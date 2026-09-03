@@ -1,0 +1,10 @@
+{
+  "name": "@treenweb/tests-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "echo 'e2e: Playwright suite lands in Step 9'",
+    "test:a11y": "echo 'a11y: axe-core/playwright checks land in Step 9'"
+  }
+}

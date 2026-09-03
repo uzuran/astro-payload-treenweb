@@ -1,0 +1,21 @@
+---
+import type { MetaTags } from '../lib/seo/buildMeta';
+
+interface Props {
+  meta: MetaTags;
+}
+
+const { meta } = Astro.props;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+
+<title>{meta.title}</title>
+<meta name="description" content={meta.description} />
+<link rel="canonical" href={meta.canonical} />
+<meta name="robots" content={meta.robots} />
+
+{Object.entries(meta.og).map(([property, content]) => <meta property={property} content={content} />)}
+{Object.entries(meta.twitter).map(([name, content]) => <meta name={name} content={content} />)}

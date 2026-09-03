@@ -1,0 +1,17 @@
+# syntax=docker/dockerfile:1
+# Development image for the backend. The workspace is bind-mounted at /repo and
+# host + container are both linux/amd64, so node_modules installed on the host
+# is reused directly. A fresh install runs only when it is missing.
+FROM node:22-bookworm-slim
+
+ENV PNPM_HOME=/pnpm \
+    PATH=/pnpm:$PATH \
+    NEXT_TELEMETRY_DISABLED=1 \
+    CI=true \
+    COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+
+WORKDIR /repo
+
+CMD ["sh", "-lc", "([ -d node_modules/.pnpm ] || pnpm install --frozen-lockfile) && exec pnpm --filter @treenweb/backend run dev"]

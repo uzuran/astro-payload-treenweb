@@ -1,0 +1,3 @@
+# Generated SQL migrations live here.
+# `PAYLOAD_DB_PUSH=true` in local dev syncs schema without migrations;
+# staging/prod run `pnpm --filter @treenweb/backend migrate` (Step 10).

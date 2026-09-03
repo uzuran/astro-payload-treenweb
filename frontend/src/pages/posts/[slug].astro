@@ -1,0 +1,67 @@
+---
+import RichText from '../../components/RichText.astro';
+import { env } from '../../env';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPostBySlug } from '../../lib/payload/client';
+import { buildMeta } from '../../lib/seo/buildMeta';
+import { articleJsonLd, breadcrumbJsonLd } from '../../lib/seo/jsonLd';
+
+const slug = (Astro.params.slug ?? '').replace(/^\/+|\/+$/g, '');
+let post = null;
+try {
+  post = slug ? await getPostBySlug(slug) : null;
+} catch (error) {
+  console.error(`[post] failed to load "${slug}":`, error);
+}
+if (!post) {
+  Astro.response.status = 404;
+}
+
+const meta = buildMeta(
+  post
+    ? {
+        title: post.seo?.title ?? post.title,
+        description: post.seo?.description ?? post.excerpt,
+        path: `/posts/${slug}`,
+        noindex: post.seo?.noindex ?? false,
+        type: 'article',
+      }
+    : { title: 'Post not found', path: `/posts/${slug}`, noindex: true },
+  env.PUBLIC_SITE_URL,
+);
+
+const jsonLd = post
+  ? [
+      articleJsonLd({
+        title: meta.title,
+        description: meta.description,
+        url: meta.canonical,
+        datePublished: post.publishedAt,
+        dateModified: post.updatedAt,
+      }),
+      breadcrumbJsonLd([
+        { name: 'Home', url: new URL('/', env.PUBLIC_SITE_URL).href },
+        { name: post.title, url: meta.canonical },
+      ]),
+    ]
+  : [];
+---
+
+<BaseLayout meta={meta} jsonLd={jsonLd}>
+  {
+    post ? (
+      <main>
+        <article>
+          <h1>{post.title}</h1>
+          {post.excerpt && <p>{post.excerpt}</p>}
+          <RichText content={post.content} />
+        </article>
+      </main>
+    ) : (
+      <main>
+        <h1>Post not found</h1>
+        <a href="/">Go to the home page</a>
+      </main>
+    )
+  }
+</BaseLayout>

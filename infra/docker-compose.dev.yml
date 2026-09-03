@@ -1,0 +1,92 @@
+# Development override. Run from the repo root (so `.env` is picked up):
+#   docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d --wait
+#   ...or just `make up`
+#
+# `frontend` still runs a tiny health stub (infra/dev/stub-server.mjs) until
+# Step 5. `backend` now runs the real Payload/Next dev server.
+#
+# Deps are installed inside the container against the bind-mounted workspace;
+# host and container are both linux/amd64 so node_modules is shared directly
+# (no node_modules volume needed on this target platform).
+
+services:
+  db:
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.dev
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://${POSTGRES_USER:-treenweb}:${POSTGRES_PASSWORD:-treenweb}@db:5432/${POSTGRES_DB:-treenweb}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:-dev-only-insecure-secret-change-me-0123456789}
+      PAYLOAD_PUBLIC_SERVER_URL: http://localhost:3000
+      PAYLOAD_DB_PUSH: 'true'
+      CORS_ORIGINS: http://localhost:4321
+      CSRF_ORIGINS: http://localhost:4321,http://localhost:3000
+      WATCHPACK_POLLING: 'true'
+    volumes:
+      - ..:/repo
+    ports:
+      - '127.0.0.1:3000:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 90s
+    networks:
+      - data
+      - edge
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      HOST: '0.0.0.0'
+      PORT: '4321'
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:4321}
+      PAYLOAD_INTERNAL_URL: http://backend:3000
+      PUBLIC_CMS_URL: ${PUBLIC_CMS_URL:-http://localhost:3000}
+      PUBLIC_PLAUSIBLE_DOMAIN: ${PUBLIC_PLAUSIBLE_DOMAIN:-}
+      PUBLIC_PLAUSIBLE_SRC: ${PUBLIC_PLAUSIBLE_SRC:-}
+      CHOKIDAR_USEPOLLING: 'true'
+    volumes:
+      - ..:/repo
+    ports:
+      - '127.0.0.1:4321:4321'
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:4321/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 60s
+    networks:
+      - edge

@@ -1,0 +1,35 @@
+# Base stack — shared between dev and prod.
+# Not meant to be run on its own; always combine with an environment override:
+#   docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml  up -d --wait
+#   docker compose -f infra/docker-compose.yml -f infra/docker-compose.prod.yml up -d   (Step 11)
+name: treenweb
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-treenweb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-treenweb}
+      POSTGRES_DB: ${POSTGRES_DB:-treenweb}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-treenweb} -d ${POSTGRES_DB:-treenweb}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - data
+
+networks:
+  # public-facing traffic (Traefik <-> apps); Traefik itself lands in Step 8
+  edge:
+    driver: bridge
+  # private data plane (backend <-> db); the frontend never joins this
+  data:
+    driver: bridge
+
+volumes:
+  db-data:

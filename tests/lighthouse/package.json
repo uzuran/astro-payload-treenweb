@@ -1,0 +1,9 @@
+{
+  "name": "@treenweb/tests-lighthouse",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:lhci": "echo 'lighthouse: LHCI budgets land in Step 9'"
+  }
+}

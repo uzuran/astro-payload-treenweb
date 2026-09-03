@@ -1,0 +1,14 @@
+---
+import { renderRichText } from '../lib/richtext/render';
+
+interface Props {
+  content: unknown;
+}
+
+const { content } = Astro.props;
+// Placeholder pipeline (Step 7 swaps in @treenweb/richtext). Output is already
+// HTML-escaped plain text, so set:html is safe here.
+const html = renderRichText(content);
+---
+
+{html && <div class="prose" set:html={html} />}

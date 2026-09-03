@@ -1,0 +1,49 @@
+{
+  "name": "astro-payload-treenweb",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm run test:unit",
+    "test:unit": "pnpm -r --if-present test:unit",
+    "test:integration": "pnpm -r --if-present test:integration",
+    "test:e2e": "pnpm -r --if-present test:e2e",
+    "test:a11y": "pnpm -r --if-present test:a11y",
+    "test:lhci": "pnpm -r --if-present test:lhci",
+    "test:all": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e && pnpm run test:a11y && pnpm run test:lhci",
+    "build": "pnpm -r --if-present build",
+    "dev": "pnpm -r --if-present --parallel dev",
+    "dev:up": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d --wait",
+    "dev:down": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml down",
+    "dev:logs": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml logs -f",
+    "dev:ps": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml ps",
+    "dev:psql": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml exec db psql -U treenweb -d treenweb",
+    "dev:reset": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml down -v",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test:unit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "globals": "^16.0.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "unrs-resolver",
+      "@swc/core"
+    ]
+  }
+}

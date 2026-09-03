@@ -1,0 +1,26 @@
+{
+  "name": "@treenweb/frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0 --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0 --port 4321",
+    "start": "node ./dist/server/entry.mjs",
+    "typecheck": "astro check",
+    "sync": "astro sync",
+    "test:unit": "vitest run src"
+  },
+  "dependencies": {
+    "@astrojs/node": "^9",
+    "astro": "^5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@treenweb/tsconfig": "workspace:*",
+    "typescript": "^5.7.2",
+    "vitest": "^3"
+  }
+}

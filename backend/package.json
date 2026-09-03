@@ -1,0 +1,44 @@
+{
+  "name": "@treenweb/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3000 -H 0.0.0.0",
+    "devsafe": "rm -rf .next && next dev -p 3000 -H 0.0.0.0",
+    "build": "pnpm run generate:types && next build",
+    "start": "next start -p 3000 -H 0.0.0.0",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
+    "payload": "payload",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create",
+    "migrate:status": "payload migrate:status",
+    "seed": "tsx src/seed/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run src",
+    "test:integration": "vitest run tests"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "^3",
+    "@payloadcms/next": "^3",
+    "@payloadcms/richtext-lexical": "^3",
+    "@payloadcms/ui": "^3",
+    "graphql": "^16.9.0",
+    "next": "~15.4.11",
+    "payload": "^3",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "sharp": "^0.34.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@treenweb/tsconfig": "workspace:*",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3"
+  }
+}

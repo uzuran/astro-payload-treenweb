@@ -1,0 +1,35 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import type { MetaTags } from '../lib/seo/buildMeta';
+import { serializeJsonLd } from '../lib/seo/jsonLd';
+
+interface Props {
+  meta: MetaTags;
+  jsonLd?: unknown[];
+}
+
+const { meta, jsonLd = [] } = Astro.props;
+
+const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
+const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead meta={meta} />
+    {
+      jsonLd.map((data) => (
+        <script is:inline type="application/ld+json" set:html={serializeJsonLd(data)} />
+      ))
+    }
+    {
+      plausibleDomain && plausibleSrc && (
+        <script is:inline defer data-domain={plausibleDomain} src={plausibleSrc} />
+      )
+    }
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
