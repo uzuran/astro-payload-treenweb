@@ -1,10 +1,10 @@
 ---
-import RichText from '../components/RichText.astro';
-import { env } from '../env';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { getPageBySlug } from '../lib/payload/client';
-import { buildMeta } from '../lib/seo/buildMeta';
-import { breadcrumbJsonLd, webPageJsonLd } from '../lib/seo/jsonLd';
+import RichText from '../../components/RichText.astro';
+import { env } from '../../env';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPageBySlug } from '../../lib/payload/client';
+import { buildMeta } from '../../lib/seo/buildMeta';
+import { breadcrumbJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
 
 const slugParam = Astro.params.slug ?? '';
 const slug = slugParam.replace(/^\/+|\/+$/g, '');

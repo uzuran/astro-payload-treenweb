@@ -1,0 +1,91 @@
+---
+import SiteFooter from '../../components/SiteFooter.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import About from '../../components/sections/About.astro';
+import Booking from '../../components/sections/Booking.astro';
+import Hero from '../../components/sections/Hero.astro';
+import Services from '../../components/sections/Services.astro';
+import Team from '../../components/sections/Team.astro';
+import Ticker from '../../components/sections/Ticker.astro';
+import { env } from '../../env';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { DEFAULT_LOCALE } from '../../lib/locale';
+import {
+  getAbout,
+  getBooking,
+  getHero,
+  getNavigation,
+  getPageBySlug,
+  getServices,
+  getSiteSettings,
+  getTeam,
+  listMasters,
+  mediaUrl,
+} from '../../lib/payload/client';
+import { buildMeta, type Alternate } from '../../lib/seo/buildMeta';
+import { organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
+
+/** Resolve a fetch, logging and swallowing failures so one dead section never 500s the page. */
+const settle = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
+  promise.catch((error: unknown) => {
+    console.error(`[index] ${label} failed:`, error);
+    return null;
+  });
+
+const [page, hero, services, about, team, booking, navigation, siteSettings, masters] =
+  await Promise.all([
+    settle(getPageBySlug('home'), 'home page'),
+    settle(getHero(), 'hero'),
+    settle(getServices(), 'services'),
+    settle(getAbout(), 'about'),
+    settle(getTeam(), 'team'),
+    settle(getBooking(), 'booking'),
+    settle(getNavigation(), 'navigation'),
+    settle(getSiteSettings(), 'site settings'),
+    settle(listMasters(), 'masters'),
+  ]);
+
+const lang = siteSettings?.defaultLocale || DEFAULT_LOCALE;
+const siteName = siteSettings?.siteName || 'FORMA';
+
+// hreflang alternates — empty until the site actually serves more than one locale.
+const enabledLocales = (siteSettings?.supportedLocales ?? []).filter((l) => l.enabled !== false);
+const alternates: Alternate[] =
+  enabledLocales.length > 1
+    ? enabledLocales.map((l) => ({ hreflang: l.code, href: new URL('/', env.PUBLIC_SITE_URL).href }))
+    : [];
+
+const meta = buildMeta(
+  {
+    title: page?.seo?.title || page?.title || `${siteName} — барбершоп`,
+    description: page?.seo?.description || siteSettings?.description,
+    path: '/',
+    noindex: page?.seo?.noindex ?? false,
+    image: mediaUrl(siteSettings?.ogImage) ?? undefined,
+    siteName,
+    locale: lang,
+    alternates,
+  },
+  env.PUBLIC_SITE_URL,
+);
+---
+
+<BaseLayout
+  meta={meta}
+  lang={lang}
+  jsonLd={[
+    organizationJsonLd(env.PUBLIC_SITE_URL),
+    webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
+  ]}
+>
+  <SiteHeader siteName={siteSettings?.siteName} items={navigation?.main} />
+  <main>
+    <Hero data={hero} />
+    <Ticker words={siteSettings?.ticker?.map((t) => t.word)} />
+    <Services data={services} />
+    <About data={about} />
+    <Team data={team} masters={masters} />
+    <Booking data={booking} services={services} masters={masters} />
+  </main>
+  <SiteFooter site={siteSettings} />
+</BaseLayout>
