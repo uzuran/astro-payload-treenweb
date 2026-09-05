@@ -1,13 +1,14 @@
 import type { APIRoute } from 'astro';
 
 import { env } from '../env';
-import { DEFAULT_LOCALE, LOCALES, isLocale, localizedPath, type Locale } from '../lib/locale';
+import { LOCALES, isLocale, localizedPath, type Locale } from '../lib/locale';
 import {
   getSiteSettings,
   listSitemapEntries,
   PayloadError,
   type SitemapEntry,
 } from '../lib/payload/client';
+import { buildAlternates } from '../lib/seo/alternates';
 
 export const prerender = false;
 
@@ -20,13 +21,9 @@ const urlBlocks = (
   locales: Locale[],
 ): string[] => {
   const lastmod = updatedAt ? `<lastmod>${new Date(updatedAt).toISOString()}</lastmod>` : '';
-  const alternates = [
-    ...locales.map(
-      (code) =>
-        `    <xhtml:link rel="alternate" hreflang="${code}" href="${abs(localizedPath(code, basePath))}"/>`,
-    ),
-    `    <xhtml:link rel="alternate" hreflang="x-default" href="${abs(localizedPath(DEFAULT_LOCALE, basePath))}"/>`,
-  ].join('\n');
+  const alternates = buildAlternates(basePath, locales)
+    .map((alt) => `    <xhtml:link rel="alternate" hreflang="${alt.hreflang}" href="${alt.href}"/>`)
+    .join('\n');
   return locales.map(
     (code) =>
       `  <url>\n    <loc>${abs(localizedPath(code, basePath))}</loc>${lastmod}\n${alternates}\n  </url>`,

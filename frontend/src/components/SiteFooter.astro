@@ -1,12 +1,17 @@
 ---
 import { SITE_FB } from '../lib/fallback';
-import Multiline from './Multiline.astro';
+import { t } from '../lib/i18n/ui';
+import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
 import type { SiteSettings } from '../lib/payload/client';
+import Multiline from './Multiline.astro';
 
 interface Props {
   site?: SiteSettings | null;
+  locale?: Locale;
 }
 
+const { locale = DEFAULT_LOCALE } = Astro.props;
+const tr = t(locale);
 const site = Astro.props.site ?? {};
 const name = site.siteName || SITE_FB.siteName;
 const tagline = site.tagline || SITE_FB.tagline;
@@ -22,13 +27,13 @@ const footerNote = site.footerNote || SITE_FB.footerNote;
     </div>
 
     <div>
-      <p class="eyebrow orange mb-3">НАЙДИ НАС</p>
+      <p class="eyebrow orange mb-3">{tr('footer.findUs')}</p>
       <p><Multiline text={contact.address} /></p>
       {contact.phone && <p class="mt-2">{contact.phone}</p>}
     </div>
 
     <div>
-      <p class="eyebrow orange mb-3">ВРЕМЯ ДЛЯ СЕБЯ</p>
+      <p class="eyebrow orange mb-3">{tr('footer.hours')}</p>
       {contact.hoursWeekday && <p>{contact.hoursWeekday}</p>}
       <p class="muted mt-2">
         {contact.hoursSaturday}
@@ -42,6 +47,6 @@ const footerNote = site.footerNote || SITE_FB.footerNote;
     class="wrap flex flex-wrap justify-between gap-3 border-t border-white/15 py-5 text-xs text-white/40"
   >
     <span>{footerNote}</span>
-    <span>Названия, мастера и цены — примеры.</span>
+    <span>{tr('footer.disclaimer')}</span>
   </div>
 </footer>

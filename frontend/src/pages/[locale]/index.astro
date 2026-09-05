@@ -1,6 +1,4 @@
 ---
-import SiteFooter from '../../components/SiteFooter.astro';
-import SiteHeader from '../../components/SiteHeader.astro';
 import About from '../../components/sections/About.astro';
 import Booking from '../../components/sections/Booking.astro';
 import Hero from '../../components/sections/Hero.astro';
@@ -8,8 +6,8 @@ import Services from '../../components/sections/Services.astro';
 import Team from '../../components/sections/Team.astro';
 import Ticker from '../../components/sections/Ticker.astro';
 import { env } from '../../env';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { isLocale, localizedPath, type Locale } from '../../lib/locale';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { localizedPath } from '../../lib/locale';
 import {
   getAbout,
   getBooking,
@@ -22,7 +20,7 @@ import {
   listMasters,
   mediaUrl,
 } from '../../lib/payload/client';
-import { buildMeta, type Alternate } from '../../lib/seo/buildMeta';
+import { buildMeta } from '../../lib/seo/buildMeta';
 import { organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
 
 /** Resolve a fetch, logging and swallowing failures so one dead section never 500s the page. */
@@ -49,23 +47,7 @@ const [page, hero, services, about, team, booking, navigation, siteSettings, mas
 
 const siteName = siteSettings?.siteName || 'FORMA';
 
-// hreflang: one link per enabled locale + x-default, only when >1 is offered.
-const enabledLocales: Locale[] = (siteSettings?.supportedLocales ?? [])
-  .filter((l) => l.enabled !== false)
-  .map((l) => l.code)
-  .filter(isLocale);
-const abs = (path: string) => new URL(path, env.PUBLIC_SITE_URL).href;
-const alternates: Alternate[] =
-  enabledLocales.length > 1
-    ? [
-        ...enabledLocales.map((code) => ({
-          hreflang: code,
-          href: abs(localizedPath(code, '/')),
-        })),
-        { hreflang: 'x-default', href: abs(localizedPath('ru', '/')) },
-      ]
-    : [];
-
+// hreflang / og:locale:alternate are added by SiteLayout from siteSettings.
 const meta = buildMeta(
   {
     title: page?.seo?.title || page?.title || `${siteName} — барбершоп`,
@@ -75,33 +57,25 @@ const meta = buildMeta(
     image: mediaUrl(siteSettings?.ogImage) ?? undefined,
     siteName,
     locale,
-    alternates,
   },
   env.PUBLIC_SITE_URL,
 );
 ---
 
-<BaseLayout
+<SiteLayout
   meta={meta}
-  lang={locale}
+  locale={locale}
+  navigation={navigation}
+  siteSettings={siteSettings}
   jsonLd={[
     organizationJsonLd(env.PUBLIC_SITE_URL),
     webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
   ]}
 >
-  <SiteHeader
-    siteName={siteSettings?.siteName}
-    items={navigation?.main}
-    locale={locale}
-    supportedLocales={siteSettings?.supportedLocales}
-  />
-  <main>
-    <Hero data={hero} />
-    <Ticker words={siteSettings?.ticker?.map((t) => t.word)} />
-    <Services data={services} />
-    <About data={about} />
-    <Team data={team} masters={masters} />
-    <Booking data={booking} services={services} masters={masters} />
-  </main>
-  <SiteFooter site={siteSettings} />
-</BaseLayout>
+  <Hero data={hero} />
+  <Ticker words={siteSettings?.ticker?.map((word) => word.word)} />
+  <Services data={services} />
+  <About data={about} />
+  <Team data={team} masters={masters} />
+  <Booking data={booking} services={services} masters={masters} locale={locale} />
+</SiteLayout>

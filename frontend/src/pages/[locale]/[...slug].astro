@@ -1,16 +1,19 @@
 ---
 import RichText from '../../components/RichText.astro';
 import { env } from '../../env';
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { t } from '../../lib/i18n/ui';
 import { localizedPath } from '../../lib/locale';
 import { getPageBySlug } from '../../lib/payload/client';
 import { buildMeta } from '../../lib/seo/buildMeta';
 import { breadcrumbJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
 
 const locale = Astro.locals.locale;
+const tr = t(locale);
 const slugParam = Astro.params.slug ?? '';
 const slug = slugParam.replace(/^\/+|\/+$/g, '');
 const path = localizedPath(locale, `/${slug}`);
+const home = localizedPath(locale, '/');
 
 let page = null;
 try {
@@ -31,7 +34,7 @@ const meta = buildMeta(
         noindex: page.seo?.noindex ?? false,
         locale,
       }
-    : { title: 'Page not found', path, noindex: true, locale },
+    : { title: tr('errors.pageNotFoundTitle'), path, noindex: true, locale },
   env.PUBLIC_SITE_URL,
 );
 
@@ -39,28 +42,28 @@ const jsonLd = page
   ? [
       webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
       breadcrumbJsonLd([
-        { name: 'Home', url: new URL(localizedPath(locale, '/'), env.PUBLIC_SITE_URL).href },
+        { name: 'Home', url: new URL(home, env.PUBLIC_SITE_URL).href },
         { name: page.title, url: meta.canonical },
       ]),
     ]
   : [];
 ---
 
-<BaseLayout meta={meta} lang={locale} jsonLd={jsonLd}>
+<SiteLayout meta={meta} locale={locale} jsonLd={jsonLd}>
   {
     page ? (
-      <main>
+      <div class="wrap section">
         <h1>{page.title}</h1>
         <RichText content={page.content} />
-      </main>
+      </div>
     ) : (
-      <main>
-        <h1>Page not found</h1>
-        <p>
-          We couldn't find <code>/{slug}</code>.
+      <div class="wrap section">
+        <h1>{tr('errors.notFoundHeading')}</h1>
+        <p class="muted mt-4">
+          {tr('errors.couldNotFind')} <code>/{slug}</code>.
         </p>
-        <a href={localizedPath(locale, '/')}>Go to the home page</a>
-      </main>
+        <a class="button mt-8" href={home}>{tr('errors.backHome')}</a>
+      </div>
     )
   }
-</BaseLayout>
+</SiteLayout>

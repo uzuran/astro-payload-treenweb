@@ -1,5 +1,7 @@
 ---
 import { BOOKING_FB, MASTERS_FB, SERVICES_FB } from '../../lib/fallback';
+import { t } from '../../lib/i18n/ui';
+import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import type { Booking, Master, Services } from '../../lib/payload/client';
 import Multiline from '../Multiline.astro';
 
@@ -7,8 +9,10 @@ interface Props {
   data?: Booking | null;
   services?: Services | null;
   masters?: Master[] | null;
+  locale?: Locale;
 }
 
+const tr = t(Astro.props.locale ?? DEFAULT_LOCALE);
 const b = Astro.props.data ?? {};
 const eyebrow = b.eyebrow || BOOKING_FB.eyebrow;
 const heading = b.heading || BOOKING_FB.heading;
@@ -34,27 +38,32 @@ const masterNames = masters.map((master) => master.name);
       <p class="mt-5 max-w-sm text-sm text-white/45">{disclaimer}</p>
     </div>
 
-    <form id="booking-form" class="grid gap-5 self-center">
+    <form id="booking-form" class="grid gap-5 self-center" data-result-template={tr('booking.result')}>
       <div class="grid gap-5 sm:grid-cols-2">
         <label>
-          Твоё имя
-          <input name="name" required autocomplete="given-name" placeholder="Как к тебе обращаться?" />
+          {tr('booking.name')}
+          <input
+            name="name"
+            required
+            autocomplete="given-name"
+            placeholder={tr('booking.namePlaceholder')}
+          />
         </label>
         <label>
-          Телефон
+          {tr('booking.phone')}
           <input
             name="phone"
             required
             type="tel"
             autocomplete="tel"
             pattern="[+0-9 ()-]{9,20}"
-            placeholder="+420 000 000 000"
+            placeholder={tr('booking.phonePlaceholder')}
           />
         </label>
       </div>
 
       <label>
-        Услуга
+        {tr('booking.service')}
         <select name="service">
           {serviceNames.map((name) => <option>{name}</option>)}
         </select>
@@ -62,19 +71,19 @@ const masterNames = masters.map((master) => master.name);
 
       <div class="grid gap-5 sm:grid-cols-2">
         <label>
-          Мастер
+          {tr('booking.master')}
           <select name="master">
-            <option>Любой мастер</option>
+            <option>{tr('booking.anyMaster')}</option>
             {masterNames.map((name) => <option>{name}</option>)}
           </select>
         </label>
         <label>
-          Желаемая дата
+          {tr('booking.date')}
           <input name="date" type="date" required />
         </label>
       </div>
 
-      <button class="button w-full mt-2" type="submit">Проверить запись <span>↗</span></button>
+      <button class="button w-full mt-2" type="submit">{tr('booking.submit')} <span>↗</span></button>
       <p id="form-result" role="status" aria-live="polite" class="text-sm leading-relaxed"></p>
     </form>
   </div>
@@ -115,6 +124,9 @@ const masterNames = masters.map((master) => master.name);
       }),
     );
 
+    const template =
+      form.dataset.resultTemplate ?? '{name}: {service}, {date}. Demo — nothing was sent.';
+
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!form.reportValidity()) return;
@@ -127,7 +139,10 @@ const masterNames = masters.map((master) => master.name);
         dateEl instanceof HTMLInputElement
       ) {
         const date = dateEl.value.split('-').reverse().join('.');
-        result.textContent = `${name.value.trim()}, всё заполнено: ${service.value}, ${date}. Это демонстрация — запись не создана и данные не отправлены.`;
+        result.textContent = template
+          .replaceAll('{name}', name.value.trim())
+          .replaceAll('{service}', service.value)
+          .replaceAll('{date}', date);
       }
     });
 

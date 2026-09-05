@@ -64,6 +64,18 @@ describe('buildMeta', () => {
     expect(buildMeta({ title: 'X', path: '/' }, SITE).og['og:locale']).toBeUndefined();
   });
 
+  it('emits og:locale:alternate for the other locales, excluding the current one', () => {
+    const meta = buildMeta(
+      { title: 'X', path: '/', locale: 'ru', localeAlternates: ['ru', 'en', 'cs'] },
+      SITE,
+    );
+    expect(meta.ogRepeatable).toEqual([
+      ['og:locale:alternate', 'en'],
+      ['og:locale:alternate', 'cs'],
+    ]);
+    expect(buildMeta({ title: 'X', path: '/' }, SITE).ogRepeatable).toEqual([]);
+  });
+
   it('carries hreflang alternates through, defaulting to none', () => {
     expect(buildMeta({ title: 'X', path: '/' }, SITE).alternates).toEqual([]);
     const alts = [{ hreflang: 'en', href: 'https://x/en' }];

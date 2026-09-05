@@ -1,6 +1,7 @@
 ---
 import { NAV_FB } from '../lib/fallback';
-import type { Locale } from '../lib/locale';
+import { t } from '../lib/i18n/ui';
+import { type Locale, localizedPath } from '../lib/locale';
 import type { NavItem, SiteSettings } from '../lib/payload/client';
 import LocaleSwitcher from './LocaleSwitcher.astro';
 
@@ -13,14 +14,25 @@ interface Props {
 
 const { siteName, locale, supportedLocales } = Astro.props;
 const name = siteName || 'FORMA';
-const links = Astro.props.items?.length ? Astro.props.items : NAV_FB;
+const tr = t(locale);
+const home = localizedPath(locale, '/');
+
+// Hash links (#about, #booking) only resolve on the home page — prefix them so
+// they also work from a content page (/en/foo -> /en/#about).
+const resolveHref = (href: string) => (href.startsWith('#') ? `${home}${href}` : href);
+const links = (Astro.props.items?.length ? Astro.props.items : NAV_FB).map((link) => ({
+  label: link.label,
+  href: resolveHref(link.href),
+}));
 ---
 
 <header class="border-b border-white/15">
   <div class="wrap flex items-center justify-between gap-6 py-6">
-    <a class="logo" href="#" aria-label={`${name}, главная`}>{name}<span>®</span></a>
+    <a class="logo" href={home} aria-label={tr('header.homeAria', { site: name })}
+      >{name}<span>®</span></a
+    >
 
-    <nav class="hidden gap-8 text-sm md:flex" aria-label="Главная навигация">
+    <nav class="hidden gap-8 text-sm md:flex" aria-label={tr('header.navAria')}>
       {links.map((link) => <a href={link.href}>{link.label}</a>)}
     </nav>
 
@@ -30,20 +42,27 @@ const links = Astro.props.items?.length ? Astro.props.items : NAV_FB;
       class="ml-auto hidden md:flex"
     />
 
-    <a href="#booking" class="small-cta">Записаться <span>↗</span></a>
+    <a href={resolveHref('#booking')} class="small-cta">{tr('header.cta')} <span>↗</span></a>
 
     <button
       id="menu-toggle"
       class="text-2xl md:hidden"
-      aria-label="Открыть меню"
+      aria-label={tr('header.menuOpen')}
       aria-expanded="false"
       aria-controls="mobile-menu"
+      data-label-open={tr('header.menuOpen')}
+      data-label-close={tr('header.menuClose')}
     >
       ☰
     </button>
   </div>
 
-  <nav id="mobile-menu" class="wrap flex-col gap-4 pb-6" hidden aria-label="Мобильная навигация">
+  <nav
+    id="mobile-menu"
+    class="wrap flex-col gap-4 pb-6"
+    hidden
+    aria-label={tr('header.navAriaMobile')}
+  >
     {links.map((link) => <a href={link.href}>{link.label}</a>)}
     <LocaleSwitcher locale={locale} supportedLocales={supportedLocales} class="pt-2" />
   </nav>
@@ -53,19 +72,22 @@ const links = Astro.props.items?.length ? Astro.props.items : NAV_FB;
   const toggle = document.querySelector('#menu-toggle');
   const menu = document.querySelector('#mobile-menu');
 
-  if (toggle && menu) {
+  if (toggle instanceof HTMLElement && menu instanceof HTMLElement) {
+    const labelOpen = toggle.dataset.labelOpen ?? 'Open menu';
+    const labelClose = toggle.dataset.labelClose ?? 'Close menu';
+
     toggle.addEventListener('click', () => {
       const open = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!open));
-      toggle.setAttribute('aria-label', open ? 'Открыть меню' : 'Закрыть меню');
-      (menu as HTMLElement).hidden = open;
+      toggle.setAttribute('aria-label', open ? labelOpen : labelClose);
+      menu.hidden = open;
     });
 
     menu.querySelectorAll('a').forEach((link) =>
       link.addEventListener('click', () => {
-        (menu as HTMLElement).hidden = true;
+        menu.hidden = true;
         toggle.setAttribute('aria-expanded', 'false');
-        toggle.setAttribute('aria-label', 'Открыть меню');
+        toggle.setAttribute('aria-label', labelOpen);
       }),
     );
   }

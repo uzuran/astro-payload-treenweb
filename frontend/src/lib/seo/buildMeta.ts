@@ -18,8 +18,10 @@ export interface SeoInput {
   type?: 'website' | 'article';
   /** Site name for the title suffix + og:site_name. Defaults to SITE_NAME. */
   siteName?: string | null;
-  /** BCP-47 locale for og:locale. i18n is not enabled yet — usually the site default. */
+  /** BCP-47 locale of this page — drives og:locale. */
   locale?: string | null;
+  /** Other locales this page exists in — drives og:locale:alternate. */
+  localeAlternates?: string[];
   /** hreflang alternates. Populate only when the site actually serves >1 locale. */
   alternates?: Alternate[];
 }
@@ -30,6 +32,8 @@ export interface MetaTags {
   canonical: string;
   robots: string;
   og: Record<string, string>;
+  /** Repeatable <meta property> tags the flat `og` map can't hold (og:locale:alternate). */
+  ogRepeatable: [string, string][];
   twitter: Record<string, string>;
   alternates: Alternate[];
 }
@@ -57,6 +61,10 @@ export function buildMeta(input: SeoInput, siteUrl: string): MetaTags {
   if (image) og['og:image'] = image;
   if (input.locale) og['og:locale'] = input.locale;
 
+  const ogRepeatable: [string, string][] = (input.localeAlternates ?? [])
+    .filter((code) => code && code !== input.locale)
+    .map((code) => ['og:locale:alternate', code]);
+
   const twitter: Record<string, string> = {
     'twitter:card': image ? 'summary_large_image' : 'summary',
     'twitter:title': title,
@@ -70,6 +78,7 @@ export function buildMeta(input: SeoInput, siteUrl: string): MetaTags {
     canonical,
     robots,
     og,
+    ogRepeatable,
     twitter,
     alternates: input.alternates ?? [],
   };

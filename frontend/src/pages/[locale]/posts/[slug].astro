@@ -1,15 +1,18 @@
 ---
 import RichText from '../../../components/RichText.astro';
 import { env } from '../../../env';
-import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import { t } from '../../../lib/i18n/ui';
 import { localizedPath } from '../../../lib/locale';
 import { getPostBySlug } from '../../../lib/payload/client';
 import { buildMeta } from '../../../lib/seo/buildMeta';
 import { articleJsonLd, breadcrumbJsonLd } from '../../../lib/seo/jsonLd';
 
 const locale = Astro.locals.locale;
+const tr = t(locale);
 const slug = (Astro.params.slug ?? '').replace(/^\/+|\/+$/g, '');
 const path = localizedPath(locale, `/posts/${slug}`);
+const home = localizedPath(locale, '/');
 
 let post = null;
 try {
@@ -31,7 +34,7 @@ const meta = buildMeta(
         type: 'article',
         locale,
       }
-    : { title: 'Post not found', path, noindex: true, locale },
+    : { title: tr('errors.postNotFoundTitle'), path, noindex: true, locale },
   env.PUBLIC_SITE_URL,
 );
 
@@ -45,28 +48,26 @@ const jsonLd = post
         dateModified: post.updatedAt,
       }),
       breadcrumbJsonLd([
-        { name: 'Home', url: new URL(localizedPath(locale, '/'), env.PUBLIC_SITE_URL).href },
+        { name: 'Home', url: new URL(home, env.PUBLIC_SITE_URL).href },
         { name: post.title, url: meta.canonical },
       ]),
     ]
   : [];
 ---
 
-<BaseLayout meta={meta} lang={locale} jsonLd={jsonLd}>
+<SiteLayout meta={meta} locale={locale} jsonLd={jsonLd}>
   {
     post ? (
-      <main>
-        <article>
-          <h1>{post.title}</h1>
-          {post.excerpt && <p>{post.excerpt}</p>}
-          <RichText content={post.content} />
-        </article>
-      </main>
+      <article class="wrap section">
+        <h1>{post.title}</h1>
+        {post.excerpt && <p class="muted mt-4">{post.excerpt}</p>}
+        <RichText content={post.content} />
+      </article>
     ) : (
-      <main>
-        <h1>Post not found</h1>
-        <a href={localizedPath(locale, '/')}>Go to the home page</a>
-      </main>
+      <div class="wrap section">
+        <h1>{tr('errors.postNotFoundHeading')}</h1>
+        <a class="button mt-8" href={home}>{tr('errors.backHome')}</a>
+      </div>
     )
   }
-</BaseLayout>
+</SiteLayout>
