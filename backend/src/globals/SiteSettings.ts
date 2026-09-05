@@ -45,6 +45,21 @@ export const SiteSettings: GlobalConfig = {
       localized: true,
       admin: { description: 'Small print in the footer bar.' },
     },
+    {
+      name: 'heroAnimation',
+      type: 'select',
+      defaultValue: 'fade',
+      options: [
+        { label: 'Fade', value: 'fade' },
+        { label: 'Slide up', value: 'slide-up' },
+        { label: 'Zoom', value: 'zoom' },
+        { label: 'Neon', value: 'neon' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Entrance animation for the home hero. Same for every locale.',
+      },
+    },
     // ─── Locale — codes come from src/locales.ts (single source of truth) ───
     {
       name: 'defaultLocale',

@@ -50,3 +50,13 @@ const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
     <slot />
   </body>
 </html>
+
+<script>
+  // Compatibility with <ClientRouter/> (not enabled today — these events simply
+  // never fire without it): flag the document while a client-side navigation is
+  // swapping so CSS one-shot entrance animations (e.g. the hero) do not replay
+  // mid-transition. Cleared once the new page has settled.
+  const root = document.documentElement;
+  document.addEventListener('astro:before-swap', () => root.setAttribute('data-navigating', ''));
+  document.addEventListener('astro:page-load', () => root.removeAttribute('data-navigating'));
+</script>

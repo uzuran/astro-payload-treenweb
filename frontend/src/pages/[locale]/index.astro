@@ -72,7 +72,7 @@ const meta = buildMeta(
     webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
   ]}
 >
-  <Hero data={hero} />
+  <Hero data={hero} animation={siteSettings?.heroAnimation} />
   <Ticker words={siteSettings?.ticker?.map((word) => word.word)} />
   <Services data={services} />
   <About data={about} />

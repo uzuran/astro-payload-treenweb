@@ -4,9 +4,20 @@ import { mediaUrl, type Hero } from '../../lib/payload/client';
 import { withFallback } from '../../lib/withFallback';
 import Multiline from '../Multiline.astro';
 
+const HERO_ANIMATIONS = ['fade', 'slide-up', 'zoom', 'neon'] as const;
+type HeroAnimation = (typeof HERO_ANIMATIONS)[number];
+
 interface Props {
   data?: Hero | null;
+  /** SiteSettings.heroAnimation — falls back to `fade` for any unknown value. */
+  animation?: string | null;
 }
+
+const animation: HeroAnimation = (HERO_ANIMATIONS as readonly string[]).includes(
+  Astro.props.animation ?? '',
+)
+  ? (Astro.props.animation as HeroAnimation)
+  : 'fade';
 
 const d = withFallback(Astro.props.data, HERO_FB);
 
@@ -18,7 +29,7 @@ const srcset = [card && `${card} 768w`, hero && `${hero} 1600w`].filter(Boolean)
 const alt = photo?.alt || HERO_PHOTO_ALT_FB;
 ---
 
-<section class="hero wrap relative pb-10 pt-12 md:pt-16">
+<section class:list={['hero wrap relative pb-10 pt-12 md:pt-16', `hero--${animation}`]}>
   <div class="eyebrow mb-7 flex justify-between gap-5">
     <span>{d.eyebrowLeft}</span>
     <span class="hidden sm:block">{d.eyebrowRight}</span>

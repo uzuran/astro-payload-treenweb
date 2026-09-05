@@ -678,6 +678,10 @@ export interface SiteSetting {
    */
   footerNote?: string | null;
   /**
+   * Entrance animation for the home hero. Same for every locale.
+   */
+  heroAnimation?: ('fade' | 'slide-up' | 'zoom' | 'neon') | null;
+  /**
    * Locale assumed when a request carries no /xx prefix. Drives <html lang>.
    */
   defaultLocale: 'cs' | 'en' | 'ru';
@@ -907,6 +911,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         mapUrl?: T;
       };
   footerNote?: T;
+  heroAnimation?: T;
   defaultLocale?: T;
   supportedLocales?:
     | T

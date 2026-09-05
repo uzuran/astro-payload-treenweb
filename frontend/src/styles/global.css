@@ -279,6 +279,69 @@
     font-weight: 800;
   }
 
+  /* Hero entrance — admin-selected via SiteSettings.heroAnimation.
+     Pure CSS: an `animation` runs when the hero is first rendered, i.e. on
+     page load. With <ClientRouter/> it would otherwise replay per swap;
+     BaseLayout's `data-navigating` guard suppresses that (see BaseLayout). */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero--fade {
+      animation: hero-in-fade 0.7s ease-out both;
+    }
+    .hero--slide-up {
+      animation: hero-in-slide 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .hero--zoom {
+      animation: hero-in-zoom 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .hero--neon {
+      animation: hero-in-fade 0.5s ease-out both;
+    }
+    .hero--neon h1 {
+      animation: hero-in-neon 1.2s 0.05s ease-out both;
+    }
+
+    :root[data-navigating] .hero--fade,
+    :root[data-navigating] .hero--slide-up,
+    :root[data-navigating] .hero--zoom,
+    :root[data-navigating] .hero--neon,
+    :root[data-navigating] .hero--neon h1 {
+      animation: none;
+    }
+  }
+
+  @keyframes hero-in-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes hero-in-slide {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+  @keyframes hero-in-zoom {
+    from {
+      opacity: 0;
+      transform: scale(0.985);
+    }
+  }
+  @keyframes hero-in-neon {
+    0% {
+      opacity: 0.25;
+      text-shadow: none;
+    }
+    55% {
+      opacity: 1;
+      text-shadow:
+        0 0 22px rgb(255 107 53 / 0.85),
+        0 0 6px rgb(255 107 53 / 0.7);
+    }
+    100% {
+      text-shadow: 0 0 1px rgb(255 107 53 / 0);
+    }
+  }
+
   .hero-photo {
     height: 360px;
     position: relative;

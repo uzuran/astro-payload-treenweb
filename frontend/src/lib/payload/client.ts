@@ -237,6 +237,7 @@ export const siteSettingsSchema = z.object({
     })
     .nullish(),
   footerNote: z.string().nullish(),
+  heroAnimation: z.string().nullish(),
   defaultLocale: z.string().nullish(),
   supportedLocales: z
     .array(
