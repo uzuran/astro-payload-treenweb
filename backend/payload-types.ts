@@ -747,6 +747,10 @@ export interface Hero {
    * Corner rounding for this section’s buttons, cards and form fields.
    */
   rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  /**
+   * Corner rounding for the hero photo only.
+   */
+  photoRounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -986,6 +990,7 @@ export interface HeroSelect<T extends boolean = true> {
   photoCaptionLeft?: T;
   photoCaptionRight?: T;
   rounded?: T;
+  photoRounded?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

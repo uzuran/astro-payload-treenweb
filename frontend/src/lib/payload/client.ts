@@ -168,6 +168,7 @@ export const heroSchema = z.object({
   photoCaptionLeft: z.string().nullish(),
   photoCaptionRight: z.string().nullish(),
   rounded: z.string().nullish(),
+  photoRounded: z.string().nullish(),
 });
 export type Hero = z.infer<typeof heroSchema>;
 

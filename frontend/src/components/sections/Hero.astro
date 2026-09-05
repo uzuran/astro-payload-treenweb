@@ -57,7 +57,7 @@ const alt = photo?.alt || HERO_PHOTO_ALT_FB;
       </div>
     </div>
 
-    <div class="hero-photo">
+    <div class:list={['hero-photo', roundedClass(d.photoRounded)]}>
       <img
         src={src}
         srcset={srcset || undefined}
