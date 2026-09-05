@@ -15,6 +15,13 @@ interface Props {
 const { meta, jsonLd = [], lang = DEFAULT_LOCALE } = Astro.props;
 const dir = dirFor(lang);
 
+// Preload the body + display face for this locale's script so a language
+// switch doesn't reflow while the other subset loads (font-display: swap).
+const fontPreloads =
+  lang === 'ru'
+    ? ['/fonts/manrope-cyrillic.woff2', '/fonts/oswald-cyrillic.woff2']
+    : ['/fonts/manrope-latin.woff2', '/fonts/oswald-latin.woff2'];
+
 const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
 ---
@@ -22,6 +29,11 @@ const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
 <!doctype html>
 <html lang={lang} dir={dir}>
   <head>
+    {
+      fontPreloads.map((href) => (
+        <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
+      ))
+    }
     <BaseHead meta={meta} />
     {
       jsonLd.map((data) => (
