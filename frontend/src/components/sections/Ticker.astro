@@ -1,0 +1,21 @@
+---
+import { TICKER_FB } from '../../lib/fallback';
+
+interface Props {
+  words?: string[] | null;
+}
+
+const source = Astro.props.words?.length ? Astro.props.words : TICKER_FB;
+// The template repeats the set so the row fills wide viewports.
+const words = [...source, ...source];
+---
+
+<div class="ticker" aria-hidden="true">
+  {
+    words.map((word, i) => (
+      <Fragment>
+        {i > 0 && <span>✳</span>} {word}{' '}
+      </Fragment>
+    ))
+  }
+</div>

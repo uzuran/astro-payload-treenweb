@@ -1,0 +1,51 @@
+---
+import { SERVICES_FB } from '../../lib/fallback';
+import type { Services } from '../../lib/payload/client';
+import Multiline from '../Multiline.astro';
+
+interface Props {
+  data?: Services | null;
+}
+
+const src = Astro.props.data ?? {};
+const eyebrow = src.eyebrow || SERVICES_FB.eyebrow;
+const heading = src.heading || SERVICES_FB.heading;
+const note = src.note || SERVICES_FB.note;
+const items = src.items?.length ? src.items : (SERVICES_FB.items ?? []);
+
+const price = (amount?: number | null, currency?: string | null) =>
+  [amount, currency].filter((v) => v !== null && v !== undefined && v !== '').join(' ');
+---
+
+<section id="services" class="wrap section">
+  <div class="section-top">
+    <div>
+      <p class="eyebrow orange mb-4">{eyebrow}</p>
+      <h2><Multiline text={heading} /></h2>
+    </div>
+    <p class="muted max-w-xs"><Multiline text={note} /></p>
+  </div>
+
+  <div class="services">
+    {
+      items.map((item, i) => (
+        <button class="service" data-service={item.name}>
+          <span class="service-no">{String(i + 1).padStart(2, '0')}</span>
+          <span>
+            <strong>
+              {item.name}
+              {item.badge && <em>{item.badge}</em>}
+            </strong>
+            <small>
+              {item.description}
+              {item.description && item.duration && ' · '}
+              {item.duration}
+            </small>
+          </span>
+          <span class="price">{price(item.priceAmount, item.priceCurrency)}</span>
+          <span class="service-arrow">↗</span>
+        </button>
+      ))
+    }
+  </div>
+</section>

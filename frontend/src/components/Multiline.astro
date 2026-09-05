@@ -1,0 +1,21 @@
+---
+/**
+ * Renders text that carries hard line breaks as `\n` (Payload textarea
+ * fields), turning each newline into a `<br>`. No wrapper element — the
+ * caller supplies the block (`<p>`, `<h2>`, …).
+ */
+interface Props {
+  text?: string | null;
+}
+
+const lines = (Astro.props.text ?? '').split('\n');
+---
+
+{
+  lines.map((line, i) => (
+    <Fragment>
+      {i > 0 && <br />}
+      {line}
+    </Fragment>
+  ))
+}

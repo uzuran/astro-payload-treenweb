@@ -24,6 +24,12 @@ const schema = z.object({
     z.string().url().default('http://localhost:3000'),
   ),
 
+  // Browser-visible CMS origin. Used server-side to turn Payload's relative
+  // media URLs into absolute URLs the browser can load (Payload leaves
+  // `serverURL` unset in dev). In compose this is the published localhost
+  // port, not the internal service name; in prod it is the public CMS domain.
+  PUBLIC_CMS_URL: z.preprocess(emptyToUndefined, z.string().url().default('http://localhost:3000')),
+
   // Optional analytics — the script renders only when both are set.
   PUBLIC_PLAUSIBLE_DOMAIN: z.preprocess(emptyToUndefined, z.string().optional()),
   PUBLIC_PLAUSIBLE_SRC: z.preprocess(emptyToUndefined, z.string().url().optional()),

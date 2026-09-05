@@ -19,8 +19,11 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@tailwindcss/vite": "^4.3.3",
     "@treenweb/tsconfig": "workspace:*",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.7.2",
+    "vite": "^6.4.3",
     "vitest": "^3"
   }
 }

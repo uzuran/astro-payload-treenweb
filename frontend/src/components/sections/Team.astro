@@ -1,0 +1,44 @@
+---
+import { MASTERS_FB, TEAM_FB } from '../../lib/fallback';
+import type { Master, Team } from '../../lib/payload/client';
+import Multiline from '../Multiline.astro';
+
+interface Props {
+  data?: Team | null;
+  masters?: Master[] | null;
+}
+
+const s = Astro.props.data ?? {};
+const eyebrow = s.eyebrow || TEAM_FB.eyebrow;
+const heading = s.heading || TEAM_FB.heading;
+const note = s.note || TEAM_FB.note;
+const masters = Astro.props.masters?.length ? Astro.props.masters : MASTERS_FB;
+---
+
+<section id="team" class="wrap section">
+  <div class="section-top">
+    <div>
+      <p class="eyebrow orange mb-4">{eyebrow}</p>
+      <h2><Multiline text={heading} /></h2>
+    </div>
+    <p class="muted max-w-xs"><Multiline text={note} /></p>
+  </div>
+
+  <div class="grid gap-5 md:grid-cols-3">
+    {
+      masters.map((master, i) => (
+        <article class="master">
+          <div class="master-mark">
+            {master.initials}
+            <span>{String(i + 1).padStart(2, '0')}</span>
+          </div>
+          <h3>{master.name}</h3>
+          <p>{master.specialty}</p>
+          <a href="#booking" data-master={master.name}>
+            {master.bookingLabel || `Записаться к ${master.name} ↗`}
+          </a>
+        </article>
+      ))
+    }
+  </div>
+</section>

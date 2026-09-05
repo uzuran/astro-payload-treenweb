@@ -1,0 +1,61 @@
+---
+import { NAV_FB } from '../lib/fallback';
+import type { NavItem } from '../lib/payload/client';
+
+interface Props {
+  siteName?: string | null;
+  items?: NavItem[] | null;
+}
+
+const { siteName } = Astro.props;
+const name = siteName || 'FORMA';
+const links = Astro.props.items?.length ? Astro.props.items : NAV_FB;
+---
+
+<header class="border-b border-white/15">
+  <div class="wrap flex items-center justify-between gap-6 py-6">
+    <a class="logo" href="#" aria-label={`${name}, главная`}>{name}<span>®</span></a>
+
+    <nav class="hidden gap-8 text-sm md:flex" aria-label="Главная навигация">
+      {links.map((link) => <a href={link.href}>{link.label}</a>)}
+    </nav>
+
+    <a href="#booking" class="small-cta">Записаться <span>↗</span></a>
+
+    <button
+      id="menu-toggle"
+      class="text-2xl md:hidden"
+      aria-label="Открыть меню"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      ☰
+    </button>
+  </div>
+
+  <nav id="mobile-menu" class="wrap flex-col gap-4 pb-6" hidden aria-label="Мобильная навигация">
+    {links.map((link) => <a href={link.href}>{link.label}</a>)}
+  </nav>
+</header>
+
+<script>
+  const toggle = document.querySelector('#menu-toggle');
+  const menu = document.querySelector('#mobile-menu');
+
+  if (toggle && menu) {
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      toggle.setAttribute('aria-label', open ? 'Открыть меню' : 'Закрыть меню');
+      (menu as HTMLElement).hidden = open;
+    });
+
+    menu.querySelectorAll('a').forEach((link) =>
+      link.addEventListener('click', () => {
+        (menu as HTMLElement).hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Открыть меню');
+      }),
+    );
+  }
+</script>

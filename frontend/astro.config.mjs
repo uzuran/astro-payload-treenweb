@@ -1,5 +1,6 @@
 // @ts-check
 import node from '@astrojs/node';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
 const site = process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321';
@@ -15,4 +16,6 @@ export default defineConfig({
   security: { checkOrigin: true },
   server: { host: true, port: 4321 },
   devToolbar: { enabled: false },
+  // Tailwind v4 — configured entirely in src/styles/global.css (@import + @theme)
+  vite: { plugins: [tailwindcss()] },
 });

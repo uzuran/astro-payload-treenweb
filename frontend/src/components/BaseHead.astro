@@ -19,3 +19,5 @@ const { meta } = Astro.props;
 
 {Object.entries(meta.og).map(([property, content]) => <meta property={property} content={content} />)}
 {Object.entries(meta.twitter).map(([name, content]) => <meta name={name} content={content} />)}
+
+{meta.alternates.map((alt) => <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />)}

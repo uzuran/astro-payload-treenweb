@@ -1,21 +1,26 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
+import { DEFAULT_LOCALE, dirFor } from '../lib/locale';
 import type { MetaTags } from '../lib/seo/buildMeta';
 import { serializeJsonLd } from '../lib/seo/jsonLd';
+import '../styles/global.css';
 
 interface Props {
   meta: MetaTags;
   jsonLd?: unknown[];
+  /** BCP-47 tag for <html lang>. Defaults to the site locale (i18n not enabled yet). */
+  lang?: string;
 }
 
-const { meta, jsonLd = [] } = Astro.props;
+const { meta, jsonLd = [], lang = DEFAULT_LOCALE } = Astro.props;
+const dir = dirFor(lang);
 
 const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang} dir={dir}>
   <head>
     <BaseHead meta={meta} />
     {

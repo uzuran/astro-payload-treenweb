@@ -6,14 +6,20 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { buildConfig } from 'payload';
 import sharp from 'sharp';
 
+import { Masters } from './collections/Masters';
 import { Media } from './collections/Media';
 import { Pages } from './collections/Pages';
 import { Posts } from './collections/Posts';
 import { Redirects } from './collections/Redirects';
 import { Users } from './collections/Users';
 import { env } from './env';
+import { About } from './globals/About';
+import { Booking } from './globals/Booking';
+import { Hero } from './globals/Hero';
 import { Navigation } from './globals/Navigation';
+import { Services } from './globals/Services';
 import { SiteSettings } from './globals/SiteSettings';
+import { Team } from './globals/Team';
 import { lexicalFeatures } from './lexical/allowlist';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -27,8 +33,8 @@ export default buildConfig({
     meta: { titleSuffix: ' · treenweb CMS' },
   },
   editor: lexicalEditor({ features: () => lexicalFeatures }),
-  collections: [Pages, Posts, Media, Redirects, Users],
-  globals: [SiteSettings, Navigation],
+  collections: [Pages, Posts, Media, Masters, Redirects, Users],
+  globals: [SiteSettings, Navigation, Hero, Services, About, Team, Booking],
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL },
     push: env.PAYLOAD_DB_PUSH,

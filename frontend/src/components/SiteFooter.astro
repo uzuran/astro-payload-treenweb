@@ -1,0 +1,47 @@
+---
+import { SITE_FB } from '../lib/fallback';
+import Multiline from './Multiline.astro';
+import type { SiteSettings } from '../lib/payload/client';
+
+interface Props {
+  site?: SiteSettings | null;
+}
+
+const site = Astro.props.site ?? {};
+const name = site.siteName || SITE_FB.siteName;
+const tagline = site.tagline || SITE_FB.tagline;
+const contact = { ...SITE_FB.contact, ...(site.contact ?? {}) };
+const footerNote = site.footerNote || SITE_FB.footerNote;
+---
+
+<footer id="contacts" class="border-t border-white/15">
+  <div class="wrap grid gap-8 py-12 sm:grid-cols-3">
+    <div>
+      <a href="#" class="logo">{name}<span>®</span></a>
+      <p class="muted mt-3 text-sm">{tagline}</p>
+    </div>
+
+    <div>
+      <p class="eyebrow orange mb-3">НАЙДИ НАС</p>
+      <p><Multiline text={contact.address} /></p>
+      {contact.phone && <p class="mt-2">{contact.phone}</p>}
+    </div>
+
+    <div>
+      <p class="eyebrow orange mb-3">ВРЕМЯ ДЛЯ СЕБЯ</p>
+      {contact.hoursWeekday && <p>{contact.hoursWeekday}</p>}
+      <p class="muted mt-2">
+        {contact.hoursSaturday}
+        {contact.hoursSaturday && contact.hoursSunday && ' / '}
+        {contact.hoursSunday}
+      </p>
+    </div>
+  </div>
+
+  <div
+    class="wrap flex flex-wrap justify-between gap-3 border-t border-white/15 py-5 text-xs text-white/40"
+  >
+    <span>{footerNote}</span>
+    <span>Названия, мастера и цены — примеры.</span>
+  </div>
+</footer>
