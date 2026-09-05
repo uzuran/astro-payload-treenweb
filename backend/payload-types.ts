@@ -743,6 +743,10 @@ export interface Hero {
   photo?: (number | null) | Media;
   photoCaptionLeft?: string | null;
   photoCaptionRight?: string | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -792,6 +796,10 @@ export interface Service {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -820,6 +828,10 @@ export interface About {
   leadParagraph?: string | null;
   bodyParagraph?: string | null;
   footnote?: string | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -845,6 +857,10 @@ export interface Team {
    * Optional muted text beside the headline.
    */
   note?: string | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -875,6 +891,10 @@ export interface Booking {
    * Notice shown under the demo form.
    */
   disclaimer?: string | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -965,6 +985,7 @@ export interface HeroSelect<T extends boolean = true> {
   photo?: T;
   photoCaptionLeft?: T;
   photoCaptionRight?: T;
+  rounded?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -990,6 +1011,7 @@ export interface ServicesSelect<T extends boolean = true> {
         anchor?: T;
         id?: T;
       };
+  rounded?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1006,6 +1028,7 @@ export interface AboutSelect<T extends boolean = true> {
   leadParagraph?: T;
   bodyParagraph?: T;
   footnote?: T;
+  rounded?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1019,6 +1042,7 @@ export interface TeamSelect<T extends boolean = true> {
   heading?: T;
   headingAccent?: T;
   note?: T;
+  rounded?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1034,6 +1058,7 @@ export interface BookingSelect<T extends boolean = true> {
   note?: T;
   intro?: T;
   disclaimer?: T;
+  rounded?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

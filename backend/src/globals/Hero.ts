@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload';
 
 import { anyone } from '../access/anyone';
 import { authenticated } from '../access/authenticated';
+import { roundedField } from '../fields/rounded';
 
 export const Hero: GlobalConfig = {
   slug: 'hero',
@@ -25,5 +26,6 @@ export const Hero: GlobalConfig = {
     { name: 'photo', type: 'upload', relationTo: 'media' },
     { name: 'photoCaptionLeft', type: 'text', localized: true },
     { name: 'photoCaptionRight', type: 'text', localized: true },
+    roundedField,
   ],
 };

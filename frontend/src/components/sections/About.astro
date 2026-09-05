@@ -1,6 +1,7 @@
 ---
 import { ABOUT_FB } from '../../lib/fallback';
 import type { About } from '../../lib/payload/client';
+import { roundedClass } from '../../lib/rounded';
 import Multiline from '../Multiline.astro';
 
 interface Props {
@@ -15,7 +16,7 @@ const bodyParagraph = s.bodyParagraph || ABOUT_FB.bodyParagraph;
 const footnote = s.footnote || ABOUT_FB.footnote;
 ---
 
-<section id="about" class="about">
+<section id="about" class:list={['about', roundedClass(s.rounded)]}>
   <div class="wrap section grid gap-12 md:grid-cols-2">
     <div>
       <p class="eyebrow mb-4">{eyebrow}</p>

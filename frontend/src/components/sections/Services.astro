@@ -1,6 +1,7 @@
 ---
 import { SERVICES_FB } from '../../lib/fallback';
 import type { Services } from '../../lib/payload/client';
+import { roundedClass } from '../../lib/rounded';
 import Multiline from '../Multiline.astro';
 
 interface Props {
@@ -17,7 +18,7 @@ const price = (amount?: number | null, currency?: string | null) =>
   [amount, currency].filter((v) => v !== null && v !== undefined && v !== '').join(' ');
 ---
 
-<section id="services" class="wrap section">
+<section id="services" class:list={['wrap section', roundedClass(src.rounded)]}>
   <div class="section-top">
     <div>
       <p class="eyebrow orange mb-4">{eyebrow}</p>

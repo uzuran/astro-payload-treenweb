@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload';
 
 import { anyone } from '../access/anyone';
 import { authenticated } from '../access/authenticated';
+import { roundedField } from '../fields/rounded';
 import { sectionHeaderFields } from '../fields/sectionHeader';
 
 export const Booking: GlobalConfig = {
@@ -17,5 +18,6 @@ export const Booking: GlobalConfig = {
       localized: true,
       admin: { description: 'Notice shown under the demo form.' },
     },
+    roundedField,
   ],
 };

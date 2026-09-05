@@ -3,6 +3,7 @@ import { BOOKING_FB, MASTERS_FB, SERVICES_FB } from '../../lib/fallback';
 import { t } from '../../lib/i18n/ui';
 import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import type { Booking, Master, Services } from '../../lib/payload/client';
+import { roundedClass } from '../../lib/rounded';
 import Multiline from '../Multiline.astro';
 
 interface Props {
@@ -29,7 +30,10 @@ const masters = Astro.props.masters?.length ? Astro.props.masters : MASTERS_FB;
 const masterNames = masters.map((master) => master.name);
 ---
 
-<section id="booking" class="wrap section booking border-t border-white/15">
+<section
+  id="booking"
+  class:list={['wrap section booking border-t border-white/15', roundedClass(b.rounded)]}
+>
   <div class="grid gap-12 md:grid-cols-2 md:gap-24">
     <div>
       <p class="eyebrow orange mb-4">{eyebrow}</p>

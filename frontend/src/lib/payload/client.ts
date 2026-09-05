@@ -167,6 +167,7 @@ export const heroSchema = z.object({
   photo: mediaSchema.nullish(),
   photoCaptionLeft: z.string().nullish(),
   photoCaptionRight: z.string().nullish(),
+  rounded: z.string().nullish(),
 });
 export type Hero = z.infer<typeof heroSchema>;
 
@@ -183,6 +184,7 @@ export const serviceItemSchema = z.object({
 export const servicesSchema = z.object({
   ...sectionHeader,
   items: z.array(serviceItemSchema).nullish(),
+  rounded: z.string().nullish(),
 });
 export type Services = z.infer<typeof servicesSchema>;
 export type ServiceItem = z.infer<typeof serviceItemSchema>;
@@ -192,16 +194,18 @@ export const aboutSchema = z.object({
   leadParagraph: z.string().nullish(),
   bodyParagraph: z.string().nullish(),
   footnote: z.string().nullish(),
+  rounded: z.string().nullish(),
 });
 export type About = z.infer<typeof aboutSchema>;
 
-export const teamSchema = z.object({ ...sectionHeader });
+export const teamSchema = z.object({ ...sectionHeader, rounded: z.string().nullish() });
 export type Team = z.infer<typeof teamSchema>;
 
 export const bookingSchema = z.object({
   ...sectionHeader,
   intro: z.string().nullish(),
   disclaimer: z.string().nullish(),
+  rounded: z.string().nullish(),
 });
 export type Booking = z.infer<typeof bookingSchema>;
 

@@ -1,6 +1,7 @@
 ---
 import { MASTERS_FB, TEAM_FB } from '../../lib/fallback';
 import type { Master, Team } from '../../lib/payload/client';
+import { roundedClass } from '../../lib/rounded';
 import Multiline from '../Multiline.astro';
 
 interface Props {
@@ -15,7 +16,7 @@ const note = s.note || TEAM_FB.note;
 const masters = Astro.props.masters?.length ? Astro.props.masters : MASTERS_FB;
 ---
 
-<section id="team" class="wrap section">
+<section id="team" class:list={['wrap section', roundedClass(s.rounded)]}>
   <div class="section-top">
     <div>
       <p class="eyebrow orange mb-4">{eyebrow}</p>

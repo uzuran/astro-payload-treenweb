@@ -369,6 +369,32 @@
     letter-spacing: 0.08em;
   }
 
+  /* Per-section corner rounding — admin control: <global>.rounded (none|sm|md|
+     lg|full). The section carries `rounded rounded--<value>`; the variant class
+     sets --rounded-radius, which the section's buttons, cards and form fields
+     read. border-radius never changes box size or spacing, so there is no
+     layout shift. `none` (the default) is a no-op. */
+  .rounded--none {
+    --rounded-radius: 0;
+  }
+  .rounded--sm {
+    --rounded-radius: 4px;
+  }
+  .rounded--md {
+    --rounded-radius: 8px;
+  }
+  .rounded--lg {
+    --rounded-radius: 16px;
+  }
+  .rounded--full {
+    --rounded-radius: 9999px;
+  }
+
+  .rounded :where(.button, .service, .master, .hero-photo),
+  .rounded :where(.booking input, .booking select) {
+    border-radius: var(--rounded-radius, 0);
+  }
+
   .ticker {
     margin-top: 15px;
     padding: 19px 0;

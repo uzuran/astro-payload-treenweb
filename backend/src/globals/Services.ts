@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload';
 
 import { anyone } from '../access/anyone';
 import { authenticated } from '../access/authenticated';
+import { roundedField } from '../fields/rounded';
 import { sectionHeaderFields } from '../fields/sectionHeader';
 
 export const Services: GlobalConfig = {
@@ -36,5 +37,6 @@ export const Services: GlobalConfig = {
         { name: 'anchor', type: 'text', admin: { description: 'Optional #id link target.' } },
       ],
     },
+    roundedField,
   ],
 };
