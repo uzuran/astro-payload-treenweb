@@ -42,6 +42,17 @@ async function apiFetch<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   }
 }
 
+/**
+ * `&locale=<code>` query suffix. Omits `fallback-locale` by default, so
+ * Payload's config `fallback: true` backfills untranslated fields from the
+ * default locale. Pass `strict` (QA / gap-finding only) to disable that —
+ * untranslated fields then come back `null`.
+ */
+function localeQS(locale?: string, strict = false): string {
+  if (!locale) return '';
+  return `&locale=${encodeURIComponent(locale)}${strict ? '&fallback-locale=null' : ''}`;
+}
+
 // Minimal shapes for what the frontend reads. Step 6 replaces these with
 // @treenweb/schemas backed by the generated Payload types.
 const seoSchema = z
@@ -72,15 +83,16 @@ export type Post = z.infer<typeof postSchema>;
 const listOf = <T extends z.ZodTypeAny>(doc: T) =>
   z.object({ docs: z.array(doc), totalDocs: z.number() });
 
-const query = (slug: string) => `where[slug][equals]=${encodeURIComponent(slug)}&depth=1&limit=1`;
+const query = (slug: string, locale?: string) =>
+  `where[slug][equals]=${encodeURIComponent(slug)}&depth=1&limit=1${localeQS(locale)}`;
 
-export async function getPageBySlug(slug: string): Promise<Page | null> {
-  const data = await apiFetch(`/api/pages?${query(slug)}`, listOf(pageSchema));
+export async function getPageBySlug(slug: string, locale?: string): Promise<Page | null> {
+  const data = await apiFetch(`/api/pages?${query(slug, locale)}`, listOf(pageSchema));
   return data.docs[0] ?? null;
 }
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const data = await apiFetch(`/api/posts?${query(slug)}`, listOf(postSchema));
+export async function getPostBySlug(slug: string, locale?: string): Promise<Post | null> {
+  const data = await apiFetch(`/api/posts?${query(slug, locale)}`, listOf(postSchema));
   return data.docs[0] ?? null;
 }
 
@@ -124,13 +136,7 @@ export function mediaUrl(file: Media | null | undefined, size?: MediaSize): stri
 // ─── Globals (FORMA landing sections) ──────────────────────────────────────
 //
 // Every field is optional: a half-filled global renders with per-section
-// fallbacks rather than throwing. The optional `locale` arg is threaded to
-// `?locale=` for future multilingual content — inert while Payload
-// localization is disabled.
-
-/** `?locale=` suffix — appended only when a caller opts in. */
-const localeQS = (locale?: string): string =>
-  locale ? `&locale=${encodeURIComponent(locale)}&fallback-locale=null` : '';
+// fallbacks rather than throwing.
 
 async function getGlobal<T>(
   slug: string,

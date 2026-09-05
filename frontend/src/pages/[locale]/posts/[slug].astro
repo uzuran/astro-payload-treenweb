@@ -2,16 +2,20 @@
 import RichText from '../../../components/RichText.astro';
 import { env } from '../../../env';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { localizedPath } from '../../../lib/locale';
 import { getPostBySlug } from '../../../lib/payload/client';
 import { buildMeta } from '../../../lib/seo/buildMeta';
 import { articleJsonLd, breadcrumbJsonLd } from '../../../lib/seo/jsonLd';
 
+const locale = Astro.locals.locale;
 const slug = (Astro.params.slug ?? '').replace(/^\/+|\/+$/g, '');
+const path = localizedPath(locale, `/posts/${slug}`);
+
 let post = null;
 try {
-  post = slug ? await getPostBySlug(slug) : null;
+  post = slug ? await getPostBySlug(slug, locale) : null;
 } catch (error) {
-  console.error(`[post] failed to load "${slug}":`, error);
+  console.error(`[post] failed to load "${slug}" (${locale}):`, error);
 }
 if (!post) {
   Astro.response.status = 404;
@@ -22,11 +26,12 @@ const meta = buildMeta(
     ? {
         title: post.seo?.title ?? post.title,
         description: post.seo?.description ?? post.excerpt,
-        path: `/posts/${slug}`,
+        path,
         noindex: post.seo?.noindex ?? false,
         type: 'article',
+        locale,
       }
-    : { title: 'Post not found', path: `/posts/${slug}`, noindex: true },
+    : { title: 'Post not found', path, noindex: true, locale },
   env.PUBLIC_SITE_URL,
 );
 
@@ -40,14 +45,14 @@ const jsonLd = post
         dateModified: post.updatedAt,
       }),
       breadcrumbJsonLd([
-        { name: 'Home', url: new URL('/', env.PUBLIC_SITE_URL).href },
+        { name: 'Home', url: new URL(localizedPath(locale, '/'), env.PUBLIC_SITE_URL).href },
         { name: post.title, url: meta.canonical },
       ]),
     ]
   : [];
 ---
 
-<BaseLayout meta={meta} jsonLd={jsonLd}>
+<BaseLayout meta={meta} lang={locale} jsonLd={jsonLd}>
   {
     post ? (
       <main>
@@ -60,7 +65,7 @@ const jsonLd = post
     ) : (
       <main>
         <h1>Post not found</h1>
-        <a href="/">Go to the home page</a>
+        <a href={localizedPath(locale, '/')}>Go to the home page</a>
       </main>
     )
   }

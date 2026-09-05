@@ -134,11 +134,14 @@ describe('globals + masters getters', () => {
     expect(requested).not.toContain('locale=');
   });
 
-  it('threads an explicit locale through to the query string', async () => {
+  it('threads an explicit locale through without forcing fallback-locale', async () => {
     const fetchMock = vi.fn(async (_url: string | URL) => jsonResponse({}));
     vi.stubGlobal('fetch', fetchMock);
     await getSiteSettings('cs');
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('locale=cs&fallback-locale=null');
+    const requested = String(fetchMock.mock.calls[0]?.[0]);
+    expect(requested).toContain('locale=cs');
+    // no fallback-locale => Payload config `fallback: true` fills untranslated fields
+    expect(requested).not.toContain('fallback-locale');
   });
 
   it('returns the masters docs array sorted by the API', async () => {

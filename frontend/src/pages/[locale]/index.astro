@@ -9,7 +9,7 @@ import Team from '../../components/sections/Team.astro';
 import Ticker from '../../components/sections/Ticker.astro';
 import { env } from '../../env';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { DEFAULT_LOCALE } from '../../lib/locale';
+import { isLocale, localizedPath, type Locale } from '../../lib/locale';
 import {
   getAbout,
   getBooking,
@@ -32,38 +32,49 @@ const settle = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
     return null;
   });
 
+const locale = Astro.locals.locale;
+
 const [page, hero, services, about, team, booking, navigation, siteSettings, masters] =
   await Promise.all([
-    settle(getPageBySlug('home'), 'home page'),
-    settle(getHero(), 'hero'),
-    settle(getServices(), 'services'),
-    settle(getAbout(), 'about'),
-    settle(getTeam(), 'team'),
-    settle(getBooking(), 'booking'),
-    settle(getNavigation(), 'navigation'),
-    settle(getSiteSettings(), 'site settings'),
-    settle(listMasters(), 'masters'),
+    settle(getPageBySlug('home', locale), 'home page'),
+    settle(getHero(locale), 'hero'),
+    settle(getServices(locale), 'services'),
+    settle(getAbout(locale), 'about'),
+    settle(getTeam(locale), 'team'),
+    settle(getBooking(locale), 'booking'),
+    settle(getNavigation(locale), 'navigation'),
+    settle(getSiteSettings(locale), 'site settings'),
+    settle(listMasters(locale), 'masters'),
   ]);
 
-const lang = siteSettings?.defaultLocale || DEFAULT_LOCALE;
 const siteName = siteSettings?.siteName || 'FORMA';
 
-// hreflang alternates — empty until the site actually serves more than one locale.
-const enabledLocales = (siteSettings?.supportedLocales ?? []).filter((l) => l.enabled !== false);
+// hreflang: one link per enabled locale + x-default, only when >1 is offered.
+const enabledLocales: Locale[] = (siteSettings?.supportedLocales ?? [])
+  .filter((l) => l.enabled !== false)
+  .map((l) => l.code)
+  .filter(isLocale);
+const abs = (path: string) => new URL(path, env.PUBLIC_SITE_URL).href;
 const alternates: Alternate[] =
   enabledLocales.length > 1
-    ? enabledLocales.map((l) => ({ hreflang: l.code, href: new URL('/', env.PUBLIC_SITE_URL).href }))
+    ? [
+        ...enabledLocales.map((code) => ({
+          hreflang: code,
+          href: abs(localizedPath(code, '/')),
+        })),
+        { hreflang: 'x-default', href: abs(localizedPath('ru', '/')) },
+      ]
     : [];
 
 const meta = buildMeta(
   {
     title: page?.seo?.title || page?.title || `${siteName} — барбершоп`,
     description: page?.seo?.description || siteSettings?.description,
-    path: '/',
+    path: localizedPath(locale, '/'),
     noindex: page?.seo?.noindex ?? false,
     image: mediaUrl(siteSettings?.ogImage) ?? undefined,
     siteName,
-    locale: lang,
+    locale,
     alternates,
   },
   env.PUBLIC_SITE_URL,
@@ -72,7 +83,7 @@ const meta = buildMeta(
 
 <BaseLayout
   meta={meta}
-  lang={lang}
+  lang={locale}
   jsonLd={[
     organizationJsonLd(env.PUBLIC_SITE_URL),
     webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),

@@ -1,15 +1,20 @@
 ---
 import { env } from '../../env';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { localizedPath } from '../../lib/locale';
 import { buildMeta } from '../../lib/seo/buildMeta';
 
-const meta = buildMeta({ title: 'Page not found', path: '/404', noindex: true }, env.PUBLIC_SITE_URL);
+const locale = Astro.locals.locale;
+const meta = buildMeta(
+  { title: 'Page not found', path: localizedPath(locale, '/404'), noindex: true, locale },
+  env.PUBLIC_SITE_URL,
+);
 ---
 
-<BaseLayout meta={meta}>
+<BaseLayout meta={meta} lang={locale}>
   <main>
     <h1>404 — Page not found</h1>
     <p>The page you're looking for doesn't exist.</p>
-    <a href="/">Go to the home page</a>
+    <a href={localizedPath(locale, '/')}>Go to the home page</a>
   </main>
 </BaseLayout>
