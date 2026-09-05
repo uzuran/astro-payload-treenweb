@@ -36,9 +36,11 @@ if (existingAdmin.totalDocs === 0) {
 
 // ─── Hero image (Media) — upload once, reuse on re-run ──────────────────────
 let heroImageId: number | undefined;
+// Look up by alt, not filename: Payload suffixes the filename (hero-1.jpg) if
+// a stale file is left in uploads/, which would break filename-based matching.
 const existingHeroImage = await payload.find({
   collection: 'media',
-  where: { filename: { equals: 'hero.jpg' } },
+  where: { alt: { equals: HERO_ALT } },
   limit: 1,
 });
 if (existingHeroImage.docs[0]) {

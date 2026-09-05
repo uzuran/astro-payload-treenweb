@@ -10,8 +10,8 @@ export const SiteSettings: GlobalConfig = {
   access: { read: anyone, update: authenticated },
   fields: [
     { name: 'siteName', type: 'text', required: true, defaultValue: 'treenweb' },
-    { name: 'tagline', type: 'text' },
-    { name: 'description', type: 'textarea' },
+    { name: 'tagline', type: 'text', localized: true },
+    { name: 'description', type: 'textarea', localized: true },
     { name: 'ogImage', type: 'upload', relationTo: 'media' },
     {
       name: 'social',
@@ -25,21 +25,26 @@ export const SiteSettings: GlobalConfig = {
       name: 'ticker',
       type: 'array',
       labels: { singular: 'Ticker word', plural: 'Ticker words' },
-      fields: [{ name: 'word', type: 'text', required: true }],
+      fields: [{ name: 'word', type: 'text', required: true, localized: true }],
     },
     {
       name: 'contact',
       type: 'group',
       fields: [
-        { name: 'address', type: 'textarea' },
+        { name: 'address', type: 'textarea', localized: true },
         { name: 'phone', type: 'text' },
-        { name: 'hoursWeekday', type: 'text' },
-        { name: 'hoursSaturday', type: 'text' },
-        { name: 'hoursSunday', type: 'text' },
+        { name: 'hoursWeekday', type: 'text', localized: true },
+        { name: 'hoursSaturday', type: 'text', localized: true },
+        { name: 'hoursSunday', type: 'text', localized: true },
         { name: 'mapUrl', type: 'text' },
       ],
     },
-    { name: 'footerNote', type: 'text', admin: { description: 'Small print in the footer bar.' } },
+    {
+      name: 'footerNote',
+      type: 'text',
+      localized: true,
+      admin: { description: 'Small print in the footer bar.' },
+    },
     // ─── Locale — codes come from src/locales.ts (single source of truth) ───
     {
       name: 'defaultLocale',

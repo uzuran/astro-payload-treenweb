@@ -18,12 +18,13 @@ export const Masters: CollectionConfig = {
   },
   defaultSort: 'order',
   fields: [
-    { name: 'name', type: 'text', required: true },
+    { name: 'name', type: 'text', required: true, localized: true },
     { name: 'initials', type: 'text', required: true, admin: { description: 'e.g. "АЛ".' } },
-    { name: 'specialty', type: 'text' },
+    { name: 'specialty', type: 'text', localized: true },
     {
       name: 'bookingLabel',
       type: 'text',
+      localized: true,
       admin: { description: 'Link text, e.g. "Записаться к Алексу ↗".' },
     },
     { name: 'photo', type: 'upload', relationTo: 'media' },

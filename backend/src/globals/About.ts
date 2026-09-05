@@ -10,8 +10,8 @@ export const About: GlobalConfig = {
   access: { read: anyone, update: authenticated },
   fields: [
     ...sectionHeaderFields,
-    { name: 'leadParagraph', type: 'textarea' },
-    { name: 'bodyParagraph', type: 'textarea' },
-    { name: 'footnote', type: 'text' },
+    { name: 'leadParagraph', type: 'textarea', localized: true },
+    { name: 'bodyParagraph', type: 'textarea', localized: true },
+    { name: 'footnote', type: 'text', localized: true },
   ],
 };

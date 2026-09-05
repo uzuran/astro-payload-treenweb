@@ -23,9 +23,10 @@ export const Pages: CollectionConfig = {
     maxPerDoc: 25,
   },
   fields: [
-    { name: 'title', type: 'text', required: true },
+    { name: 'title', type: 'text', required: true, localized: true },
+    // slug stays shared across locales (Option A): /en/about, /about — same segment.
     slugField('title'),
-    { name: 'content', type: 'richText' },
+    { name: 'content', type: 'richText', localized: true },
     seoField,
     { name: 'publishedAt', type: 'date', admin: { position: 'sidebar' } },
   ],

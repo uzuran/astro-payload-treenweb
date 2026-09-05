@@ -94,7 +94,7 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('cs' | 'en' | 'ru') | ('cs' | 'en' | 'ru')[];
   globals: {
     'site-settings': SiteSetting;
     navigation: Navigation;
@@ -113,7 +113,7 @@ export interface Config {
     team: TeamSelect<false> | TeamSelect<true>;
     booking: BookingSelect<false> | BookingSelect<true>;
   };
-  locale: null;
+  locale: 'cs' | 'en' | 'ru';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -177,7 +177,7 @@ export interface Page {
      */
     description?: string | null;
     /**
-     * OG / social share image.
+     * OG / social share image. Shared across locales.
      */
     image?: (number | null) | Media;
     noindex?: boolean | null;
@@ -194,7 +194,7 @@ export interface Page {
 export interface Media {
   id: number;
   /**
-   * Describe the image for screen readers and SEO.
+   * Describe the image for screen readers and SEO. Required in the default locale; fill each locale for a11y.
    */
   alt: string;
   caption?: string | null;
@@ -280,7 +280,7 @@ export interface Post {
      */
     description?: string | null;
     /**
-     * OG / social share image.
+     * OG / social share image. Shared across locales.
      */
     image?: (number | null) | Media;
     noindex?: boolean | null;

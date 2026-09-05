@@ -10,10 +10,11 @@ export const Booking: GlobalConfig = {
   access: { read: anyone, update: authenticated },
   fields: [
     ...sectionHeaderFields,
-    { name: 'intro', type: 'textarea' },
+    { name: 'intro', type: 'textarea', localized: true },
     {
       name: 'disclaimer',
       type: 'textarea',
+      localized: true,
       admin: { description: 'Notice shown under the demo form.' },
     },
   ],

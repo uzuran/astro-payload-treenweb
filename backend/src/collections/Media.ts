@@ -40,8 +40,12 @@ export const Media: CollectionConfig = {
       name: 'alt',
       type: 'text',
       required: true,
-      admin: { description: 'Describe the image for screen readers and SEO.' },
+      localized: true,
+      admin: {
+        description:
+          'Describe the image for screen readers and SEO. Required in the default locale; fill each locale for a11y.',
+      },
     },
-    { name: 'caption', type: 'text' },
+    { name: 'caption', type: 'text', localized: true },
   ],
 };

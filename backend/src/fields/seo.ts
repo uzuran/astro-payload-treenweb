@@ -9,18 +9,20 @@ export const seoField: Field = {
     {
       name: 'title',
       type: 'text',
+      localized: true,
       admin: { description: 'Overrides <title> / OG title. Falls back to the document title.' },
     },
     {
       name: 'description',
       type: 'textarea',
+      localized: true,
       admin: { description: 'Meta description / OG description (~155 chars).' },
     },
     {
       name: 'image',
       type: 'upload',
       relationTo: 'media',
-      admin: { description: 'OG / social share image.' },
+      admin: { description: 'OG / social share image. Shared across locales.' },
     },
     {
       name: 'noindex',

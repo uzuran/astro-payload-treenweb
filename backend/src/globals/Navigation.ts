@@ -5,7 +5,8 @@ const menu = (name: string, label: string): ArrayField => ({
   label,
   type: 'array',
   fields: [
-    { name: 'label', type: 'text', required: true },
+    // Same link structure in every locale; only the visible text is translated.
+    { name: 'label', type: 'text', required: true, localized: true },
     { name: 'href', type: 'text', required: true },
   ],
 });
