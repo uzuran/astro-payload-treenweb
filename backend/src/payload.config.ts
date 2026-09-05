@@ -19,8 +19,8 @@ import { lexicalFeatures } from './lexical/allowlist';
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default buildConfig({
-  // In dev leave this unset so the admin talks to its own origin (works through
-  // Codespaces / any tunnel). Prod pins the public URL.
+  // In dev leave this unset so the admin talks to its own origin (works behind
+  // any local port or tunnel). Prod pins the public URL.
   serverURL: env.NODE_ENV === 'production' ? env.PAYLOAD_PUBLIC_SERVER_URL : undefined,
   admin: {
     user: Users.slug,
@@ -35,8 +35,8 @@ export default buildConfig({
     migrationDir: path.resolve(dirname, 'migrations'),
   }),
   secret: env.PAYLOAD_SECRET,
-  // Dev is permissive so the admin works through tunnelled origins
-  // (Codespaces `*.app.github.dev`, etc). Prod uses the explicit allowlists.
+  // Dev is permissive so the admin works through any local or tunnelled
+  // origin. Prod uses the explicit allowlists.
   cors: env.NODE_ENV === 'production' ? env.CORS_ORIGINS : '*',
   csrf: env.NODE_ENV === 'production' ? env.CSRF_ORIGINS : [],
   graphQL: { disablePlaygroundInProduction: true },

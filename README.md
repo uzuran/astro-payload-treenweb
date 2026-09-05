@@ -32,23 +32,47 @@ tests/
   e2e/             Playwright + axe (cross-service)
   lighthouse/      Lighthouse CI budgets
 docs/              ANALYSIS.md, ADRs, runbook
-.devcontainer/     Dev Container / Codespaces config
 Makefile           task runner (wraps the pnpm scripts)
 ```
 
-## Dev container / Codespaces
-
-Open the repo in **GitHub Codespaces** or **VS Code Dev Containers** and the
-environment (Node 22, pnpm, Docker-in-Docker, `gh`, extensions) is built for
-you; `.devcontainer/post-create.sh` bootstraps `.env` and runs `pnpm install`.
-Then start the stack with `make up` (from Step 3). See
-[.devcontainer/README.md](.devcontainer/README.md) for details and how to
-validate changes to that folder.
-
 ## Running the stack
 
-`make up` runs everything in containers: Postgres + Payload/Next (`backend`) +
-Astro SSR (`frontend`).
+Everything runs in local Docker containers via Docker Compose. Two modes —
+pick one.
+
+### Container mode (default)
+
+`make up` runs the whole stack in containers: Postgres + Payload/Next
+(`backend`) + Astro SSR (`frontend`). The workspace is bind-mounted, so both
+apps hot-reload.
+
+```bash
+make setup   # one time: create .env + pnpm install
+make up      # build + start Postgres, backend (:3000), frontend (:4321)
+make seed    # dev admin + sample pages
+make logs    # follow all three services   ·   make down   to stop
+```
+
+`.env` uses the compose service names here — `DATABASE_URL=…@db:5432`,
+`PAYLOAD_INTERNAL_URL=http://backend:3000` (the defaults in `.env.example`).
+
+### Host mode (only Postgres in Docker)
+
+Apps run on the host, only Postgres runs in a container. Lighter — useful on
+a low-memory machine or for attaching a debugger to an app directly.
+
+```bash
+make dev-setup   # one time: .env (rewritten for @localhost) + deps + Postgres + seed
+make dev-db      # each session, if the Postgres container is not already up
+make dev         # backend on :3000, frontend on :4321 (Ctrl-C to stop both)
+```
+
+Re-seed any time with `make dev-seed`. Stop the database with `make dev-db-down`
+(the volume, and your data, survive). Host mode needs `DATABASE_URL` at
+`@localhost:5432` and `PAYLOAD_INTERNAL_URL` at `http://localhost:3000` —
+`make dev-setup` rewrites the compose service names when it creates `.env`.
+
+### Endpoints (either mode)
 
 | URL                                                              | What                                      |
 | ---------------------------------------------------------------- | ----------------------------------------- |
@@ -57,9 +81,10 @@ Astro SSR (`frontend`).
 | <http://localhost:3000/admin>                                    | Payload admin                             |
 | `http://localhost:3000/api/*` · `/api/graphql`                   | CMS REST + GraphQL                        |
 
-`make seed` creates a dev admin — `admin@treenweb.local` /
-`admin-dev-password` — plus a published `/home` page and a `/draft-page`
-(the draft is hidden from the public site and the sitemap).
+The seed creates a dev admin — `admin@treenweb.local` / `admin-dev-password`
+— plus a published `/home` page and a `/draft-page` (the draft is hidden from
+the public site and the sitemap). Until the seed runs, `/` returns HTTP 503
+with a "home page has not been published yet" placeholder — that is expected.
 
 The browser only ever talks to the frontend; Astro fetches the CMS
 server-side over the internal Docker network (`PAYLOAD_INTERNAL_URL`).
@@ -69,9 +94,9 @@ and [frontend/README.md](frontend/README.md).
 
 ## Prerequisites
 
-- Node **22** (`.nvmrc`) — enforced via `engine-strict`
-- pnpm **10** (via Corepack: `corepack enable`)
-- Docker + Docker Compose (for the dev stack, added in Step 3)
+- Docker + Docker Compose — the dev stack runs here
+- Node **22** (`.nvmrc`) + pnpm **10** (via Corepack: `corepack enable`) —
+  only needed for host mode and for running lint/tests/build on the host
 - GNU Make (optional — every target just wraps a `pnpm` script)
 
 ## Quick start
@@ -96,9 +121,10 @@ the matching `pnpm` script, so `make lint` and `pnpm lint` are equivalent.
 | `make check`                                                                                         | `pnpm check`                                                |
 | `make test` / `test-unit` / `test-integration` / `test-e2e` / `test-a11y` / `test-lhci` / `test-all` | `pnpm test:*`                                               |
 | `make build`                                                                                         | `pnpm build`                                                |
-| `make dev`                                                                                           | `pnpm dev`                                                  |
-| `make up` / `down` / `logs` / `ps` / `reset`                                                         | dev Docker stack                                            |
-| `make seed`                                                                                          | seed the dev DB (admin user + pages)                        |
+| `make up` / `down` / `logs` / `ps` / `reset`                                                         | container-mode dev stack (Compose)                          |
+| `make seed`                                                                                          | seed the dev DB in container mode (admin user + pages)      |
+| `make dev`                                                                                           | `pnpm dev` — run both app dev servers on the host           |
+| `make dev-setup` / `dev-db` / `dev-db-down` / `dev-seed`                                              | host-mode: setup, start/stop Postgres, seed from the host   |
 | `make types`                                                                                         | regenerate `backend/payload-types.ts`                       |
 | `make psql`                                                                                          | psql shell on the dev DB                                    |
 | `make env`                                                                                           | copy root `.env` → `backend/`, `frontend/` (host runs only) |

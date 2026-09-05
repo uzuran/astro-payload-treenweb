@@ -94,6 +94,36 @@ build: ## Build every app
 dev: ## Run every app's dev server in parallel (no containers)
 	pnpm dev
 
+# ─── Host-mode local dev (apps on the host, only Postgres in Docker) ─────────
+# Lighter alternative to `make up`. One-time:
+#   make dev-setup
+# Each session:
+#   make dev-db   # if the db container is not already up
+#   make dev      # backend :3000  +  frontend :4321
+
+.PHONY: dev-setup
+dev-setup: ## Host dev one-time setup: .env + deps + Postgres + seed
+	@test -f .env || { cp .env.example .env && \
+		sed -i 's#@db:5432#@localhost:5432#; s#http://backend:3000#http://localhost:3000#' .env && \
+		echo "created .env from .env.example (rewritten for host mode: @localhost)"; }
+	@corepack enable 2>/dev/null || true
+	pnpm install
+	$(MAKE) dev-db
+	$(MAKE) env
+	$(MAKE) dev-seed
+
+.PHONY: dev-db
+dev-db: ## Host dev: start ONLY the Postgres container (127.0.0.1:5432)
+	$(COMPOSE) up -d --wait db
+
+.PHONY: dev-db-down
+dev-db-down: ## Host dev: stop the Postgres container (keeps the volume)
+	$(COMPOSE) stop db
+
+.PHONY: dev-seed
+dev-seed: ## Host dev: seed the DB from the host (admin user + sample pages)
+	cd backend && pnpm exec tsx --env-file=.env src/seed/index.ts
+
 .PHONY: up
 up: ## Start the dev Docker stack (waits for healthy)
 	$(COMPOSE) up -d --wait

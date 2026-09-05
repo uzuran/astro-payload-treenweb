@@ -2,7 +2,7 @@ import config from '@payload-config';
 import { getPayload } from 'payload';
 
 const ADMIN_EMAIL = 'admin@treenweb.local';
-const ADMIN_PASSWORD = 'admin-dev-password';
+const ADMIN_PASSWORD = 'nuzky999';
 
 const payload = await getPayload({ config });
 

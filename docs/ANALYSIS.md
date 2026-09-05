@@ -5,7 +5,7 @@ Secure, SEO-first web platform.
 **Stack:** Astro 5 SSR · Payload CMS 3 (Next.js 15) · PostgreSQL 16 · pnpm
 workspace · Docker Compose · Traefik v3 · Sentry · Plausible · Zod ·
 Lexical safe serializer · Playwright + Lighthouse · GitHub Actions ·
-Codespaces devcontainer (Node 22).
+Node 22 toolchain.
 
 ---
 
@@ -168,7 +168,7 @@ retries=2 in CI only, explicit locators.
 - **Dev (`docker-compose.dev.yml`):** `db` (127.0.0.1:5432), `backend`
   (`next dev`, bind mount, `push:true`), `frontend` (`astro dev`), optional
   `traefik`, optional `plausible`, optional `mailpit`. `node_modules` in
-  named volumes. Hot reload both apps. Codespaces launches the same compose.
+  named volumes. Hot reload both apps.
 - **Prod (`docker-compose.prod.yml`):** `traefik` (80/443, ACME volume,
   read-only socket via socket-proxy), `backend` + `frontend` from GHCR
   `<sha>` images (standalone, non-root), `db` (no host port, secrets,
@@ -209,7 +209,6 @@ scoping). Plausible via its own route or first-party proxy.
 
 ```
 astro-payload-treenweb/
-├── .devcontainer/           devcontainer.json, post-create.sh          (Step 2)
 ├── .github/workflows/       ci.yml, release.yml, codeql.yml            (Step 10)
 ├── frontend/                Astro 5 SSR site                           (Step 5)
 │   ├── src/{pages,layouts,components,lib,middleware.ts,env.ts,styles}
@@ -264,14 +263,14 @@ directories with placeholder `package.json` + README; `.env.example`;
 
 **Risks** — pnpm hoisting surprises (mitigate via `.npmrc`); Node drift
 (local 24 vs target 22 — `engines.node >=22` so both pass, `.nvmrc` pins
-devcontainer); TS alias inconsistency (single base config); premature Turbo
+the version); TS alias inconsistency (single base config); premature Turbo
 noise (deferred to ADR 0002).
 
 **Testing procedure**
 
 - Clean `pnpm install` succeeds and writes `pnpm-lock.yaml`.
-- `pnpm -r exec node -p "process.version"` prints v22 in the devcontainer
-  (v24 acceptable on the host).
+- `pnpm -r exec node -p "process.version"` prints v22 (v24 acceptable on the
+  host as long as `engines.node >=22` passes).
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck` exit 0.
 - `pnpm test:unit`, `test:integration`, `test:e2e`, `test:a11y`,
   `test:lhci`, `test:all`, `build` all exit 0 (placeholder echoes).
@@ -286,35 +285,29 @@ confirm `--if-present` and package `name`/`scripts`.
 wired and green; every test/build command runs green via placeholders;
 repo tree matches Part 2.
 
-### Step 2 — Devcontainer + Codespaces stability
+### Step 2 — Local dev toolchain
 
-**Goals** — `.devcontainer/devcontainer.json` (base
-`typescript-node:22`, features `docker-in-docker` + `git`,
-`postCreateCommand` -> `post-create.sh`: `corepack enable` +
-`corepack prepare pnpm@10 --activate` + `pnpm install` +
-`playwright install --with-deps chromium`); `remoteUser: node`;
-`forwardPorts` 4321/3000/5432/8080 with labels; VS Code extensions (Astro,
-ESLint, Prettier, Playwright, Docker); persist pnpm store + `node_modules`
-volumes.
+**Goals** — Node 22 (`.nvmrc` / `.node-version`), pnpm 10 via Corepack
+(`packageManager` pinned, `COREPACK_ENABLE_DOWNLOAD_PROMPT=0`), Docker +
+Docker Compose on the host; `Makefile` wrapping every `pnpm` script;
+`make setup` bootstraps `.env` from `.env.example` and runs `pnpm install`;
+`.env.example` documents container-mode vs host-mode host names.
 
-**Risks** — DinD race (don't run compose in `postCreate`; provide
-`pnpm dev:up`); Codespaces 2-core/8GB limits (keep stack lean, optional
-services opt-in); Playwright browser download flakiness (cache in prebuild,
-`--with-deps` needs root -> run in `postCreate`); Corepack signature errors
-(pin exact pnpm, `COREPACK_ENABLE_DOWNLOAD_PROMPT=0`); bind-mount perf (use
-named volumes).
+**Risks** — Corepack signature errors (pin exact pnpm); host/container
+native-module mismatch for bind-mounted `node_modules` (keep both on
+linux/amd64, or use named volumes); apps not binding `0.0.0.0` inside
+containers; port clashes on 4321/3000/5432.
 
-**Testing** — full container rebuild completes < ~5 min clean; `docker ps`
-works without sudo; `node -v` = 22.x, `pnpm -v` pinned,
-`playwright --version` resolves; fresh Codespace on the branch reproduces.
+**Testing** — `corepack enable` then `pnpm -v` prints the pinned version;
+`pnpm install` is reproducible; `docker compose version` works;
+`make help` lists every target.
 
-**Debug** — read Codespaces creation log / devcontainer build logs; run
-`post-create.sh` steps manually; `sudo service docker status`; Ports panel;
-ensure apps bind `0.0.0.0`.
+**Debug** — `pnpm install --reporter=append-only`; `docker info` for the
+daemon; `ss -tlnp` for port owners; confirm `HOST=0.0.0.0` in the app dev
+scripts.
 
-**Expected output** — one "Rebuild Container" yields Node 22 + pnpm + Docker
-
-- Playwright; documented `pnpm dev:up`/`dev:down`.
+**Expected output** — a fresh clone reaches a running stack with
+`make setup && make up` (or `make dev-setup && make dev` for host mode).
 
 ### Step 3 — Docker Compose (dev)
 
