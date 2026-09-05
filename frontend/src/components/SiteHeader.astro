@@ -1,13 +1,17 @@
 ---
 import { NAV_FB } from '../lib/fallback';
-import type { NavItem } from '../lib/payload/client';
+import type { Locale } from '../lib/locale';
+import type { NavItem, SiteSettings } from '../lib/payload/client';
+import LocaleSwitcher from './LocaleSwitcher.astro';
 
 interface Props {
   siteName?: string | null;
   items?: NavItem[] | null;
+  locale: Locale;
+  supportedLocales?: SiteSettings['supportedLocales'];
 }
 
-const { siteName } = Astro.props;
+const { siteName, locale, supportedLocales } = Astro.props;
 const name = siteName || 'FORMA';
 const links = Astro.props.items?.length ? Astro.props.items : NAV_FB;
 ---
@@ -19,6 +23,12 @@ const links = Astro.props.items?.length ? Astro.props.items : NAV_FB;
     <nav class="hidden gap-8 text-sm md:flex" aria-label="Главная навигация">
       {links.map((link) => <a href={link.href}>{link.label}</a>)}
     </nav>
+
+    <LocaleSwitcher
+      locale={locale}
+      supportedLocales={supportedLocales}
+      class="ml-auto hidden md:flex"
+    />
 
     <a href="#booking" class="small-cta">Записаться <span>↗</span></a>
 
@@ -35,6 +45,7 @@ const links = Astro.props.items?.length ? Astro.props.items : NAV_FB;
 
   <nav id="mobile-menu" class="wrap flex-col gap-4 pb-6" hidden aria-label="Мобильная навигация">
     {links.map((link) => <a href={link.href}>{link.label}</a>)}
+    <LocaleSwitcher locale={locale} supportedLocales={supportedLocales} class="pt-2" />
   </nav>
 </header>
 
