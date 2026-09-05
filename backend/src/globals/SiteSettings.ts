@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload';
 
 import { anyone } from '../access/anyone';
 import { authenticated } from '../access/authenticated';
+import { DEFAULT_LOCALE, localeSelectOptions } from '../locales';
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -39,20 +40,16 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     { name: 'footerNote', type: 'text', admin: { description: 'Small print in the footer bar.' } },
-    // ─── Locale (design-only for now; Payload localization is NOT enabled) ───
+    // ─── Locale — codes come from src/locales.ts (single source of truth) ───
     {
       name: 'defaultLocale',
       type: 'select',
       required: true,
-      defaultValue: 'ru',
-      options: [
-        { label: 'Русский', value: 'ru' },
-        { label: 'English', value: 'en' },
-        { label: 'Čeština', value: 'cs' },
-      ],
+      defaultValue: DEFAULT_LOCALE,
+      options: localeSelectOptions,
       admin: {
         position: 'sidebar',
-        description: 'Drives <html lang>. Multilingual content is not enabled yet.',
+        description: 'Locale assumed when a request carries no /xx prefix. Drives <html lang>.',
       },
     },
     {
@@ -60,7 +57,7 @@ export const SiteSettings: GlobalConfig = {
       type: 'array',
       admin: {
         description:
-          'Future locale set (switcher, hreflang). Codes must match Payload localization when it is enabled.',
+          'Locales offered in the switcher / hreflang. Codes must match localization.locales in payload.config.ts.',
       },
       fields: [
         { name: 'code', type: 'text', required: true },

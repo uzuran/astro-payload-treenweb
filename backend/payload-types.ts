@@ -678,11 +678,11 @@ export interface SiteSetting {
    */
   footerNote?: string | null;
   /**
-   * Drives <html lang>. Multilingual content is not enabled yet.
+   * Locale assumed when a request carries no /xx prefix. Drives <html lang>.
    */
-  defaultLocale: 'ru' | 'en' | 'cs';
+  defaultLocale: 'cs' | 'en' | 'ru';
   /**
-   * Future locale set (switcher, hreflang). Codes must match Payload localization when it is enabled.
+   * Locales offered in the switcher / hreflang. Codes must match localization.locales in payload.config.ts.
    */
   supportedLocales?:
     | {

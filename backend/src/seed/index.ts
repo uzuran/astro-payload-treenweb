@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import config from '@payload-config';
 import { getPayload } from 'payload';
 
+import { DEFAULT_LOCALE, supportedLocalesSeed } from '../locales';
+
 const ADMIN_EMAIL = 'admin@treenweb.local';
 const ADMIN_PASSWORD = 'nuzky999';
 
@@ -70,8 +72,8 @@ await payload.updateGlobal({
       mapUrl: '',
     },
     footerNote: '© 2026 FORMA. Демонстрационный шаблон.',
-    defaultLocale: 'ru',
-    supportedLocales: [{ code: 'ru', label: 'Русский', enabled: true }],
+    defaultLocale: DEFAULT_LOCALE,
+    supportedLocales: supportedLocalesSeed,
   },
 });
 
