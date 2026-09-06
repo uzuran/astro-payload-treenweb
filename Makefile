@@ -132,6 +132,18 @@ up: ## Start the dev Docker stack (waits for healthy)
 down: ## Stop the dev Docker stack
 	$(COMPOSE) down
 
+.PHONY: restart
+restart: ## Restart the app containers (backend + frontend; reloads Payload config). Use `make down up` for a full recreate.
+	$(COMPOSE) restart backend frontend
+
+.PHONY: restart-backend
+restart-backend: ## Restart only the backend container (reloads Payload config, regenerates payload-types.ts)
+	$(COMPOSE) restart backend
+
+.PHONY: restart-frontend
+restart-frontend: ## Restart only the frontend container
+	$(COMPOSE) restart frontend
+
 .PHONY: logs
 logs: ## Follow dev Docker stack logs
 	$(COMPOSE) logs -f
