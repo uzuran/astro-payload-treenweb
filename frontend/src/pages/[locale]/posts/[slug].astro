@@ -1,0 +1,73 @@
+---
+import RichText from '../../../components/RichText.astro';
+import { env } from '../../../env';
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import { t } from '../../../lib/i18n/ui';
+import { localizedPath } from '../../../lib/locale';
+import { getPostBySlug } from '../../../lib/payload/client';
+import { buildMeta } from '../../../lib/seo/buildMeta';
+import { articleJsonLd, breadcrumbJsonLd } from '../../../lib/seo/jsonLd';
+
+const locale = Astro.locals.locale;
+const tr = t(locale);
+const slug = (Astro.params.slug ?? '').replace(/^\/+|\/+$/g, '');
+const path = localizedPath(locale, `/posts/${slug}`);
+const home = localizedPath(locale, '/');
+
+let post = null;
+try {
+  post = slug ? await getPostBySlug(slug, locale) : null;
+} catch (error) {
+  console.error(`[post] failed to load "${slug}" (${locale}):`, error);
+}
+if (!post) {
+  Astro.response.status = 404;
+}
+
+const meta = buildMeta(
+  post
+    ? {
+        title: post.seo?.title ?? post.title,
+        description: post.seo?.description ?? post.excerpt,
+        path,
+        noindex: post.seo?.noindex ?? false,
+        type: 'article',
+        locale,
+      }
+    : { title: tr('errors.postNotFoundTitle'), path, noindex: true, locale },
+  env.PUBLIC_SITE_URL,
+);
+
+const jsonLd = post
+  ? [
+      articleJsonLd({
+        title: meta.title,
+        description: meta.description,
+        url: meta.canonical,
+        datePublished: post.publishedAt,
+        dateModified: post.updatedAt,
+      }),
+      breadcrumbJsonLd([
+        { name: 'Home', url: new URL(home, env.PUBLIC_SITE_URL).href },
+        { name: post.title, url: meta.canonical },
+      ]),
+    ]
+  : [];
+---
+
+<SiteLayout meta={meta} locale={locale} jsonLd={jsonLd}>
+  {
+    post ? (
+      <article class="wrap section">
+        <h1>{post.title}</h1>
+        {post.excerpt && <p class="muted mt-4">{post.excerpt}</p>}
+        <RichText content={post.content} />
+      </article>
+    ) : (
+      <div class="wrap section">
+        <h1>{tr('errors.postNotFoundHeading')}</h1>
+        <a class="button mt-8" href={home}>{tr('errors.backHome')}</a>
+      </div>
+    )
+  }
+</SiteLayout>

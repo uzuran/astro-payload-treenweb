@@ -1,0 +1,76 @@
+---
+import { HERO_FB, HERO_PHOTO_ALT_FB, HERO_PHOTO_SRC_FB } from '../../lib/fallback';
+import { mediaUrl, type Hero } from '../../lib/payload/client';
+import { roundedClass } from '../../lib/rounded';
+import { withFallback } from '../../lib/withFallback';
+import Multiline from '../Multiline.astro';
+
+const HERO_ANIMATIONS = ['fade', 'slide-up', 'zoom', 'neon'] as const;
+type HeroAnimation = (typeof HERO_ANIMATIONS)[number];
+
+interface Props {
+  data?: Hero | null;
+  /** SiteSettings.heroAnimation — falls back to `fade` for any unknown value. */
+  animation?: string | null;
+}
+
+const animation: HeroAnimation = (HERO_ANIMATIONS as readonly string[]).includes(
+  Astro.props.animation ?? '',
+)
+  ? (Astro.props.animation as HeroAnimation)
+  : 'fade';
+
+const d = withFallback(Astro.props.data, HERO_FB);
+
+const photo = d.photo ?? null;
+const card = mediaUrl(photo, 'card');
+const hero = mediaUrl(photo, 'hero');
+const src = card ?? mediaUrl(photo) ?? HERO_PHOTO_SRC_FB;
+const srcset = [card && `${card} 768w`, hero && `${hero} 1600w`].filter(Boolean).join(', ');
+const alt = photo?.alt || HERO_PHOTO_ALT_FB;
+---
+
+<section
+  class:list={['hero wrap relative pb-10 pt-12 md:pt-16', `hero--${animation}`, roundedClass(d.rounded)]}
+>
+  <div class="eyebrow mb-7 flex justify-between gap-5">
+    <span>{d.eyebrowLeft}</span>
+    <span class="hidden sm:block">{d.eyebrowRight}</span>
+  </div>
+
+  <h1>{d.headingLine1}<br /><span>{d.headingAccent}</span></h1>
+
+  <div class="hero-grid mt-9 grid gap-8 md:grid-cols-[0.85fr_1.65fr] md:gap-14">
+    <div class="flex flex-col justify-between">
+      <div>
+        <p class="max-w-sm text-lg leading-relaxed text-white/65">
+          <Multiline text={d.introText} />
+        </p>
+        <a href={d.ctaHref || '#booking'} class="button mt-8">{d.ctaLabel} <span>↗</span></a>
+      </div>
+
+      <div class="mb-2 mt-12 flex items-center gap-5">
+        <span class="seal" aria-hidden="true">{d.sealText}</span>
+        <p class="text-sm leading-relaxed text-white/50">
+          <Multiline text={d.sealCaption} />
+        </p>
+      </div>
+    </div>
+
+    <div class:list={['hero-photo', roundedClass(d.photoRounded)]}>
+      <img
+        src={src}
+        srcset={srcset || undefined}
+        sizes="(min-width: 768px) 65vw, 100vw"
+        width={photo?.width ?? undefined}
+        height={photo?.height ?? undefined}
+        alt={alt}
+        fetchpriority="high"
+      />
+      <div class="photo-caption">
+        <span>{d.photoCaptionLeft}</span>
+        <span>{d.photoCaptionRight}</span>
+      </div>
+    </div>
+  </div>
+</section>

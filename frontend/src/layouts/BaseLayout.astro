@@ -1,22 +1,39 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
+import { DEFAULT_LOCALE, dirFor } from '../lib/locale';
 import type { MetaTags } from '../lib/seo/buildMeta';
 import { serializeJsonLd } from '../lib/seo/jsonLd';
+import '../styles/global.css';
 
 interface Props {
   meta: MetaTags;
   jsonLd?: unknown[];
+  /** BCP-47 tag for <html lang>. Defaults to the site locale (i18n not enabled yet). */
+  lang?: string;
 }
 
-const { meta, jsonLd = [] } = Astro.props;
+const { meta, jsonLd = [], lang = DEFAULT_LOCALE } = Astro.props;
+const dir = dirFor(lang);
+
+// Preload the body + display face for this locale's script so a language
+// switch doesn't reflow while the other subset loads (font-display: swap).
+const fontPreloads =
+  lang === 'ru'
+    ? ['/fonts/manrope-cyrillic.woff2', '/fonts/oswald-cyrillic.woff2']
+    : ['/fonts/manrope-latin.woff2', '/fonts/oswald-latin.woff2'];
 
 const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang} dir={dir}>
   <head>
+    {
+      fontPreloads.map((href) => (
+        <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
+      ))
+    }
     <BaseHead meta={meta} />
     {
       jsonLd.map((data) => (
@@ -33,3 +50,41 @@ const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
     <slot />
   </body>
 </html>
+
+<script>
+  // The hero entrance animation is pure CSS: it runs once, on first render
+  // (a full page load), with no JS dependency. This block only matters if
+  // <ClientRouter/> is added later — its events don't fire otherwise.
+  const root = document.documentElement;
+  const HERO_SELECTOR = '.hero--fade, .hero--slide-up, .hero--zoom, .hero--neon, .hero--neon h1';
+  let clientNavigated = false;
+
+  // Mark the document while a client-side navigation is in flight so the CSS
+  // guard (`:root[data-navigating] .hero--* { animation: none }`) keeps the
+  // incoming hero static. Astro's swap wipes every non-internal <html>
+  // attribute, so re-assert it in `astro:after-swap` — which runs after the
+  // swap and BEFORE the new page paints — otherwise the fresh hero would flash
+  // its entrance mid-transition.
+  const flagNavigating = () => {
+    clientNavigated = true;
+    root.setAttribute('data-navigating', '');
+  };
+  document.addEventListener('astro:before-swap', flagNavigating);
+  document.addEventListener('astro:after-swap', () => {
+    if (clientNavigated) root.setAttribute('data-navigating', '');
+  });
+
+  // Once the new page has settled: pin the swapped-in hero's animation off
+  // (inline `!important`) so removing the flag can't restart it — a CSS
+  // `animation-name` going none -> named on an in-DOM element re-triggers.
+  // Skipped on the initial page-load (no prior swap) so the first-load
+  // entrance still plays.
+  document.addEventListener('astro:page-load', () => {
+    if (clientNavigated) {
+      document
+        .querySelectorAll<HTMLElement>(HERO_SELECTOR)
+        .forEach((el) => el.style.setProperty('animation', 'none', 'important'));
+    }
+    root.removeAttribute('data-navigating');
+  });
+</script>

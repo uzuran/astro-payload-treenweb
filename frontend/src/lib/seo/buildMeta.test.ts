@@ -46,4 +46,39 @@ describe('buildMeta', () => {
       'article',
     );
   });
+
+  it('uses a custom site name and skips the suffix when the title already contains it', () => {
+    const meta = buildMeta({ title: 'FORMA — барбершоп', path: '/', siteName: 'FORMA' }, SITE);
+    expect(meta.title).toBe('FORMA — барбершоп');
+    expect(meta.og['og:site_name']).toBe('FORMA');
+  });
+
+  it('still appends a custom site name when absent from the title', () => {
+    expect(buildMeta({ title: 'Услуги', path: '/s', siteName: 'FORMA' }, SITE).title).toBe(
+      'Услуги · FORMA',
+    );
+  });
+
+  it('emits og:locale only when a locale is given', () => {
+    expect(buildMeta({ title: 'X', path: '/', locale: 'ru' }, SITE).og['og:locale']).toBe('ru');
+    expect(buildMeta({ title: 'X', path: '/' }, SITE).og['og:locale']).toBeUndefined();
+  });
+
+  it('emits og:locale:alternate for the other locales, excluding the current one', () => {
+    const meta = buildMeta(
+      { title: 'X', path: '/', locale: 'ru', localeAlternates: ['ru', 'en', 'cs'] },
+      SITE,
+    );
+    expect(meta.ogRepeatable).toEqual([
+      ['og:locale:alternate', 'en'],
+      ['og:locale:alternate', 'cs'],
+    ]);
+    expect(buildMeta({ title: 'X', path: '/' }, SITE).ogRepeatable).toEqual([]);
+  });
+
+  it('carries hreflang alternates through, defaulting to none', () => {
+    expect(buildMeta({ title: 'X', path: '/' }, SITE).alternates).toEqual([]);
+    const alts = [{ hreflang: 'en', href: 'https://x/en' }];
+    expect(buildMeta({ title: 'X', path: '/', alternates: alts }, SITE).alternates).toEqual(alts);
+  });
 });

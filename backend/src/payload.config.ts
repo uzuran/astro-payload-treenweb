@@ -6,15 +6,22 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { buildConfig } from 'payload';
 import sharp from 'sharp';
 
+import { Masters } from './collections/Masters';
 import { Media } from './collections/Media';
 import { Pages } from './collections/Pages';
 import { Posts } from './collections/Posts';
 import { Redirects } from './collections/Redirects';
 import { Users } from './collections/Users';
 import { env } from './env';
+import { About } from './globals/About';
+import { Booking } from './globals/Booking';
+import { Hero } from './globals/Hero';
 import { Navigation } from './globals/Navigation';
+import { Services } from './globals/Services';
 import { SiteSettings } from './globals/SiteSettings';
+import { Team } from './globals/Team';
 import { lexicalFeatures } from './lexical/allowlist';
+import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES } from './locales';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,8 +34,16 @@ export default buildConfig({
     meta: { titleSuffix: ' · treenweb CMS' },
   },
   editor: lexicalEditor({ features: () => lexicalFeatures }),
-  collections: [Pages, Posts, Media, Redirects, Users],
-  globals: [SiteSettings, Navigation],
+  // Multilingual content. Fields opt in with `localized: true`; everything else
+  // is shared across locales. `fallback` returns the default-locale value when a
+  // translation is missing, so a page is never blank in a new language.
+  localization: {
+    locales: LOCALES.map((code) => ({ code, label: LOCALE_LABELS[code] })),
+    defaultLocale: DEFAULT_LOCALE,
+    fallback: true,
+  },
+  collections: [Pages, Posts, Media, Masters, Redirects, Users],
+  globals: [SiteSettings, Navigation, Hero, Services, About, Team, Booking],
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL },
     push: env.PAYLOAD_DB_PUSH,

@@ -124,7 +124,7 @@ the matching `pnpm` script, so `make lint` and `pnpm lint` are equivalent.
 | `make up` / `down` / `logs` / `ps` / `reset`                                                         | container-mode dev stack (Compose)                          |
 | `make seed`                                                                                          | seed the dev DB in container mode (admin user + pages)      |
 | `make dev`                                                                                           | `pnpm dev` — run both app dev servers on the host           |
-| `make dev-setup` / `dev-db` / `dev-db-down` / `dev-seed`                                              | host-mode: setup, start/stop Postgres, seed from the host   |
+| `make dev-setup` / `dev-db` / `dev-db-down` / `dev-seed`                                             | host-mode: setup, start/stop Postgres, seed from the host   |
 | `make types`                                                                                         | regenerate `backend/payload-types.ts`                       |
 | `make psql`                                                                                          | psql shell on the dev DB                                    |
 | `make env`                                                                                           | copy root `.env` → `backend/`, `frontend/` (host runs only) |

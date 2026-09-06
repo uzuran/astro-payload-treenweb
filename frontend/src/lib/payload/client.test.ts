@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getPageBySlug, listSitemapEntries, PayloadError } from './client';
+import {
+  getHero,
+  getPageBySlug,
+  getSiteSettings,
+  listMasters,
+  listSitemapEntries,
+  mediaUrl,
+  PayloadError,
+} from './client';
 
 const jsonResponse = (body: unknown, init: ResponseInit = {}) =>
   new Response(JSON.stringify(body), {
@@ -75,5 +83,81 @@ describe('payload client', () => {
     );
     const entries = await listSitemapEntries();
     expect(entries.map((e) => e.path)).toEqual(['/about', '/posts/hello']);
+  });
+});
+
+describe('mediaUrl', () => {
+  const file = {
+    url: '/api/media/file/hero.jpg',
+    sizes: { hero: { url: '/api/media/file/hero-1600x2400.jpg' } },
+  };
+
+  it('resolves a relative Payload url against PUBLIC_CMS_URL', () => {
+    expect(mediaUrl(file)).toBe('http://localhost:3000/api/media/file/hero.jpg');
+  });
+
+  it('prefers the requested size, falling back to the original', () => {
+    expect(mediaUrl(file, 'hero')).toBe('http://localhost:3000/api/media/file/hero-1600x2400.jpg');
+    expect(mediaUrl(file, 'card')).toBe('http://localhost:3000/api/media/file/hero.jpg');
+  });
+
+  it('returns null for a missing file or url', () => {
+    expect(mediaUrl(null)).toBeNull();
+    expect(mediaUrl(undefined)).toBeNull();
+    expect(mediaUrl({ url: null })).toBeNull();
+  });
+});
+
+describe('globals + masters getters', () => {
+  it('parses the hero global and exposes a populated photo', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          headingLine1: 'ТВОЯ ФОРМА.',
+          headingAccent: 'ТВОЙ ХАРАКТЕР.',
+          photo: { url: '/api/media/file/hero.jpg', alt: 'x' },
+        }),
+      ),
+    );
+    const hero = await getHero();
+    expect(hero.headingLine1).toBe('ТВОЯ ФОРМА.');
+    expect(mediaUrl(hero.photo)).toBe('http://localhost:3000/api/media/file/hero.jpg');
+  });
+
+  it('requests hero at depth=1 and omits locale by default', async () => {
+    const fetchMock = vi.fn(async (_url: string | URL) => jsonResponse({}));
+    vi.stubGlobal('fetch', fetchMock);
+    await getHero();
+    const requested = String(fetchMock.mock.calls[0]?.[0]);
+    expect(requested).toContain('/api/globals/hero?depth=1');
+    expect(requested).not.toContain('locale=');
+  });
+
+  it('threads an explicit locale through without forcing fallback-locale', async () => {
+    const fetchMock = vi.fn(async (_url: string | URL) => jsonResponse({}));
+    vi.stubGlobal('fetch', fetchMock);
+    await getSiteSettings('cs');
+    const requested = String(fetchMock.mock.calls[0]?.[0]);
+    expect(requested).toContain('locale=cs');
+    // no fallback-locale => Payload config `fallback: true` fills untranslated fields
+    expect(requested).not.toContain('fallback-locale');
+  });
+
+  it('returns the masters docs array sorted by the API', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          docs: [
+            { id: 1, name: 'Алекс', order: 1 },
+            { id: 2, name: 'Марк', order: 2 },
+          ],
+          totalDocs: 2,
+        }),
+      ),
+    );
+    const masters = await listMasters();
+    expect(masters.map((m) => m.name)).toEqual(['Алекс', 'Марк']);
   });
 });

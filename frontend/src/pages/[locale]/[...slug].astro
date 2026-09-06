@@ -1,0 +1,69 @@
+---
+import RichText from '../../components/RichText.astro';
+import { env } from '../../env';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { t } from '../../lib/i18n/ui';
+import { localizedPath } from '../../lib/locale';
+import { getPageBySlug } from '../../lib/payload/client';
+import { buildMeta } from '../../lib/seo/buildMeta';
+import { breadcrumbJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
+
+const locale = Astro.locals.locale;
+const tr = t(locale);
+const slugParam = Astro.params.slug ?? '';
+const slug = slugParam.replace(/^\/+|\/+$/g, '');
+const path = localizedPath(locale, `/${slug}`);
+const home = localizedPath(locale, '/');
+
+let page = null;
+try {
+  page = slug ? await getPageBySlug(slug, locale) : null;
+} catch (error) {
+  console.error(`[slug] failed to load "${slug}" (${locale}):`, error);
+}
+if (!page) {
+  Astro.response.status = 404;
+}
+
+const meta = buildMeta(
+  page
+    ? {
+        title: page.seo?.title ?? page.title,
+        description: page.seo?.description,
+        path,
+        noindex: page.seo?.noindex ?? false,
+        locale,
+      }
+    : { title: tr('errors.pageNotFoundTitle'), path, noindex: true, locale },
+  env.PUBLIC_SITE_URL,
+);
+
+const jsonLd = page
+  ? [
+      webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
+      breadcrumbJsonLd([
+        { name: 'Home', url: new URL(home, env.PUBLIC_SITE_URL).href },
+        { name: page.title, url: meta.canonical },
+      ]),
+    ]
+  : [];
+---
+
+<SiteLayout meta={meta} locale={locale} jsonLd={jsonLd}>
+  {
+    page ? (
+      <div class="wrap section">
+        <h1>{page.title}</h1>
+        <RichText content={page.content} />
+      </div>
+    ) : (
+      <div class="wrap section">
+        <h1>{tr('errors.notFoundHeading')}</h1>
+        <p class="muted mt-4">
+          {tr('errors.couldNotFind')} <code>/{slug}</code>.
+        </p>
+        <a class="button mt-8" href={home}>{tr('errors.backHome')}</a>
+      </div>
+    )
+  }
+</SiteLayout>

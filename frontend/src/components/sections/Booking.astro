@@ -1,0 +1,157 @@
+---
+import { BOOKING_FB, MASTERS_FB, SERVICES_FB } from '../../lib/fallback';
+import { t } from '../../lib/i18n/ui';
+import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
+import type { Booking, Master, Services } from '../../lib/payload/client';
+import { roundedClass } from '../../lib/rounded';
+import Multiline from '../Multiline.astro';
+
+interface Props {
+  data?: Booking | null;
+  services?: Services | null;
+  masters?: Master[] | null;
+  locale?: Locale;
+}
+
+const tr = t(Astro.props.locale ?? DEFAULT_LOCALE);
+const b = Astro.props.data ?? {};
+const eyebrow = b.eyebrow || BOOKING_FB.eyebrow;
+const heading = b.heading || BOOKING_FB.heading;
+const headingAccent = b.headingAccent || BOOKING_FB.headingAccent;
+const intro = b.intro || BOOKING_FB.intro;
+const disclaimer = b.disclaimer || BOOKING_FB.disclaimer;
+
+const serviceItems = Astro.props.services?.items?.length
+  ? Astro.props.services.items
+  : (SERVICES_FB.items ?? []);
+const serviceNames = serviceItems.map((item) => item.name);
+
+const masters = Astro.props.masters?.length ? Astro.props.masters : MASTERS_FB;
+const masterNames = masters.map((master) => master.name);
+---
+
+<section
+  id="booking"
+  class:list={['wrap section booking border-t border-white/15', roundedClass(b.rounded)]}
+>
+  <div class="grid gap-12 md:grid-cols-2 md:gap-24">
+    <div>
+      <p class="eyebrow orange mb-4">{eyebrow}</p>
+      <h2><Multiline text={heading} /><br /><span class="orange">{headingAccent}</span></h2>
+      <p class="muted mt-6 max-w-sm">{intro}</p>
+      <p class="mt-5 max-w-sm text-sm text-white/45">{disclaimer}</p>
+    </div>
+
+    <form id="booking-form" class="grid gap-5 self-center" data-result-template={tr('booking.result')}>
+      <div class="grid gap-5 sm:grid-cols-2">
+        <label>
+          {tr('booking.name')}
+          <input
+            name="name"
+            required
+            autocomplete="given-name"
+            placeholder={tr('booking.namePlaceholder')}
+          />
+        </label>
+        <label>
+          {tr('booking.phone')}
+          <input
+            name="phone"
+            required
+            type="tel"
+            autocomplete="tel"
+            pattern="[+0-9 ()-]{9,20}"
+            placeholder={tr('booking.phonePlaceholder')}
+          />
+        </label>
+      </div>
+
+      <label>
+        {tr('booking.service')}
+        <select name="service">
+          {serviceNames.map((name) => <option>{name}</option>)}
+        </select>
+      </label>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <label>
+          {tr('booking.master')}
+          <select name="master">
+            <option>{tr('booking.anyMaster')}</option>
+            {masterNames.map((name) => <option>{name}</option>)}
+          </select>
+        </label>
+        <label>
+          {tr('booking.date')}
+          <input name="date" type="date" required />
+        </label>
+      </div>
+
+      <button class="button w-full mt-2" type="submit">{tr('booking.submit')} <span>↗</span></button>
+      <p id="form-result" role="status" aria-live="polite" class="text-sm leading-relaxed"></p>
+    </form>
+  </div>
+</section>
+
+<script>
+  const form = document.querySelector('#booking-form');
+  const result = document.querySelector('#form-result');
+
+  if (form instanceof HTMLFormElement) {
+    const dateEl = form.elements.namedItem('date');
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate(),
+    ).padStart(2, '0')}`;
+    if (dateEl instanceof HTMLInputElement) dateEl.min = today;
+
+    const prefersReducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    document.querySelectorAll('[data-service]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const select = form.elements.namedItem('service');
+        if (select instanceof HTMLSelectElement && el instanceof HTMLElement && el.dataset.service) {
+          select.value = el.dataset.service;
+        }
+        document
+          .querySelector('#booking')
+          ?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      }),
+    );
+
+    document.querySelectorAll('[data-master]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const select = form.elements.namedItem('master');
+        if (select instanceof HTMLSelectElement && el instanceof HTMLElement && el.dataset.master) {
+          select.value = el.dataset.master;
+        }
+      }),
+    );
+
+    const template =
+      form.dataset.resultTemplate ?? '{name}: {service}, {date}. Demo — nothing was sent.';
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const name = form.elements.namedItem('name');
+      const service = form.elements.namedItem('service');
+      if (
+        result &&
+        name instanceof HTMLInputElement &&
+        service instanceof HTMLSelectElement &&
+        dateEl instanceof HTMLInputElement
+      ) {
+        const date = dateEl.value.split('-').reverse().join('.');
+        result.textContent = template
+          .replaceAll('{name}', name.value.trim())
+          .replaceAll('{service}', service.value)
+          .replaceAll('{date}', date);
+      }
+    });
+
+    form.addEventListener('input', () => {
+      if (result) result.textContent = '';
+    });
+  }
+</script>

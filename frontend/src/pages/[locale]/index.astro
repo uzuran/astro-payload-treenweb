@@ -1,0 +1,81 @@
+---
+import About from '../../components/sections/About.astro';
+import Booking from '../../components/sections/Booking.astro';
+import Hero from '../../components/sections/Hero.astro';
+import Services from '../../components/sections/Services.astro';
+import Team from '../../components/sections/Team.astro';
+import Ticker from '../../components/sections/Ticker.astro';
+import { env } from '../../env';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { localizedPath } from '../../lib/locale';
+import {
+  getAbout,
+  getBooking,
+  getHero,
+  getNavigation,
+  getPageBySlug,
+  getServices,
+  getSiteSettings,
+  getTeam,
+  listMasters,
+  mediaUrl,
+} from '../../lib/payload/client';
+import { buildMeta } from '../../lib/seo/buildMeta';
+import { organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
+
+/** Resolve a fetch, logging and swallowing failures so one dead section never 500s the page. */
+const settle = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
+  promise.catch((error: unknown) => {
+    console.error(`[index] ${label} failed:`, error);
+    return null;
+  });
+
+const locale = Astro.locals.locale;
+
+const [page, hero, services, about, team, booking, navigation, siteSettings, masters] =
+  await Promise.all([
+    settle(getPageBySlug('home', locale), 'home page'),
+    settle(getHero(locale), 'hero'),
+    settle(getServices(locale), 'services'),
+    settle(getAbout(locale), 'about'),
+    settle(getTeam(locale), 'team'),
+    settle(getBooking(locale), 'booking'),
+    settle(getNavigation(locale), 'navigation'),
+    settle(getSiteSettings(locale), 'site settings'),
+    settle(listMasters(locale), 'masters'),
+  ]);
+
+const siteName = siteSettings?.siteName || 'FORMA';
+
+// hreflang / og:locale:alternate are added by SiteLayout from siteSettings.
+const meta = buildMeta(
+  {
+    title: page?.seo?.title || page?.title || `${siteName} — барбершоп`,
+    description: page?.seo?.description || siteSettings?.description,
+    path: localizedPath(locale, '/'),
+    noindex: page?.seo?.noindex ?? false,
+    image: mediaUrl(siteSettings?.ogImage) ?? undefined,
+    siteName,
+    locale,
+  },
+  env.PUBLIC_SITE_URL,
+);
+---
+
+<SiteLayout
+  meta={meta}
+  locale={locale}
+  navigation={navigation}
+  siteSettings={siteSettings}
+  jsonLd={[
+    organizationJsonLd(env.PUBLIC_SITE_URL),
+    webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
+  ]}
+>
+  <Hero data={hero} animation={siteSettings?.heroAnimation} />
+  <Ticker words={siteSettings?.ticker?.map((word) => word.word)} />
+  <Services data={services} />
+  <About data={about} />
+  <Team data={team} masters={masters} />
+  <Booking data={booking} services={services} masters={masters} locale={locale} />
+</SiteLayout>

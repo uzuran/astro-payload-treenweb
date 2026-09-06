@@ -1,12 +1,37 @@
 import { defineMiddleware } from 'astro:middleware';
 
+import { DEFAULT_LOCALE, isLocale, type Locale } from './lib/locale';
+
+declare global {
+  namespace App {
+    interface Locals {
+      /** Validated route locale, set below. */
+      locale: Locale;
+    }
+  }
+}
+
 /**
- * Defense-in-depth response headers + conservative caching for HTML.
- * Traefik sets the authoritative security headers in Step 8.
+ * 1. Locale validation for the `/[locale]/**` tree — Payload is lenient, Astro
+ *    isn't. Unknown/disabled prefixes 404 here rather than rendering fallback
+ *    content under a bogus `<html lang>`.
+ * 2. Defense-in-depth response headers + conservative HTML caching.
+ *    Traefik sets the authoritative security headers in Step 8.
  */
 export const onRequest = defineMiddleware(async (context, next) => {
+  // `locale` param is present only when a `src/pages/[locale]/**` route matched.
+  const routeLocale = context.params.locale;
+  if (routeLocale !== undefined && !isLocale(routeLocale)) {
+    return new Response('Not found', { status: 404 });
+  }
+  context.locals.locale = isLocale(routeLocale) ? routeLocale : DEFAULT_LOCALE;
+
   const response = await next();
   const headers = response.headers;
+
+  if (routeLocale !== undefined) {
+    headers.set('Content-Language', context.locals.locale);
+  }
 
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Frame-Options', 'DENY');

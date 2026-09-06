@@ -1,0 +1,32 @@
+---
+import { ABOUT_FB } from '../../lib/fallback';
+import type { About } from '../../lib/payload/client';
+import { roundedClass } from '../../lib/rounded';
+import Multiline from '../Multiline.astro';
+
+interface Props {
+  data?: About | null;
+}
+
+const s = Astro.props.data ?? {};
+const eyebrow = s.eyebrow || ABOUT_FB.eyebrow;
+const heading = s.heading || ABOUT_FB.heading;
+const leadParagraph = s.leadParagraph || ABOUT_FB.leadParagraph;
+const bodyParagraph = s.bodyParagraph || ABOUT_FB.bodyParagraph;
+const footnote = s.footnote || ABOUT_FB.footnote;
+---
+
+<section id="about" class:list={['about', roundedClass(s.rounded)]}>
+  <div class="wrap section grid gap-12 md:grid-cols-2">
+    <div>
+      <p class="eyebrow mb-4">{eyebrow}</p>
+      <h2><Multiline text={heading} /></h2>
+    </div>
+
+    <div class="flex flex-col justify-center gap-7">
+      <p class="text-xl leading-relaxed md:text-2xl">{leadParagraph}</p>
+      <p class="leading-relaxed text-black/70">{bodyParagraph}</p>
+      <div class="eyebrow border-t border-black/30 pt-6">{footnote}</div>
+    </div>
+  </div>
+</section>

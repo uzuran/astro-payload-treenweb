@@ -70,6 +70,7 @@ export interface Config {
     pages: Page;
     posts: Post;
     media: Media;
+    masters: Master;
     redirects: Redirect;
     users: User;
     'payload-kv': PayloadKv;
@@ -82,6 +83,7 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    masters: MastersSelect<false> | MastersSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -92,16 +94,26 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('cs' | 'en' | 'ru') | ('cs' | 'en' | 'ru')[];
   globals: {
     'site-settings': SiteSetting;
     navigation: Navigation;
+    hero: Hero;
+    services: Service;
+    about: About;
+    team: Team;
+    booking: Booking;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
+    hero: HeroSelect<false> | HeroSelect<true>;
+    services: ServicesSelect<false> | ServicesSelect<true>;
+    about: AboutSelect<false> | AboutSelect<true>;
+    team: TeamSelect<false> | TeamSelect<true>;
+    booking: BookingSelect<false> | BookingSelect<true>;
   };
-  locale: null;
+  locale: 'cs' | 'en' | 'ru';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -165,7 +177,7 @@ export interface Page {
      */
     description?: string | null;
     /**
-     * OG / social share image.
+     * OG / social share image. Shared across locales.
      */
     image?: (number | null) | Media;
     noindex?: boolean | null;
@@ -182,7 +194,7 @@ export interface Page {
 export interface Media {
   id: number;
   /**
-   * Describe the image for screen readers and SEO.
+   * Describe the image for screen readers and SEO. Required in the default locale; fill each locale for a11y.
    */
   alt: string;
   caption?: string | null;
@@ -268,7 +280,7 @@ export interface Post {
      */
     description?: string | null;
     /**
-     * OG / social share image.
+     * OG / social share image. Shared across locales.
      */
     image?: (number | null) | Media;
     noindex?: boolean | null;
@@ -303,6 +315,30 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "masters".
+ */
+export interface Master {
+  id: number;
+  name: string;
+  /**
+   * e.g. "АЛ".
+   */
+  initials: string;
+  specialty?: string | null;
+  /**
+   * Link text, e.g. "Записаться к Алексу ↗".
+   */
+  bookingLabel?: string | null;
+  photo?: (number | null) | Media;
+  /**
+   * Ascending. Ties break by creation order.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -360,6 +396,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'masters';
+        value: number | Master;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -516,6 +556,20 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "masters_select".
+ */
+export interface MastersSelect<T extends boolean = true> {
+  name?: T;
+  initials?: T;
+  specialty?: T;
+  bookingLabel?: T;
+  photo?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
@@ -605,6 +659,43 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  ticker?:
+    | {
+        word: string;
+        id?: string | null;
+      }[]
+    | null;
+  contact?: {
+    address?: string | null;
+    phone?: string | null;
+    hoursWeekday?: string | null;
+    hoursSaturday?: string | null;
+    hoursSunday?: string | null;
+    mapUrl?: string | null;
+  };
+  /**
+   * Small print in the footer bar.
+   */
+  footerNote?: string | null;
+  /**
+   * Entrance animation for the home hero. Same for every locale.
+   */
+  heroAnimation?: ('fade' | 'slide-up' | 'zoom' | 'neon') | null;
+  /**
+   * Where the bare "/" sends visitors. Each /xx page keeps its own <html lang>. Applies on the next request; no rebuild needed.
+   */
+  defaultLocale: 'cs' | 'en' | 'ru';
+  /**
+   * Locales offered in the switcher / hreflang. Codes must match localization.locales in payload.config.ts.
+   */
+  supportedLocales?:
+    | {
+        code: string;
+        label: string;
+        enabled?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -633,6 +724,186 @@ export interface Navigation {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hero".
+ */
+export interface Hero {
+  id: number;
+  eyebrowLeft?: string | null;
+  eyebrowRight?: string | null;
+  headingLine1?: string | null;
+  /**
+   * Second line, rendered in the accent colour.
+   */
+  headingAccent?: string | null;
+  introText?: string | null;
+  ctaLabel?: string | null;
+  ctaHref?: string | null;
+  sealText?: string | null;
+  sealCaption?: string | null;
+  photo?: (number | null) | Media;
+  photoCaptionLeft?: string | null;
+  photoCaptionRight?: string | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  /**
+   * Corner rounding for the hero photo only.
+   */
+  photoRounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services".
+ */
+export interface Service {
+  id: number;
+  /**
+   * e.g. "01 / УСЛУГИ".
+   */
+  eyebrow?: string | null;
+  /**
+   * Headline. Line breaks are preserved on the site.
+   */
+  heading?: string | null;
+  /**
+   * Optional trailing fragment rendered in the accent colour.
+   */
+  headingAccent?: string | null;
+  /**
+   * Optional muted text beside the headline.
+   */
+  note?: string | null;
+  /**
+   * Rendered in this order.
+   */
+  items?:
+    | {
+        name: string;
+        /**
+         * Optional pill, e.g. "КОМБО".
+         */
+        badge?: string | null;
+        description?: string | null;
+        /**
+         * e.g. "60 мин".
+         */
+        duration?: string | null;
+        priceAmount?: number | null;
+        priceCurrency?: string | null;
+        /**
+         * Optional #id link target.
+         */
+        anchor?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about".
+ */
+export interface About {
+  id: number;
+  /**
+   * e.g. "01 / УСЛУГИ".
+   */
+  eyebrow?: string | null;
+  /**
+   * Headline. Line breaks are preserved on the site.
+   */
+  heading?: string | null;
+  /**
+   * Optional trailing fragment rendered in the accent colour.
+   */
+  headingAccent?: string | null;
+  /**
+   * Optional muted text beside the headline.
+   */
+  note?: string | null;
+  leadParagraph?: string | null;
+  bodyParagraph?: string | null;
+  footnote?: string | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team".
+ */
+export interface Team {
+  id: number;
+  /**
+   * e.g. "01 / УСЛУГИ".
+   */
+  eyebrow?: string | null;
+  /**
+   * Headline. Line breaks are preserved on the site.
+   */
+  heading?: string | null;
+  /**
+   * Optional trailing fragment rendered in the accent colour.
+   */
+  headingAccent?: string | null;
+  /**
+   * Optional muted text beside the headline.
+   */
+  note?: string | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking".
+ */
+export interface Booking {
+  id: number;
+  /**
+   * e.g. "01 / УСЛУГИ".
+   */
+  eyebrow?: string | null;
+  /**
+   * Headline. Line breaks are preserved on the site.
+   */
+  heading?: string | null;
+  /**
+   * Optional trailing fragment rendered in the accent colour.
+   */
+  headingAccent?: string | null;
+  /**
+   * Optional muted text beside the headline.
+   */
+  note?: string | null;
+  intro?: string | null;
+  /**
+   * Notice shown under the demo form.
+   */
+  disclaimer?: string | null;
+  /**
+   * Corner rounding for this section’s buttons, cards and form fields.
+   */
+  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -645,6 +916,33 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         platform?: T;
         url?: T;
+        id?: T;
+      };
+  ticker?:
+    | T
+    | {
+        word?: T;
+        id?: T;
+      };
+  contact?:
+    | T
+    | {
+        address?: T;
+        phone?: T;
+        hoursWeekday?: T;
+        hoursSaturday?: T;
+        hoursSunday?: T;
+        mapUrl?: T;
+      };
+  footerNote?: T;
+  heroAnimation?: T;
+  defaultLocale?: T;
+  supportedLocales?:
+    | T
+    | {
+        code?: T;
+        label?: T;
+        enabled?: T;
         id?: T;
       };
   updatedAt?: T;
@@ -670,6 +968,102 @@ export interface NavigationSelect<T extends boolean = true> {
         href?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hero_select".
+ */
+export interface HeroSelect<T extends boolean = true> {
+  eyebrowLeft?: T;
+  eyebrowRight?: T;
+  headingLine1?: T;
+  headingAccent?: T;
+  introText?: T;
+  ctaLabel?: T;
+  ctaHref?: T;
+  sealText?: T;
+  sealCaption?: T;
+  photo?: T;
+  photoCaptionLeft?: T;
+  photoCaptionRight?: T;
+  rounded?: T;
+  photoRounded?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services_select".
+ */
+export interface ServicesSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  headingAccent?: T;
+  note?: T;
+  items?:
+    | T
+    | {
+        name?: T;
+        badge?: T;
+        description?: T;
+        duration?: T;
+        priceAmount?: T;
+        priceCurrency?: T;
+        anchor?: T;
+        id?: T;
+      };
+  rounded?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about_select".
+ */
+export interface AboutSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  headingAccent?: T;
+  note?: T;
+  leadParagraph?: T;
+  bodyParagraph?: T;
+  footnote?: T;
+  rounded?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team_select".
+ */
+export interface TeamSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  headingAccent?: T;
+  note?: T;
+  rounded?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking_select".
+ */
+export interface BookingSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  headingAccent?: T;
+  note?: T;
+  intro?: T;
+  disclaimer?: T;
+  rounded?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -23,10 +23,10 @@ export const Posts: CollectionConfig = {
     maxPerDoc: 25,
   },
   fields: [
-    { name: 'title', type: 'text', required: true },
+    { name: 'title', type: 'text', required: true, localized: true },
     slugField('title'),
-    { name: 'excerpt', type: 'textarea' },
-    { name: 'content', type: 'richText' },
+    { name: 'excerpt', type: 'textarea', localized: true },
+    { name: 'content', type: 'richText', localized: true },
     { name: 'author', type: 'relationship', relationTo: 'users' },
     {
       name: 'tags',

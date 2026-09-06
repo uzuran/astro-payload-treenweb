@@ -1,0 +1,73 @@
+---
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { isLocale, type Locale, stripLocale } from '../lib/locale';
+import {
+  getNavigation,
+  getSiteSettings,
+  type Navigation,
+  type SiteSettings,
+} from '../lib/payload/client';
+import { buildAlternates, otherLocales } from '../lib/seo/alternates';
+import type { MetaTags } from '../lib/seo/buildMeta';
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  meta: MetaTags;
+  locale: Locale;
+  jsonLd?: unknown[];
+  /** Pass when the page already fetched these (home), else the layout fetches. */
+  navigation?: Navigation | null;
+  siteSettings?: SiteSettings | null;
+}
+
+const { meta, locale, jsonLd = [] } = Astro.props;
+
+let { navigation, siteSettings } = Astro.props;
+if (navigation === undefined || siteSettings === undefined) {
+  const [nav, settings] = await Promise.all([
+    navigation === undefined
+      ? getNavigation(locale).catch((error: unknown) => {
+          console.error('[SiteLayout] navigation failed:', error);
+          return null;
+        })
+      : Promise.resolve(navigation),
+    siteSettings === undefined
+      ? getSiteSettings(locale).catch((error: unknown) => {
+          console.error('[SiteLayout] site settings failed:', error);
+          return null;
+        })
+      : Promise.resolve(siteSettings),
+  ]);
+  navigation = nav;
+  siteSettings = settings;
+}
+
+// hreflang + og:locale:alternate — computed once here so every route (and the
+// sitemap, via the same helper) stays consistent.
+const enabled: Locale[] = (siteSettings?.supportedLocales ?? [])
+  .filter((entry) => entry.enabled !== false)
+  .map((entry) => entry.code)
+  .filter(isLocale);
+const basePath = stripLocale(Astro.url.pathname);
+
+const mergedMeta: MetaTags = {
+  ...meta,
+  alternates: buildAlternates(basePath, enabled),
+  ogRepeatable: [
+    ...meta.ogRepeatable,
+    ...otherLocales(locale, enabled).map((code): [string, string] => ['og:locale:alternate', code]),
+  ],
+};
+---
+
+<BaseLayout meta={mergedMeta} lang={locale} jsonLd={jsonLd}>
+  <SiteHeader
+    siteName={siteSettings?.siteName}
+    items={navigation?.main}
+    locale={locale}
+    supportedLocales={siteSettings?.supportedLocales}
+  />
+  <main><slot /></main>
+  <SiteFooter site={siteSettings} locale={locale} />
+</BaseLayout>
