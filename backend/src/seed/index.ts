@@ -83,16 +83,17 @@ await payload.updateGlobal({
 
 await payload.updateGlobal({ slug: 'ui-labels', data: uiLabelsSeed.ru });
 
+const NAV_MAIN_RU = [
+  { label: 'О нас', href: '#about' },
+  { label: 'Услуги и цены', href: '#services' },
+  { label: 'Мастера', href: '#team' },
+  { label: 'Контакты', href: '#contacts' },
+];
+
 await payload.updateGlobal({
   slug: 'navigation',
-  data: {
-    main: [
-      { label: 'О нас', href: '#about' },
-      { label: 'Услуги и цены', href: '#services' },
-      { label: 'Мастера', href: '#team' },
-      { label: 'Контакты', href: '#contacts' },
-    ],
-  },
+  // Footer nav mirrors the primary nav — a quick way back up on this one-pager.
+  data: { main: NAV_MAIN_RU, footer: NAV_MAIN_RU },
 });
 
 await payload.updateGlobal({
@@ -472,15 +473,18 @@ for (const locale of ['en', 'cs'] as const) {
   });
 
   const navigationGlobal = await payload.findGlobal({ slug: 'navigation' });
+  const translateMenu = (rows: typeof navigationGlobal.main) =>
+    (rows ?? []).map((row, i) => ({
+      id: row.id ?? undefined,
+      label: t.navMain[i] ?? row.label,
+      href: row.href,
+    }));
   await payload.updateGlobal({
     slug: 'navigation',
     locale,
     data: {
-      main: (navigationGlobal.main ?? []).map((row, i) => ({
-        id: row.id ?? undefined,
-        label: t.navMain[i] ?? row.label,
-        href: row.href,
-      })),
+      main: translateMenu(navigationGlobal.main),
+      footer: translateMenu(navigationGlobal.footer),
     },
   });
 

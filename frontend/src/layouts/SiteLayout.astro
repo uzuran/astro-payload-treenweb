@@ -84,5 +84,10 @@ const mergedMeta: MetaTags = {
     labels={labels}
   />
   <main><slot /></main>
-  <SiteFooter site={siteSettings} labels={labels} />
+  <SiteFooter
+    site={siteSettings}
+    labels={labels}
+    footerItems={navigation?.footer}
+    locale={locale}
+  />
 </BaseLayout>

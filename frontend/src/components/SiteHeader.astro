@@ -3,6 +3,7 @@ import { NAV_FB, SITE_FB } from '../lib/fallback';
 import { aria } from '../lib/i18n/aria';
 import type { Labels } from '../lib/i18n/labels';
 import { type Locale, localizedPath } from '../lib/locale';
+import { resolveNavHref } from '../lib/nav';
 import type { NavItem, SiteSettings } from '../lib/payload/client';
 import LocaleSwitcher from './LocaleSwitcher.astro';
 
@@ -19,12 +20,9 @@ const name = siteName || SITE_FB.siteName || '';
 const ariaFor = aria(locale);
 const home = localizedPath(locale, '/');
 
-// Hash links (#about, #booking) only resolve on the home page — prefix them so
-// they also work from a content page (/en/foo -> /en/#about).
-const resolveHref = (href: string) => (href.startsWith('#') ? `${home}${href}` : href);
 const links = (Astro.props.items?.length ? Astro.props.items : NAV_FB).map((link) => ({
   label: link.label,
-  href: resolveHref(link.href),
+  href: resolveNavHref(link.href, locale),
 }));
 ---
 
@@ -44,7 +42,9 @@ const links = (Astro.props.items?.length ? Astro.props.items : NAV_FB).map((link
       class="ml-auto hidden md:flex"
     />
 
-    <a href={resolveHref('#booking')} class="small-cta">{labels.header.cta} <span>↗</span></a>
+    <a href={resolveNavHref('#booking', locale)} class="small-cta"
+      >{labels.header.cta} <span>↗</span></a
+    >
 
     <button
       id="menu-toggle"

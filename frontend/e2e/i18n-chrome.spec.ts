@@ -19,6 +19,16 @@ for (const locale of LOCALES) {
     await expect(form.getByRole('button', { name: new RegExp(e.submit) })).toBeVisible();
   });
 
+  test(`[${locale}] footer secondary nav renders locale-prefixed links`, async ({ page }) => {
+    await page.goto(`/${locale}`);
+    const footerNav = page.locator('footer nav');
+    await expect(footerNav).toHaveCount(1);
+
+    const first = footerNav.getByRole('link').first();
+    await expect(first).toBeVisible();
+    expect(await first.getAttribute('href')).toMatch(new RegExp(`^/${locale}#`));
+  });
+
   test(`[${locale}] booking confirmation interpolates, no raw tokens`, async ({ page }) => {
     await page.goto(`/${locale}#booking`);
     const form = page.locator('#booking-form');

@@ -1,20 +1,31 @@
 ---
 import { SITE_FB } from '../lib/fallback';
+import { aria } from '../lib/i18n/aria';
 import type { Labels } from '../lib/i18n/labels';
-import type { SiteSettings } from '../lib/payload/client';
+import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
+import { resolveNavHref } from '../lib/nav';
+import type { NavItem, SiteSettings } from '../lib/payload/client';
 import Multiline from './Multiline.astro';
 
 interface Props {
   site?: SiteSettings | null;
   labels: Labels;
+  /** Navigation.footer — a secondary link row; hidden when empty. */
+  footerItems?: NavItem[] | null;
+  locale?: Locale;
 }
 
-const { labels } = Astro.props;
+const { labels, locale = DEFAULT_LOCALE } = Astro.props;
 const site = Astro.props.site ?? {};
 const name = site.siteName || SITE_FB.siteName;
 const tagline = site.tagline || SITE_FB.tagline;
 const contact = { ...SITE_FB.contact, ...(site.contact ?? {}) };
 const footerNote = site.footerNote || SITE_FB.footerNote;
+
+const footerLinks = (Astro.props.footerItems ?? []).map((link) => ({
+  label: link.label,
+  href: resolveNavHref(link.href, locale),
+}));
 ---
 
 <footer id="contacts" class="border-t border-white/15">
@@ -40,6 +51,21 @@ const footerNote = site.footerNote || SITE_FB.footerNote;
       </p>
     </div>
   </div>
+
+  {
+    footerLinks.length > 0 && (
+      <nav
+        class="wrap flex flex-wrap gap-x-6 gap-y-2 border-t border-white/15 py-5 text-xs text-white/60"
+        aria-label={aria(locale)('navAriaFooter')}
+      >
+        {footerLinks.map((link) => (
+          <a href={link.href} class="hover:text-orange">
+            {link.label}
+          </a>
+        ))}
+      </nav>
+    )
+  }
 
   <div
     class="wrap flex flex-wrap justify-between gap-3 border-t border-white/15 py-5 text-xs text-white/40"

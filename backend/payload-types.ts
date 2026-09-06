@@ -717,16 +717,28 @@ export interface SiteSetting {
  */
 export interface Navigation {
   id: number;
+  /**
+   * Header navigation.
+   */
   main?:
     | {
         label: string;
+        /**
+         * Path (/about) or on-page anchor (#booking). Shared across locales.
+         */
         href: string;
         id?: string | null;
       }[]
     | null;
+  /**
+   * Secondary link row in the site footer. Leave empty to hide it.
+   */
   footer?:
     | {
         label: string;
+        /**
+         * Path (/about) or on-page anchor (#booking). Shared across locales.
+         */
         href: string;
         id?: string | null;
       }[]
