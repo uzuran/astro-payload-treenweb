@@ -45,6 +45,37 @@ for (const locale of LOCALES) {
     expect(await first.getAttribute('href')).toMatch(new RegExp(`^/${locale}#`));
   });
 
+  test(`[${locale}] footer renders social icon links from SiteSettings.social`, async ({
+    page,
+  }) => {
+    await page.goto(`/${locale}`);
+
+    const links = page.locator('footer ul a[target="_blank"]');
+    await expect(links.first()).toBeVisible();
+    expect(await links.count()).toBeGreaterThanOrEqual(5);
+
+    const first = links.first();
+    expect(await first.getAttribute('rel')).toContain('noopener');
+    await expect(first).toHaveAttribute('aria-label', /.+/);
+    await expect(first.locator('svg path')).toHaveCount(1);
+  });
+
+  test(`[${locale}] back-to-top button appears on scroll and returns to the top`, async ({
+    page,
+  }) => {
+    await page.goto(`/${locale}`);
+    const btn = page.locator('#back-to-top');
+
+    await expect(btn).toBeHidden(); // hidden at the top of the page
+    await page.evaluate(() => window.scrollTo(0, 2000));
+    await expect(btn).toBeVisible();
+    await expect(btn).toHaveAttribute('aria-label', /.+/);
+
+    await btn.click();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(50);
+    await expect(btn).toBeHidden();
+  });
+
   test(`[${locale}] booking confirmation interpolates, no raw tokens`, async ({ page }) => {
     await page.goto(`/${locale}#booking`);
     const form = page.locator('#booking-form');

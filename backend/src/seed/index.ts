@@ -66,6 +66,14 @@ await payload.updateGlobal({
     tagline: 'Твоя форма. Твой характер.',
     description: DESCRIPTION,
     ticker: [{ word: 'СТРИЖКА' }, { word: 'БОРОДА' }, { word: 'ХАРАКТЕР' }],
+    social: [
+      { platform: 'instagram', url: 'https://instagram.com/forma.barber' },
+      { platform: 'facebook', url: 'https://facebook.com/forma.barber' },
+      { platform: 'tiktok', url: 'https://tiktok.com/@forma.barber' },
+      { platform: 'youtube', url: 'https://youtube.com/@forma.barber' },
+      { platform: 'telegram', url: 'https://t.me/forma_barber' },
+      { platform: 'whatsapp', url: 'https://wa.me/420123456789' },
+    ],
     contact: {
       address: 'Пльзень, адрес барбершопа',
       phone: '',

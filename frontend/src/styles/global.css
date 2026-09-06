@@ -551,6 +551,12 @@
     display: flex;
   }
 
+  /* Back-to-top control (see components/BackToTop.astro). While the cookie
+     banner is on screen, lift the button clear of it. */
+  body:has(#cookie-consent) #back-to-top {
+    bottom: 7.5rem;
+  }
+
   @media (max-width: 767px) {
     .wrap {
       width: calc(100% - 36px);

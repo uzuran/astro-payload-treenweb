@@ -13,6 +13,21 @@ describe('SiteSettings', () => {
     expect(f?.required).toBe(true);
   });
 
+  it('has a non-localized `social` array of { platform, url } required text fields', () => {
+    const social = byName(SiteSettings.fields as Field[], 'social');
+    expect(social?.type).toBe('array');
+    expect(Boolean((social as { localized?: boolean }).localized)).toBe(false);
+    const leaves = (social?.fields as Field[]).map((f) => ({
+      name: (f as { name: string }).name,
+      type: f.type,
+      required: Boolean((f as { required?: boolean }).required),
+    }));
+    expect(leaves).toEqual([
+      { name: 'platform', type: 'text', required: true },
+      { name: 'url', type: 'text', required: true },
+    ]);
+  });
+
   it('has a localized `seo` group with titleTemplate + defaultDescription', () => {
     const seo = byName(SiteSettings.fields as Field[], 'seo');
     expect(seo?.type).toBe('group');

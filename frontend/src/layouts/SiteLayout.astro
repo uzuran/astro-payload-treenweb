@@ -1,4 +1,5 @@
 ---
+import BackToTop from '../components/BackToTop.astro';
 import CookieConsent from '../components/CookieConsent.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
@@ -91,5 +92,6 @@ const mergedMeta: MetaTags = {
     footerItems={navigation?.footer}
     locale={locale}
   />
+  <BackToTop locale={locale} />
   <CookieConsent labels={labels} locale={locale} />
 </BaseLayout>

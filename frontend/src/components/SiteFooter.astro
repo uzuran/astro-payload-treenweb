@@ -5,6 +5,7 @@ import type { Labels } from '../lib/i18n/labels';
 import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
 import { resolveNavHref } from '../lib/nav';
 import type { NavItem, SiteSettings } from '../lib/payload/client';
+import { socialIcon } from '../lib/social';
 import Multiline from './Multiline.astro';
 
 interface Props {
@@ -27,6 +28,10 @@ const footerLinks = (Astro.props.footerItems ?? []).map((link) => ({
   label: link.label,
   href: resolveNavHref(link.href, locale),
 }));
+
+const socials = (site.social ?? [])
+  .filter((s) => s.url)
+  .map((s) => ({ url: s.url, icon: socialIcon(s.platform) }));
 ---
 
 <footer id="contacts" class="border-t border-white/15">
@@ -52,6 +57,35 @@ const footerLinks = (Astro.props.footerItems ?? []).map((link) => ({
       </p>
     </div>
   </div>
+
+  {
+    socials.length > 0 && (
+      <ul class="wrap flex flex-wrap gap-4 border-t border-white/15 py-5">
+        {socials.map(({ url, icon }) => (
+          <li>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={icon.label}
+              class="inline-flex text-white/60 transition-colors hover:text-orange"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d={icon.path} />
+              </svg>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
 
   {
     footerLinks.length > 0 && (

@@ -666,8 +666,14 @@ export interface SiteSetting {
      */
     defaultDescription?: string | null;
   };
+  /**
+   * Social links shown as icons in the footer.
+   */
   social?:
     | {
+        /**
+         * instagram, facebook, tiktok, youtube, telegram, whatsapp, x, linkedin. Aliases: twitter→x, fb, ig, yt, tg, wa. Anything else gets a generic link icon.
+         */
         platform: string;
         url: string;
         id?: string | null;

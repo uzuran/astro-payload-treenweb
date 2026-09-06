@@ -41,8 +41,17 @@ export const SiteSettings: GlobalConfig = {
     {
       name: 'social',
       type: 'array',
+      admin: { description: 'Social links shown as icons in the footer.' },
       fields: [
-        { name: 'platform', type: 'text', required: true },
+        {
+          name: 'platform',
+          type: 'text',
+          required: true,
+          admin: {
+            description:
+              'instagram, facebook, tiktok, youtube, telegram, whatsapp, x, linkedin. Aliases: twitter→x, fb, ig, yt, tg, wa. Anything else gets a generic link icon.',
+          },
+        },
         { name: 'url', type: 'text', required: true },
       ],
     },
