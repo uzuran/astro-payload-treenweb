@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  getAnimationSettings,
   getHero,
   getPageBySlug,
   getSiteSettings,
+  getUiLabels,
   listMasters,
   listSitemapEntries,
   mediaUrl,
@@ -142,6 +144,86 @@ describe('globals + masters getters', () => {
     expect(requested).toContain('locale=cs');
     // no fallback-locale => Payload config `fallback: true` fills untranslated fields
     expect(requested).not.toContain('fallback-locale');
+  });
+
+  it('requests ui-labels at depth=0 with the locale and parses a partial payload', async () => {
+    const fetchMock = vi.fn(async (_url: string | URL) =>
+      jsonResponse({ header: { cta: 'Book' } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const labels = await getUiLabels('en');
+    const requested = String(fetchMock.mock.calls[0]?.[0]);
+    expect(requested).toContain('/api/globals/ui-labels?depth=0');
+    expect(requested).toContain('locale=en');
+    expect(labels.header?.cta).toBe('Book');
+    expect(labels.footer).toBeUndefined();
+  });
+
+  it('parses a fully-populated ui-labels payload', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          header: { cta: 'X' },
+          footer: { findUsHeading: 'A', hoursHeading: 'B', disclaimer: 'C' },
+          booking: { submitLabel: 'S', resultTemplate: '{name} {service} {date}' },
+          notFound: { heading: 'H', missingPathTemplate: 'x {path} y' },
+        }),
+      ),
+    );
+    const labels = await getUiLabels();
+    expect(labels.notFound?.missingPathTemplate).toBe('x {path} y');
+  });
+
+  it('parses siteSettings.heroAnimation (valid, garbage and absent all accepted)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ siteName: 'FORMA', heroAnimation: 'neon' })),
+    );
+    expect((await getSiteSettings()).heroAnimation).toBe('neon');
+
+    // the schema is intentionally loose — the whitelist lives in the component
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ siteName: 'FORMA', heroAnimation: 'disco' })),
+    );
+    expect((await getSiteSettings()).heroAnimation).toBe('disco');
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ siteName: 'FORMA' })),
+    );
+    expect((await getSiteSettings()).heroAnimation).toBeUndefined();
+  });
+
+  it('requests animation-settings at depth=0 and parses `duration` (present or absent)', async () => {
+    const fetchMock = vi.fn(async (_url: string | URL) => jsonResponse({ duration: 2.5 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const s = await getAnimationSettings();
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain(
+      '/api/globals/animation-settings?depth=0',
+    );
+    expect(s.duration).toBe(2.5);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({})),
+    );
+    expect((await getAnimationSettings()).duration).toBeUndefined();
+  });
+
+  it('parses siteSettings with an optional seo group', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          siteName: 'FORMA',
+          seo: { titleTemplate: '{page} · {site}', defaultDescription: 'D' },
+        }),
+      ),
+    );
+    const s = await getSiteSettings('ru');
+    expect(s.seo?.titleTemplate).toBe('{page} · {site}');
   });
 
   it('returns the masters docs array sorted by the API', async () => {

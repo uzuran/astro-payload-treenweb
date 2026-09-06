@@ -1,37 +1,42 @@
 ---
-import { HERO_FB, HERO_PHOTO_ALT_FB, HERO_PHOTO_SRC_FB } from '../../lib/fallback';
+import { getFallback, HERO_PHOTO_SRC_FB } from '../../lib/fallback';
+import { heroAnimationDurationCss, toHeroAnimation } from '../../lib/heroAnimation';
+import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import { mediaUrl, type Hero } from '../../lib/payload/client';
 import { roundedClass } from '../../lib/rounded';
 import { withFallback } from '../../lib/withFallback';
 import Multiline from '../Multiline.astro';
 
-const HERO_ANIMATIONS = ['fade', 'slide-up', 'zoom', 'neon'] as const;
-type HeroAnimation = (typeof HERO_ANIMATIONS)[number];
-
 interface Props {
   data?: Hero | null;
-  /** SiteSettings.heroAnimation — falls back to `fade` for any unknown value. */
+  /** The chosen entrance animation. Pass the raw `SiteSettings.heroAnimation`
+   *  value directly, or a `{ heroAnimation }` object via `settings`. Anything
+   *  unknown falls back to `fade`. */
   animation?: string | null;
+  settings?: { heroAnimation?: string | null } | null;
+  /** `AnimationSettings.duration` (seconds). Drives Fade / Slide up / Zoom via
+   *  the `--hero-anim-duration` custom property. Missing → 1.2s. Neon is fixed. */
+  duration?: number | null;
+  locale?: Locale;
 }
 
-const animation: HeroAnimation = (HERO_ANIMATIONS as readonly string[]).includes(
-  Astro.props.animation ?? '',
-)
-  ? (Astro.props.animation as HeroAnimation)
-  : 'fade';
+const animation = toHeroAnimation(Astro.props.animation ?? Astro.props.settings?.heroAnimation);
+const durationCss = heroAnimationDurationCss(Astro.props.duration);
 
-const d = withFallback(Astro.props.data, HERO_FB);
+const fb = getFallback(Astro.props.locale ?? DEFAULT_LOCALE);
+const d = withFallback(Astro.props.data, fb.hero);
 
 const photo = d.photo ?? null;
 const card = mediaUrl(photo, 'card');
 const hero = mediaUrl(photo, 'hero');
 const src = card ?? mediaUrl(photo) ?? HERO_PHOTO_SRC_FB;
 const srcset = [card && `${card} 768w`, hero && `${hero} 1600w`].filter(Boolean).join(', ');
-const alt = photo?.alt || HERO_PHOTO_ALT_FB;
+const alt = photo?.alt || fb.heroPhotoAlt;
 ---
 
 <section
   class:list={['hero wrap relative pb-10 pt-12 md:pt-16', `hero--${animation}`, roundedClass(d.rounded)]}
+  style={`--hero-anim-duration: ${durationCss}`}
 >
   <div class="eyebrow mb-7 flex justify-between gap-5">
     <span>{d.eyebrowLeft}</span>

@@ -242,6 +242,9 @@ export const siteSettingsSchema = z.object({
     })
     .nullish(),
   footerNote: z.string().nullish(),
+  seo: z
+    .object({ titleTemplate: z.string().nullish(), defaultDescription: z.string().nullish() })
+    .nullish(),
   heroAnimation: z.string().nullish(),
   defaultLocale: z.string().nullish(),
   supportedLocales: z
@@ -257,6 +260,50 @@ export const siteSettingsSchema = z.object({
 });
 export type SiteSettings = z.infer<typeof siteSettingsSchema>;
 
+const uiGroup = <T extends z.ZodRawShape>(shape: T) => z.object(shape).partial().nullish();
+
+export const uiLabelsSchema = z.object({
+  header: uiGroup({ cta: z.string().nullish() }),
+  footer: uiGroup({
+    findUsHeading: z.string().nullish(),
+    hoursHeading: z.string().nullish(),
+    disclaimer: z.string().nullish(),
+  }),
+  booking: uiGroup({
+    nameLabel: z.string().nullish(),
+    namePlaceholder: z.string().nullish(),
+    phoneLabel: z.string().nullish(),
+    phonePlaceholder: z.string().nullish(),
+    serviceLabel: z.string().nullish(),
+    masterLabel: z.string().nullish(),
+    anyMasterOption: z.string().nullish(),
+    dateLabel: z.string().nullish(),
+    submitLabel: z.string().nullish(),
+    resultTemplate: z.string().nullish(),
+  }),
+  consent: uiGroup({
+    body: z.string().nullish(),
+    essentialButton: z.string().nullish(),
+    analyticsButton: z.string().nullish(),
+  }),
+  notFound: uiGroup({
+    pageMetaTitle: z.string().nullish(),
+    postMetaTitle: z.string().nullish(),
+    heading: z.string().nullish(),
+    heading404: z.string().nullish(),
+    body: z.string().nullish(),
+    missingPathTemplate: z.string().nullish(),
+    postHeading: z.string().nullish(),
+    backHomeLabel: z.string().nullish(),
+  }),
+});
+export type UiLabels = z.infer<typeof uiLabelsSchema>;
+
+export const animationSettingsSchema = z.object({
+  duration: z.number().nullish(),
+});
+export type AnimationSettings = z.infer<typeof animationSettingsSchema>;
+
 export const getHero = (locale?: string) => getGlobal('hero', heroSchema, 1, locale);
 export const getServices = (locale?: string) => getGlobal('services', servicesSchema, 0, locale);
 export const getAbout = (locale?: string) => getGlobal('about', aboutSchema, 0, locale);
@@ -266,6 +313,9 @@ export const getNavigation = (locale?: string) =>
   getGlobal('navigation', navigationSchema, 0, locale);
 export const getSiteSettings = (locale?: string) =>
   getGlobal('site-settings', siteSettingsSchema, 1, locale);
+export const getUiLabels = (locale?: string) => getGlobal('ui-labels', uiLabelsSchema, 0, locale);
+export const getAnimationSettings = (locale?: string) =>
+  getGlobal('animation-settings', animationSettingsSchema, 0, locale);
 
 // ─── Masters (collection) ─────────────────────────────────────────────────
 

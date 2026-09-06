@@ -1,11 +1,15 @@
 ---
-import { TICKER_FB } from '../../lib/fallback';
+import { getFallback } from '../../lib/fallback';
+import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 
 interface Props {
   words?: string[] | null;
+  locale?: Locale;
 }
 
-const source = Astro.props.words?.length ? Astro.props.words : TICKER_FB;
+const source = Astro.props.words?.length
+  ? Astro.props.words
+  : getFallback(Astro.props.locale ?? DEFAULT_LOCALE).ticker;
 // The template repeats the set so the row fills wide viewports.
 const words = [...source, ...source];
 ---

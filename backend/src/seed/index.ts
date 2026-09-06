@@ -6,6 +6,7 @@ import config from '@payload-config';
 import { getPayload } from 'payload';
 
 import { DEFAULT_LOCALE, supportedLocalesSeed } from '../locales';
+import { uiLabelsSeed } from './uiLabels';
 
 const ADMIN_EMAIL = 'admin@treenweb.local';
 const ADMIN_PASSWORD = 'nuzky999';
@@ -74,21 +75,27 @@ await payload.updateGlobal({
       mapUrl: '',
     },
     footerNote: '© 2026 FORMA. Демонстрационный шаблон.',
+    seo: { titleTemplate: '{page} · {site}', defaultDescription: DESCRIPTION },
     defaultLocale: DEFAULT_LOCALE,
     supportedLocales: supportedLocalesSeed,
   },
 });
 
+await payload.updateGlobal({ slug: 'ui-labels', data: uiLabelsSeed.ru });
+
+await payload.updateGlobal({ slug: 'animation-settings', data: { duration: 1.2 } });
+
+const NAV_MAIN_RU = [
+  { label: 'О нас', href: '#about' },
+  { label: 'Услуги и цены', href: '#services' },
+  { label: 'Мастера', href: '#team' },
+  { label: 'Контакты', href: '#contacts' },
+];
+
 await payload.updateGlobal({
   slug: 'navigation',
-  data: {
-    main: [
-      { label: 'О нас', href: '#about' },
-      { label: 'Услуги и цены', href: '#services' },
-      { label: 'Мастера', href: '#team' },
-      { label: 'Контакты', href: '#contacts' },
-    ],
-  },
+  // Footer nav mirrors the primary nav — a quick way back up on this one-pager.
+  data: { main: NAV_MAIN_RU, footer: NAV_MAIN_RU },
 });
 
 await payload.updateGlobal({
@@ -468,15 +475,18 @@ for (const locale of ['en', 'cs'] as const) {
   });
 
   const navigationGlobal = await payload.findGlobal({ slug: 'navigation' });
+  const translateMenu = (rows: typeof navigationGlobal.main) =>
+    (rows ?? []).map((row, i) => ({
+      id: row.id ?? undefined,
+      label: t.navMain[i] ?? row.label,
+      href: row.href,
+    }));
   await payload.updateGlobal({
     slug: 'navigation',
     locale,
     data: {
-      main: (navigationGlobal.main ?? []).map((row, i) => ({
-        id: row.id ?? undefined,
-        label: t.navMain[i] ?? row.label,
-        href: row.href,
-      })),
+      main: translateMenu(navigationGlobal.main),
+      footer: translateMenu(navigationGlobal.footer),
     },
   });
 
@@ -489,12 +499,15 @@ for (const locale of ['en', 'cs'] as const) {
       description: t.site.description,
       footerNote: t.site.footerNote,
       contact: t.site.contact,
+      seo: { titleTemplate: '{page} · {site}', defaultDescription: t.site.description },
       ticker: (settingsGlobal.ticker ?? []).map((row, i) => ({
         id: row.id ?? undefined,
         word: t.ticker[i] ?? row.word,
       })),
     },
   });
+
+  await payload.updateGlobal({ slug: 'ui-labels', locale, data: uiLabelsSeed[locale] });
 
   for (const [ruName, translated] of Object.entries(t.masters)) {
     const found = await payload.find({

@@ -1,18 +1,21 @@
 ---
-import { SERVICES_FB } from '../../lib/fallback';
+import { getFallback } from '../../lib/fallback';
+import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import type { Services } from '../../lib/payload/client';
 import { roundedClass } from '../../lib/rounded';
 import Multiline from '../Multiline.astro';
 
 interface Props {
   data?: Services | null;
+  locale?: Locale;
 }
 
+const fb = getFallback(Astro.props.locale ?? DEFAULT_LOCALE).services;
 const src = Astro.props.data ?? {};
-const eyebrow = src.eyebrow || SERVICES_FB.eyebrow;
-const heading = src.heading || SERVICES_FB.heading;
-const note = src.note || SERVICES_FB.note;
-const items = src.items?.length ? src.items : (SERVICES_FB.items ?? []);
+const eyebrow = src.eyebrow || fb.eyebrow;
+const heading = src.heading || fb.heading;
+const note = src.note || fb.note;
+const items = src.items?.length ? src.items : (fb.items ?? []);
 
 const price = (amount?: number | null, currency?: string | null) =>
   [amount, currency].filter((v) => v !== null && v !== undefined && v !== '').join(' ');

@@ -1,6 +1,6 @@
 ---
-import { BOOKING_FB, MASTERS_FB, SERVICES_FB } from '../../lib/fallback';
-import { t } from '../../lib/i18n/ui';
+import { getFallback } from '../../lib/fallback';
+import type { Labels } from '../../lib/i18n/labels';
 import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import type { Booking, Master, Services } from '../../lib/payload/client';
 import { roundedClass } from '../../lib/rounded';
@@ -11,22 +11,24 @@ interface Props {
   services?: Services | null;
   masters?: Master[] | null;
   locale?: Locale;
+  labels: Labels;
 }
 
-const tr = t(Astro.props.locale ?? DEFAULT_LOCALE);
+const { labels } = Astro.props;
+const fb = getFallback(Astro.props.locale ?? DEFAULT_LOCALE);
 const b = Astro.props.data ?? {};
-const eyebrow = b.eyebrow || BOOKING_FB.eyebrow;
-const heading = b.heading || BOOKING_FB.heading;
-const headingAccent = b.headingAccent || BOOKING_FB.headingAccent;
-const intro = b.intro || BOOKING_FB.intro;
-const disclaimer = b.disclaimer || BOOKING_FB.disclaimer;
+const eyebrow = b.eyebrow || fb.booking.eyebrow;
+const heading = b.heading || fb.booking.heading;
+const headingAccent = b.headingAccent || fb.booking.headingAccent;
+const intro = b.intro || fb.booking.intro;
+const disclaimer = b.disclaimer || fb.booking.disclaimer;
 
 const serviceItems = Astro.props.services?.items?.length
   ? Astro.props.services.items
-  : (SERVICES_FB.items ?? []);
+  : (fb.services.items ?? []);
 const serviceNames = serviceItems.map((item) => item.name);
 
-const masters = Astro.props.masters?.length ? Astro.props.masters : MASTERS_FB;
+const masters = Astro.props.masters?.length ? Astro.props.masters : fb.masters;
 const masterNames = masters.map((master) => master.name);
 ---
 
@@ -42,32 +44,36 @@ const masterNames = masters.map((master) => master.name);
       <p class="mt-5 max-w-sm text-sm text-white/45">{disclaimer}</p>
     </div>
 
-    <form id="booking-form" class="grid gap-5 self-center" data-result-template={tr('booking.result')}>
+    <form
+      id="booking-form"
+      class="grid gap-5 self-center"
+      data-result-template={labels.booking.resultTemplate}
+    >
       <div class="grid gap-5 sm:grid-cols-2">
         <label>
-          {tr('booking.name')}
+          {labels.booking.nameLabel}
           <input
             name="name"
             required
             autocomplete="given-name"
-            placeholder={tr('booking.namePlaceholder')}
+            placeholder={labels.booking.namePlaceholder}
           />
         </label>
         <label>
-          {tr('booking.phone')}
+          {labels.booking.phoneLabel}
           <input
             name="phone"
             required
             type="tel"
             autocomplete="tel"
             pattern="[+0-9 ()-]{9,20}"
-            placeholder={tr('booking.phonePlaceholder')}
+            placeholder={labels.booking.phonePlaceholder}
           />
         </label>
       </div>
 
       <label>
-        {tr('booking.service')}
+        {labels.booking.serviceLabel}
         <select name="service">
           {serviceNames.map((name) => <option>{name}</option>)}
         </select>
@@ -75,19 +81,21 @@ const masterNames = masters.map((master) => master.name);
 
       <div class="grid gap-5 sm:grid-cols-2">
         <label>
-          {tr('booking.master')}
+          {labels.booking.masterLabel}
           <select name="master">
-            <option>{tr('booking.anyMaster')}</option>
+            <option>{labels.booking.anyMasterOption}</option>
             {masterNames.map((name) => <option>{name}</option>)}
           </select>
         </label>
         <label>
-          {tr('booking.date')}
+          {labels.booking.dateLabel}
           <input name="date" type="date" required />
         </label>
       </div>
 
-      <button class="button w-full mt-2" type="submit">{tr('booking.submit')} <span>↗</span></button>
+      <button class="button w-full mt-2" type="submit">
+        {labels.booking.submitLabel} <span>↗</span>
+      </button>
       <p id="form-result" role="status" aria-live="polite" class="text-sm leading-relaxed"></p>
     </form>
   </div>

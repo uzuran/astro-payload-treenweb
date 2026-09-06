@@ -1,7 +1,9 @@
 ---
-import { NAV_FB } from '../lib/fallback';
-import { t } from '../lib/i18n/ui';
+import { getFallback } from '../lib/fallback';
+import { aria } from '../lib/i18n/aria';
+import type { Labels } from '../lib/i18n/labels';
 import { type Locale, localizedPath } from '../lib/locale';
+import { resolveNavHref } from '../lib/nav';
 import type { NavItem, SiteSettings } from '../lib/payload/client';
 import LocaleSwitcher from './LocaleSwitcher.astro';
 
@@ -10,29 +12,28 @@ interface Props {
   items?: NavItem[] | null;
   locale: Locale;
   supportedLocales?: SiteSettings['supportedLocales'];
+  labels: Labels;
 }
 
-const { siteName, locale, supportedLocales } = Astro.props;
-const name = siteName || 'FORMA';
-const tr = t(locale);
+const { siteName, locale, supportedLocales, labels } = Astro.props;
+const fb = getFallback(locale);
+const name = siteName || fb.site.siteName || '';
+const ariaFor = aria(locale);
 const home = localizedPath(locale, '/');
 
-// Hash links (#about, #booking) only resolve on the home page — prefix them so
-// they also work from a content page (/en/foo -> /en/#about).
-const resolveHref = (href: string) => (href.startsWith('#') ? `${home}${href}` : href);
-const links = (Astro.props.items?.length ? Astro.props.items : NAV_FB).map((link) => ({
+const links = (Astro.props.items?.length ? Astro.props.items : fb.nav).map((link) => ({
   label: link.label,
-  href: resolveHref(link.href),
+  href: resolveNavHref(link.href, locale),
 }));
 ---
 
 <header class="border-b border-white/15">
   <div class="wrap flex items-center justify-between gap-6 py-6">
-    <a class="logo" href={home} aria-label={tr('header.homeAria', { site: name })}
+    <a class="logo" href={home} aria-label={ariaFor('homeAria', { site: name })}
       >{name}<span>®</span></a
     >
 
-    <nav class="hidden gap-8 text-sm md:flex" aria-label={tr('header.navAria')}>
+    <nav class="hidden gap-8 text-sm md:flex" aria-label={ariaFor('navAria')}>
       {links.map((link) => <a href={link.href}>{link.label}</a>)}
     </nav>
 
@@ -42,27 +43,24 @@ const links = (Astro.props.items?.length ? Astro.props.items : NAV_FB).map((link
       class="ml-auto hidden md:flex"
     />
 
-    <a href={resolveHref('#booking')} class="small-cta">{tr('header.cta')} <span>↗</span></a>
+    <a href={resolveNavHref('#booking', locale)} class="small-cta"
+      >{labels.header.cta} <span>↗</span></a
+    >
 
     <button
       id="menu-toggle"
       class="text-2xl md:hidden"
-      aria-label={tr('header.menuOpen')}
+      aria-label={ariaFor('menuOpen')}
       aria-expanded="false"
       aria-controls="mobile-menu"
-      data-label-open={tr('header.menuOpen')}
-      data-label-close={tr('header.menuClose')}
+      data-label-open={ariaFor('menuOpen')}
+      data-label-close={ariaFor('menuClose')}
     >
       ☰
     </button>
   </div>
 
-  <nav
-    id="mobile-menu"
-    class="wrap flex-col gap-4 pb-6"
-    hidden
-    aria-label={tr('header.navAriaMobile')}
-  >
+  <nav id="mobile-menu" class="wrap flex-col gap-4 pb-6" hidden aria-label={ariaFor('navAriaMobile')}>
     {links.map((link) => <a href={link.href}>{link.label}</a>)}
     <LocaleSwitcher locale={locale} supportedLocales={supportedLocales} class="pt-2" />
   </nav>

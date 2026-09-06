@@ -2,14 +2,14 @@
 import RichText from '../../components/RichText.astro';
 import { env } from '../../env';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { t } from '../../lib/i18n/ui';
+import { getFallback } from '../../lib/fallback';
+import { resolveLabels } from '../../lib/i18n/labels';
 import { localizedPath } from '../../lib/locale';
-import { getPageBySlug } from '../../lib/payload/client';
+import { getPageBySlug, getSiteSettings, getUiLabels } from '../../lib/payload/client';
 import { buildMeta } from '../../lib/seo/buildMeta';
 import { breadcrumbJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
 
 const locale = Astro.locals.locale;
-const tr = t(locale);
 const slugParam = Astro.params.slug ?? '';
 const slug = slugParam.replace(/^\/+|\/+$/g, '');
 const path = localizedPath(locale, `/${slug}`);
@@ -25,16 +25,45 @@ if (!page) {
   Astro.response.status = 404;
 }
 
+let siteSettings = null;
+try {
+  siteSettings = await getSiteSettings(locale);
+} catch (error) {
+  console.error(`[slug] site settings failed (${locale}):`, error);
+}
+let uiLabels = null;
+try {
+  uiLabels = await getUiLabels(locale);
+} catch (error) {
+  console.error(`[slug] ui labels failed (${locale}):`, error);
+}
+const siteName = siteSettings?.siteName || getFallback(locale).site.siteName || '';
+const labels = resolveLabels(uiLabels, locale);
+const [missingBefore, missingAfter] = labels.notFound.missingPathTemplate.split('{path}');
+
 const meta = buildMeta(
   page
     ? {
         title: page.seo?.title ?? page.title,
-        description: page.seo?.description,
+        description:
+          page.seo?.description ??
+          siteSettings?.seo?.defaultDescription ??
+          siteSettings?.description ??
+          undefined,
+        titleTemplate: siteSettings?.seo?.titleTemplate,
         path,
         noindex: page.seo?.noindex ?? false,
         locale,
+        siteName,
       }
-    : { title: tr('errors.pageNotFoundTitle'), path, noindex: true, locale },
+    : {
+        title: labels.notFound.pageMetaTitle,
+        path,
+        noindex: true,
+        locale,
+        siteName,
+        titleTemplate: siteSettings?.seo?.titleTemplate,
+      },
   env.PUBLIC_SITE_URL,
 );
 
@@ -42,14 +71,14 @@ const jsonLd = page
   ? [
       webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
       breadcrumbJsonLd([
-        { name: 'Home', url: new URL(home, env.PUBLIC_SITE_URL).href },
+        { name: siteName, url: new URL(home, env.PUBLIC_SITE_URL).href },
         { name: page.title, url: meta.canonical },
       ]),
     ]
   : [];
 ---
 
-<SiteLayout meta={meta} locale={locale} jsonLd={jsonLd}>
+<SiteLayout meta={meta} locale={locale} siteSettings={siteSettings} uiLabels={uiLabels} jsonLd={jsonLd}>
   {
     page ? (
       <div class="wrap section">
@@ -58,11 +87,13 @@ const jsonLd = page
       </div>
     ) : (
       <div class="wrap section">
-        <h1>{tr('errors.notFoundHeading')}</h1>
+        <h1>{labels.notFound.heading}</h1>
         <p class="muted mt-4">
-          {tr('errors.couldNotFind')} <code>/{slug}</code>.
+          {missingBefore}
+          <code>/{slug}</code>
+          {missingAfter}
         </p>
-        <a class="button mt-8" href={home}>{tr('errors.backHome')}</a>
+        <a class="button mt-8" href={home}>{labels.notFound.backHomeLabel}</a>
       </div>
     )
   }

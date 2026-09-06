@@ -1,29 +1,28 @@
-import { SITE_NAME } from './buildMeta';
-
 type JsonLd = Record<string, unknown>;
 
-export function organizationJsonLd(siteUrl: string): JsonLd {
+export function organizationJsonLd(siteUrl: string, siteName: string): JsonLd {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: SITE_NAME,
+    name: siteName,
     url: siteUrl,
   };
 }
 
-export function webPageJsonLd(opts: { title: string; description: string; url: string }): JsonLd {
-  return {
+export function webPageJsonLd(opts: { title: string; description?: string; url: string }): JsonLd {
+  const node: JsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: opts.title,
-    description: opts.description,
     url: opts.url,
   };
+  if (opts.description) node.description = opts.description;
+  return node;
 }
 
 export function articleJsonLd(opts: {
   title: string;
-  description: string;
+  description?: string;
   url: string;
   datePublished?: string | null;
   dateModified?: string | null;
@@ -32,9 +31,9 @@ export function articleJsonLd(opts: {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: opts.title,
-    description: opts.description,
     url: opts.url,
   };
+  if (opts.description) node.description = opts.description;
   if (opts.datePublished) node.datePublished = opts.datePublished;
   if (opts.dateModified) node.dateModified = opts.dateModified;
   return node;

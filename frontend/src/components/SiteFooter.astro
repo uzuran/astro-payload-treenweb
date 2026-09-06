@@ -1,22 +1,32 @@
 ---
-import { SITE_FB } from '../lib/fallback';
-import { t } from '../lib/i18n/ui';
+import { getFallback } from '../lib/fallback';
+import { aria } from '../lib/i18n/aria';
+import type { Labels } from '../lib/i18n/labels';
 import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
-import type { SiteSettings } from '../lib/payload/client';
+import { resolveNavHref } from '../lib/nav';
+import type { NavItem, SiteSettings } from '../lib/payload/client';
 import Multiline from './Multiline.astro';
 
 interface Props {
   site?: SiteSettings | null;
+  labels: Labels;
+  /** Navigation.footer — a secondary link row; hidden when empty. */
+  footerItems?: NavItem[] | null;
   locale?: Locale;
 }
 
-const { locale = DEFAULT_LOCALE } = Astro.props;
-const tr = t(locale);
+const { labels, locale = DEFAULT_LOCALE } = Astro.props;
+const fbSite = getFallback(locale).site;
 const site = Astro.props.site ?? {};
-const name = site.siteName || SITE_FB.siteName;
-const tagline = site.tagline || SITE_FB.tagline;
-const contact = { ...SITE_FB.contact, ...(site.contact ?? {}) };
-const footerNote = site.footerNote || SITE_FB.footerNote;
+const name = site.siteName || fbSite.siteName;
+const tagline = site.tagline || fbSite.tagline;
+const contact = { ...fbSite.contact, ...(site.contact ?? {}) };
+const footerNote = site.footerNote || fbSite.footerNote;
+
+const footerLinks = (Astro.props.footerItems ?? []).map((link) => ({
+  label: link.label,
+  href: resolveNavHref(link.href, locale),
+}));
 ---
 
 <footer id="contacts" class="border-t border-white/15">
@@ -27,13 +37,13 @@ const footerNote = site.footerNote || SITE_FB.footerNote;
     </div>
 
     <div>
-      <p class="eyebrow orange mb-3">{tr('footer.findUs')}</p>
+      <p class="eyebrow orange mb-3">{labels.footer.findUsHeading}</p>
       <p><Multiline text={contact.address} /></p>
       {contact.phone && <p class="mt-2">{contact.phone}</p>}
     </div>
 
     <div>
-      <p class="eyebrow orange mb-3">{tr('footer.hours')}</p>
+      <p class="eyebrow orange mb-3">{labels.footer.hoursHeading}</p>
       {contact.hoursWeekday && <p>{contact.hoursWeekday}</p>}
       <p class="muted mt-2">
         {contact.hoursSaturday}
@@ -43,10 +53,25 @@ const footerNote = site.footerNote || SITE_FB.footerNote;
     </div>
   </div>
 
+  {
+    footerLinks.length > 0 && (
+      <nav
+        class="wrap flex flex-wrap gap-x-6 gap-y-2 border-t border-white/15 py-5 text-xs text-white/60"
+        aria-label={aria(locale)('navAriaFooter')}
+      >
+        {footerLinks.map((link) => (
+          <a href={link.href} class="hover:text-orange">
+            {link.label}
+          </a>
+        ))}
+      </nav>
+    )
+  }
+
   <div
     class="wrap flex flex-wrap justify-between gap-3 border-t border-white/15 py-5 text-xs text-white/40"
   >
     <span>{footerNote}</span>
-    <span>{tr('footer.disclaimer')}</span>
+    <span>{labels.footer.disclaimer}</span>
   </div>
 </footer>

@@ -1,12 +1,16 @@
 ---
+import CookieConsent from '../components/CookieConsent.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
-import { isLocale, type Locale, stripLocale } from '../lib/locale';
+import { resolveLabels } from '../lib/i18n/labels';
+import { isLocale, type Locale, pickDefaultLocale, stripLocale } from '../lib/locale';
 import {
   getNavigation,
   getSiteSettings,
+  getUiLabels,
   type Navigation,
   type SiteSettings,
+  type UiLabels,
 } from '../lib/payload/client';
 import { buildAlternates, otherLocales } from '../lib/seo/alternates';
 import type { MetaTags } from '../lib/seo/buildMeta';
@@ -19,13 +23,14 @@ interface Props {
   /** Pass when the page already fetched these (home), else the layout fetches. */
   navigation?: Navigation | null;
   siteSettings?: SiteSettings | null;
+  uiLabels?: UiLabels | null;
 }
 
 const { meta, locale, jsonLd = [] } = Astro.props;
 
-let { navigation, siteSettings } = Astro.props;
-if (navigation === undefined || siteSettings === undefined) {
-  const [nav, settings] = await Promise.all([
+let { navigation, siteSettings, uiLabels } = Astro.props;
+if (navigation === undefined || siteSettings === undefined || uiLabels === undefined) {
+  const [nav, settings, chrome] = await Promise.all([
     navigation === undefined
       ? getNavigation(locale).catch((error: unknown) => {
           console.error('[SiteLayout] navigation failed:', error);
@@ -38,10 +43,19 @@ if (navigation === undefined || siteSettings === undefined) {
           return null;
         })
       : Promise.resolve(siteSettings),
+    uiLabels === undefined
+      ? getUiLabels(locale).catch((error: unknown) => {
+          console.error('[SiteLayout] ui labels failed:', error);
+          return null;
+        })
+      : Promise.resolve(uiLabels),
   ]);
   navigation = nav;
   siteSettings = settings;
+  uiLabels = chrome;
 }
+
+const labels = resolveLabels(uiLabels, locale);
 
 // hreflang + og:locale:alternate — computed once here so every route (and the
 // sitemap, via the same helper) stays consistent.
@@ -50,10 +64,11 @@ const enabled: Locale[] = (siteSettings?.supportedLocales ?? [])
   .map((entry) => entry.code)
   .filter(isLocale);
 const basePath = stripLocale(Astro.url.pathname);
+const defaultLocale = pickDefaultLocale(siteSettings?.defaultLocale, enabled);
 
 const mergedMeta: MetaTags = {
   ...meta,
-  alternates: buildAlternates(basePath, enabled),
+  alternates: buildAlternates(basePath, enabled, defaultLocale),
   ogRepeatable: [
     ...meta.ogRepeatable,
     ...otherLocales(locale, enabled).map((code): [string, string] => ['og:locale:alternate', code]),
@@ -67,7 +82,14 @@ const mergedMeta: MetaTags = {
     items={navigation?.main}
     locale={locale}
     supportedLocales={siteSettings?.supportedLocales}
+    labels={labels}
   />
   <main><slot /></main>
-  <SiteFooter site={siteSettings} locale={locale} />
+  <SiteFooter
+    site={siteSettings}
+    labels={labels}
+    footerItems={navigation?.footer}
+    locale={locale}
+  />
+  <CookieConsent labels={labels} locale={locale} />
 </BaseLayout>

@@ -1,138 +1,122 @@
-import { DEFAULT_LOCALE, type Locale } from '../locale';
+import type { Locale } from '../locale';
 
 /**
- * UI chrome strings — interface labels the frontend owns, versioned with the
- * code. NOT in Payload (that's for editor-managed content). `ru` is the shape
- * source; `en`/`cs` must satisfy the exact same key set (TS-enforced).
- *
- * `{param}` placeholders are filled by `t(locale)(key, { param: value })`.
+ * OFFLINE FALLBACK for the Payload `ui-labels` global. Read only when a CMS
+ * field is blank or the CMS is unreachable (see `resolveLabels`). Shape MUST
+ * match `backend/src/globals/UiLabels.ts`. `ru` is the shape source; `en`/`cs`
+ * are type-checked to the same keys. Screen-reader strings live in `./aria.ts`.
  */
 const RU = {
-  'header.homeAria': '{site}, главная',
-  'header.navAria': 'Главная навигация',
-  'header.navAriaMobile': 'Мобильная навигация',
-  'header.menuOpen': 'Открыть меню',
-  'header.menuClose': 'Закрыть меню',
-  'header.cta': 'Записаться',
-
-  'switcher.aria': 'Язык',
-
-  'footer.findUs': 'НАЙДИ НАС',
-  'footer.hours': 'ВРЕМЯ ДЛЯ СЕБЯ',
-  'footer.disclaimer': 'Названия, мастера и цены — примеры.',
-
-  'booking.name': 'Твоё имя',
-  'booking.namePlaceholder': 'Как к тебе обращаться?',
-  'booking.phone': 'Телефон',
-  'booking.phonePlaceholder': '+420 000 000 000',
-  'booking.service': 'Услуга',
-  'booking.master': 'Мастер',
-  'booking.anyMaster': 'Любой мастер',
-  'booking.date': 'Желаемая дата',
-  'booking.submit': 'Проверить запись',
-  'booking.result':
-    '{name}, всё заполнено: {service}, {date}. Это демонстрация — запись не создана и данные не отправлены.',
-
-  'errors.pageNotFoundTitle': 'Страница не найдена',
-  'errors.postNotFoundTitle': 'Пост не найден',
-  'errors.notFoundHeading': 'Страница не найдена',
-  'errors.notFound404Heading': '404 — Страница не найдена',
-  'errors.notFoundBody': 'Такой страницы не существует.',
-  'errors.couldNotFind': 'Мы не нашли',
-  'errors.postNotFoundHeading': 'Пост не найден',
-  'errors.backHome': 'На главную',
+  header: { cta: 'Записаться' },
+  footer: {
+    findUsHeading: 'НАЙДИ НАС',
+    hoursHeading: 'ВРЕМЯ ДЛЯ СЕБЯ',
+    disclaimer: 'Названия, мастера и цены — примеры.',
+  },
+  booking: {
+    nameLabel: 'Твоё имя',
+    namePlaceholder: 'Как к тебе обращаться?',
+    phoneLabel: 'Телефон',
+    phonePlaceholder: '+420 000 000 000',
+    serviceLabel: 'Услуга',
+    masterLabel: 'Мастер',
+    anyMasterOption: 'Любой мастер',
+    dateLabel: 'Желаемая дата',
+    submitLabel: 'Проверить запись',
+    resultTemplate:
+      '{name}, всё заполнено: {service}, {date}. Это демонстрация — запись не создана и данные не отправлены.',
+  },
+  consent: {
+    body: 'Мы храним cookie, чтобы запомнить язык. С вашего согласия загружаем приватную аналитику — без персональных данных и трекинга между сайтами.',
+    essentialButton: 'Только необходимые',
+    analyticsButton: 'Разрешить аналитику',
+  },
+  notFound: {
+    pageMetaTitle: 'Страница не найдена',
+    postMetaTitle: 'Пост не найден',
+    heading: 'Страница не найдена',
+    heading404: '404 — Страница не найдена',
+    body: 'Такой страницы не существует.',
+    missingPathTemplate: 'Мы не нашли {path}.',
+    postHeading: 'Пост не найден',
+    backHomeLabel: 'На главную',
+  },
 } as const;
 
-export type UIKey = keyof typeof RU;
+export type UiFallback = { [G in keyof typeof RU]: Record<keyof (typeof RU)[G], string> };
 
-const EN: Record<UIKey, string> = {
-  'header.homeAria': '{site}, home',
-  'header.navAria': 'Main navigation',
-  'header.navAriaMobile': 'Mobile navigation',
-  'header.menuOpen': 'Open menu',
-  'header.menuClose': 'Close menu',
-  'header.cta': 'Book',
-
-  'switcher.aria': 'Language',
-
-  'footer.findUs': 'FIND US',
-  'footer.hours': 'TIME FOR YOURSELF',
-  'footer.disclaimer': 'Names, barbers and prices are examples.',
-
-  'booking.name': 'Your name',
-  'booking.namePlaceholder': 'What should we call you?',
-  'booking.phone': 'Phone',
-  'booking.phonePlaceholder': '+420 000 000 000',
-  'booking.service': 'Service',
-  'booking.master': 'Barber',
-  'booking.anyMaster': 'Any barber',
-  'booking.date': 'Preferred date',
-  'booking.submit': 'Check availability',
-  'booking.result':
-    '{name}, all set: {service}, {date}. This is a demo — no booking was made and nothing was sent.',
-
-  'errors.pageNotFoundTitle': 'Page not found',
-  'errors.postNotFoundTitle': 'Post not found',
-  'errors.notFoundHeading': 'Page not found',
-  'errors.notFound404Heading': '404 — Page not found',
-  'errors.notFoundBody': "The page you're looking for doesn't exist.",
-  'errors.couldNotFind': "We couldn't find",
-  'errors.postNotFoundHeading': 'Post not found',
-  'errors.backHome': 'Go to the home page',
+const EN: UiFallback = {
+  header: { cta: 'Book' },
+  footer: {
+    findUsHeading: 'FIND US',
+    hoursHeading: 'TIME FOR YOURSELF',
+    disclaimer: 'Names, barbers and prices are examples.',
+  },
+  booking: {
+    nameLabel: 'Your name',
+    namePlaceholder: 'What should we call you?',
+    phoneLabel: 'Phone',
+    phonePlaceholder: '+420 000 000 000',
+    serviceLabel: 'Service',
+    masterLabel: 'Barber',
+    anyMasterOption: 'Any barber',
+    dateLabel: 'Preferred date',
+    submitLabel: 'Check availability',
+    resultTemplate:
+      '{name}, all set: {service}, {date}. This is a demo — no booking was made and nothing was sent.',
+  },
+  consent: {
+    body: 'We store a cookie to remember your language. With your consent we also load privacy-friendly analytics — no personal data, no cross-site tracking.',
+    essentialButton: 'Essential only',
+    analyticsButton: 'Allow analytics',
+  },
+  notFound: {
+    pageMetaTitle: 'Page not found',
+    postMetaTitle: 'Post not found',
+    heading: 'Page not found',
+    heading404: '404 — Page not found',
+    body: "The page you're looking for doesn't exist.",
+    missingPathTemplate: "We couldn't find {path}.",
+    postHeading: 'Post not found',
+    backHomeLabel: 'Go to the home page',
+  },
 };
 
-const CS: Record<UIKey, string> = {
-  'header.homeAria': '{site}, domů',
-  'header.navAria': 'Hlavní navigace',
-  'header.navAriaMobile': 'Mobilní navigace',
-  'header.menuOpen': 'Otevřít menu',
-  'header.menuClose': 'Zavřít menu',
-  'header.cta': 'Objednat',
-
-  'switcher.aria': 'Jazyk',
-
-  'footer.findUs': 'NAJDI NÁS',
-  'footer.hours': 'ČAS PRO SEBE',
-  'footer.disclaimer': 'Jména, holiči a ceny jsou příklady.',
-
-  'booking.name': 'Tvé jméno',
-  'booking.namePlaceholder': 'Jak ti máme říkat?',
-  'booking.phone': 'Telefon',
-  'booking.phonePlaceholder': '+420 000 000 000',
-  'booking.service': 'Služba',
-  'booking.master': 'Holič',
-  'booking.anyMaster': 'Kterýkoli holič',
-  'booking.date': 'Preferovaný termín',
-  'booking.submit': 'Zkontrolovat termín',
-  'booking.result':
-    '{name}, hotovo: {service}, {date}. Toto je ukázka — žádná rezervace nevznikla a nic se neodeslalo.',
-
-  'errors.pageNotFoundTitle': 'Stránka nenalezena',
-  'errors.postNotFoundTitle': 'Příspěvek nenalezen',
-  'errors.notFoundHeading': 'Stránka nenalezena',
-  'errors.notFound404Heading': '404 — Stránka nenalezena',
-  'errors.notFoundBody': 'Hledaná stránka neexistuje.',
-  'errors.couldNotFind': 'Nenašli jsme',
-  'errors.postNotFoundHeading': 'Příspěvek nenalezen',
-  'errors.backHome': 'Zpět na hlavní stránku',
+const CS: UiFallback = {
+  header: { cta: 'Objednat' },
+  footer: {
+    findUsHeading: 'NAJDI NÁS',
+    hoursHeading: 'ČAS PRO SEBE',
+    disclaimer: 'Jména, holiči a ceny jsou příklady.',
+  },
+  booking: {
+    nameLabel: 'Tvé jméno',
+    namePlaceholder: 'Jak ti máme říkat?',
+    phoneLabel: 'Telefon',
+    phonePlaceholder: '+420 000 000 000',
+    serviceLabel: 'Služba',
+    masterLabel: 'Holič',
+    anyMasterOption: 'Kterýkoli holič',
+    dateLabel: 'Preferovaný termín',
+    submitLabel: 'Zkontrolovat termín',
+    resultTemplate:
+      '{name}, hotovo: {service}, {date}. Toto je ukázka — žádná rezervace nevznikla a nic se neodeslalo.',
+  },
+  consent: {
+    body: 'Ukládáme cookie, abychom si zapamatovali jazyk. S vaším souhlasem načteme i analytiku šetrnou k soukromí — žádná osobní data, žádné sledování napříč weby.',
+    essentialButton: 'Jen nezbytné',
+    analyticsButton: 'Povolit analytiku',
+  },
+  notFound: {
+    pageMetaTitle: 'Stránka nenalezena',
+    postMetaTitle: 'Příspěvek nenalezen',
+    heading: 'Stránka nenalezena',
+    heading404: '404 — Stránka nenalezena',
+    body: 'Hledaná stránka neexistuje.',
+    missingPathTemplate: 'Nenašli jsme {path}.',
+    postHeading: 'Příspěvek nenalezen',
+    backHomeLabel: 'Zpět na hlavní stránku',
+  },
 };
 
-export const UI: Record<Locale, Record<UIKey, string>> = { ru: RU, en: EN, cs: CS };
-
-/** Bound translator for a locale: `const tr = t(locale); tr('header.cta')`. */
-export function t(locale: Locale) {
-  const table = UI[locale] ?? UI[DEFAULT_LOCALE];
-  return (key: UIKey, params?: Record<string, string>): string => {
-    let value = table[key];
-    if (value === undefined) {
-      if (import.meta.env.DEV) console.warn(`[ui] missing key "${key}" for locale "${locale}"`);
-      value = UI[DEFAULT_LOCALE][key] ?? key;
-    }
-    if (params) {
-      for (const [name, replacement] of Object.entries(params)) {
-        value = value.replaceAll(`{${name}}`, replacement);
-      }
-    }
-    return value;
-  };
-}
+export const UI_FALLBACK: Record<Locale, UiFallback> = { ru: RU, en: EN, cs: CS };

@@ -2,14 +2,14 @@
 import RichText from '../../../components/RichText.astro';
 import { env } from '../../../env';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
-import { t } from '../../../lib/i18n/ui';
+import { getFallback } from '../../../lib/fallback';
+import { resolveLabels } from '../../../lib/i18n/labels';
 import { localizedPath } from '../../../lib/locale';
-import { getPostBySlug } from '../../../lib/payload/client';
+import { getPostBySlug, getSiteSettings, getUiLabels } from '../../../lib/payload/client';
 import { buildMeta } from '../../../lib/seo/buildMeta';
 import { articleJsonLd, breadcrumbJsonLd } from '../../../lib/seo/jsonLd';
 
 const locale = Astro.locals.locale;
-const tr = t(locale);
 const slug = (Astro.params.slug ?? '').replace(/^\/+|\/+$/g, '');
 const path = localizedPath(locale, `/posts/${slug}`);
 const home = localizedPath(locale, '/');
@@ -24,17 +24,46 @@ if (!post) {
   Astro.response.status = 404;
 }
 
+let siteSettings = null;
+try {
+  siteSettings = await getSiteSettings(locale);
+} catch (error) {
+  console.error(`[post] site settings failed (${locale}):`, error);
+}
+let uiLabels = null;
+try {
+  uiLabels = await getUiLabels(locale);
+} catch (error) {
+  console.error(`[post] ui labels failed (${locale}):`, error);
+}
+const siteName = siteSettings?.siteName || getFallback(locale).site.siteName || '';
+const labels = resolveLabels(uiLabels, locale);
+
 const meta = buildMeta(
   post
     ? {
         title: post.seo?.title ?? post.title,
-        description: post.seo?.description ?? post.excerpt,
+        description:
+          post.seo?.description ??
+          post.excerpt ??
+          siteSettings?.seo?.defaultDescription ??
+          siteSettings?.description ??
+          undefined,
+        titleTemplate: siteSettings?.seo?.titleTemplate,
         path,
         noindex: post.seo?.noindex ?? false,
         type: 'article',
         locale,
+        siteName,
       }
-    : { title: tr('errors.postNotFoundTitle'), path, noindex: true, locale },
+    : {
+        title: labels.notFound.postMetaTitle,
+        path,
+        noindex: true,
+        locale,
+        siteName,
+        titleTemplate: siteSettings?.seo?.titleTemplate,
+      },
   env.PUBLIC_SITE_URL,
 );
 
@@ -48,14 +77,14 @@ const jsonLd = post
         dateModified: post.updatedAt,
       }),
       breadcrumbJsonLd([
-        { name: 'Home', url: new URL(home, env.PUBLIC_SITE_URL).href },
+        { name: siteName, url: new URL(home, env.PUBLIC_SITE_URL).href },
         { name: post.title, url: meta.canonical },
       ]),
     ]
   : [];
 ---
 
-<SiteLayout meta={meta} locale={locale} jsonLd={jsonLd}>
+<SiteLayout meta={meta} locale={locale} siteSettings={siteSettings} uiLabels={uiLabels} jsonLd={jsonLd}>
   {
     post ? (
       <article class="wrap section">
@@ -65,8 +94,8 @@ const jsonLd = post
       </article>
     ) : (
       <div class="wrap section">
-        <h1>{tr('errors.postNotFoundHeading')}</h1>
-        <a class="button mt-8" href={home}>{tr('errors.backHome')}</a>
+        <h1>{labels.notFound.postHeading}</h1>
+        <a class="button mt-8" href={home}>{labels.notFound.backHomeLabel}</a>
       </div>
     )
   }

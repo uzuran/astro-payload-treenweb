@@ -1,5 +1,7 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
+import { env } from '../env';
+import { analyticsAllowed, readConsent } from '../lib/consent';
 import { DEFAULT_LOCALE, dirFor } from '../lib/locale';
 import type { MetaTags } from '../lib/seo/buildMeta';
 import { serializeJsonLd } from '../lib/seo/jsonLd';
@@ -22,8 +24,11 @@ const fontPreloads =
     ? ['/fonts/manrope-cyrillic.woff2', '/fonts/oswald-cyrillic.woff2']
     : ['/fonts/manrope-latin.woff2', '/fonts/oswald-latin.woff2'];
 
-const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
-const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
+// Analytics loads ONLY with `analytics` consent, in production, and when the
+// Plausible env is configured. Dev / test / `essential` → nothing.
+const analyticsOn =
+  Boolean(env.PUBLIC_PLAUSIBLE_DOMAIN && env.PUBLIC_PLAUSIBLE_SRC) &&
+  analyticsAllowed(readConsent(Astro.cookies), env.NODE_ENV);
 ---
 
 <!doctype html>
@@ -41,8 +46,13 @@ const plausibleSrc = import.meta.env.PUBLIC_PLAUSIBLE_SRC;
       ))
     }
     {
-      plausibleDomain && plausibleSrc && (
-        <script is:inline defer data-domain={plausibleDomain} src={plausibleSrc} />
+      analyticsOn && (
+        <script
+          is:inline
+          defer
+          data-domain={env.PUBLIC_PLAUSIBLE_DOMAIN}
+          src={env.PUBLIC_PLAUSIBLE_SRC}
+        />
       )
     }
   </head>

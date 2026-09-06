@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Local runs OOM on the dev box; CI runners have 16 GB. Give Node headroom
+  # so `astro check` / builds / Playwright have room to breathe.
+  NODE_OPTIONS: --max-old-space-size=4096
+
+jobs:
+  # ── lint + format + typecheck + unit tests (no database) ──────────────────
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck # backend `tsc --noEmit` + frontend `astro check`
+      - run: pnpm test:unit # backend + frontend vitest (pure logic, no DB)
+
+  # ── Payload API integration tests (throwaway Postgres, schema push-synced) ─
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: treenweb
+          POSTGRES_PASSWORD: treenweb
+          POSTGRES_DB: treenweb
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U treenweb -d treenweb"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL_TEST: postgres://treenweb:treenweb@localhost:5432/treenweb_test
+      PAYLOAD_SECRET: ci-secret-ci-secret-ci-secret-0123456789
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Create throwaway test database
+        run: PGPASSWORD=treenweb psql -h localhost -U treenweb -d treenweb -c 'CREATE DATABASE treenweb_test'
+      - run: pnpm --filter @treenweb/backend run test:integration
+
+  # ── Playwright e2e against a real, seeded stack ───────────────────────────
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: treenweb
+          POSTGRES_PASSWORD: treenweb
+          POSTGRES_DB: treenweb
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U treenweb -d treenweb"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      # backend
+      DATABASE_URL: postgres://treenweb:treenweb@localhost:5432/treenweb
+      PAYLOAD_SECRET: ci-secret-ci-secret-ci-secret-0123456789
+      PAYLOAD_DB_PUSH: 'true'
+      # frontend / SSR
+      PUBLIC_SITE_URL: http://localhost:4321
+      PUBLIC_CMS_URL: http://localhost:3000
+      PAYLOAD_INTERNAL_URL: http://localhost:3000
+      # playwright config (see frontend/playwright.config.ts)
+      E2E_BASE_URL: http://localhost:4321
+      E2E_CMS_URL: http://localhost:3000
+      E2E_DEFAULT_LOCALE: ru
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium for Playwright
+        run: pnpm --filter @treenweb/frontend exec playwright install --with-deps chromium
+
+      - name: Build the Astro SSR bundle
+        run: pnpm --filter @treenweb/frontend run build
+
+      - name: Start Payload, seed, run Playwright
+        run: |
+          set -euo pipefail
+          pnpm --filter @treenweb/backend run dev &
+          backend_pid=$!
+          trap 'kill "$backend_pid" 2>/dev/null || true' EXIT
+          timeout 240 bash -c \
+            'until curl -sf http://localhost:3000/api/globals/site-settings >/dev/null; do sleep 3; done'
+          pnpm --filter @treenweb/backend run seed
+          # playwright.config.ts starts `astro preview` on :4321 itself
+          pnpm --filter @treenweb/frontend run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7

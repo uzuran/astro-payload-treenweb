@@ -5,11 +5,28 @@ import { buildMeta } from './buildMeta';
 const SITE = 'https://treenweb.example';
 
 describe('buildMeta', () => {
-  it('appends the site-name suffix once', () => {
-    expect(buildMeta({ title: 'About', path: '/about' }, SITE).title).toBe('About · treenweb');
-    expect(buildMeta({ title: 'About · treenweb', path: '/about' }, SITE).title).toBe(
+  it('appends the site-name suffix once when a siteName is given', () => {
+    expect(buildMeta({ title: 'About', path: '/about', siteName: 'treenweb' }, SITE).title).toBe(
       'About · treenweb',
     );
+    expect(
+      buildMeta({ title: 'About · treenweb', path: '/about', siteName: 'treenweb' }, SITE).title,
+    ).toBe('About · treenweb');
+  });
+
+  it('emits no suffix and no og:site_name when siteName is omitted', () => {
+    const meta = buildMeta({ title: 'About', path: '/about' }, SITE);
+    expect(meta.title).toBe('About');
+    expect(meta.og['og:site_name']).toBeUndefined();
+  });
+
+  it('applies a titleTemplate with {page}/{site} tokens', () => {
+    expect(
+      buildMeta(
+        { title: 'Услуги', path: '/s', siteName: 'FORMA', titleTemplate: '{page} — {site}' },
+        SITE,
+      ).title,
+    ).toBe('Услуги — FORMA');
   });
 
   it('builds an absolute canonical URL from the path', () => {
@@ -18,10 +35,18 @@ describe('buildMeta', () => {
     );
   });
 
-  it('falls back to the default description', () => {
-    expect(buildMeta({ title: 'X', path: '/' }, SITE).description).toBe(
-      'Secure, SEO-first web platform.',
-    );
+  it('leaves description empty and drops the og/twitter tags when none is supplied', () => {
+    const meta = buildMeta({ title: 'X', path: '/' }, SITE);
+    expect(meta.description).toBe('');
+    expect(meta.og['og:description']).toBeUndefined();
+    expect(meta.twitter['twitter:description']).toBeUndefined();
+  });
+
+  it('carries a supplied description into og + twitter', () => {
+    const meta = buildMeta({ title: 'X', path: '/', description: 'Hello.' }, SITE);
+    expect(meta.description).toBe('Hello.');
+    expect(meta.og['og:description']).toBe('Hello.');
+    expect(meta.twitter['twitter:description']).toBe('Hello.');
   });
 
   it('emits noindex robots when requested', () => {

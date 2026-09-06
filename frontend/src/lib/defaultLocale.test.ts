@@ -57,4 +57,36 @@ describe('resolveDefaultLocale', () => {
     );
     expect(await resolveDefaultLocale()).toBe(DEFAULT_LOCALE);
   });
+
+  it('constrains the stored default to the enabled locales', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          defaultLocale: 'en',
+          supportedLocales: [
+            { code: 'ru', label: 'Русский', enabled: true },
+            { code: 'cs', label: 'Čeština', enabled: true },
+          ],
+        }),
+      ),
+    );
+    expect(await resolveDefaultLocale()).toBe('ru');
+  });
+
+  it('skips a disabled locale even when it is the stored default', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          defaultLocale: 'en',
+          supportedLocales: [
+            { code: 'en', label: 'English', enabled: false },
+            { code: 'ru', label: 'Русский', enabled: true },
+          ],
+        }),
+      ),
+    );
+    expect(await resolveDefaultLocale()).toBe('ru');
+  });
 });

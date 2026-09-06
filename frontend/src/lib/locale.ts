@@ -32,6 +32,18 @@ export function assertLocale(value: unknown): Locale {
   return isLocale(value) ? value : DEFAULT_LOCALE;
 }
 
+/**
+ * The runtime default locale, constrained to an offered set.
+ * `raw` is typically `SiteSettings.defaultLocale`: an unroutable value degrades
+ * to `DEFAULT_LOCALE`, then a value not in `enabled` degrades to the first
+ * enabled locale. An empty `enabled` set applies no constraint.
+ */
+export function pickDefaultLocale(raw: unknown, enabled: Locale[]): Locale {
+  const wanted = assertLocale(raw);
+  if (enabled.length === 0) return wanted;
+  return enabled.includes(wanted) ? wanted : (enabled[0] as Locale);
+}
+
 const RTL_LOCALES = new Set(['ar', 'fa', 'he', 'ur']);
 
 /** Writing direction for a BCP-47 locale tag (LTR for everything we ship today). */
