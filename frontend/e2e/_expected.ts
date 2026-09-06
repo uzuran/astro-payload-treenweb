@@ -11,6 +11,8 @@ export const EXPECTED: Record<
     notFound: string;
     notFound404: string;
     back: string;
+    consentEssential: string;
+    consentAnalytics: string;
   }
 > = {
   ru: {
@@ -20,6 +22,8 @@ export const EXPECTED: Record<
     notFound: 'Страница не найдена',
     notFound404: '404 — Страница не найдена',
     back: 'На главную',
+    consentEssential: 'Только необходимые',
+    consentAnalytics: 'Разрешить аналитику',
   },
   en: {
     cta: 'Book',
@@ -28,6 +32,8 @@ export const EXPECTED: Record<
     notFound: 'Page not found',
     notFound404: '404 — Page not found',
     back: 'Go to the home page',
+    consentEssential: 'Essential only',
+    consentAnalytics: 'Allow analytics',
   },
   cs: {
     cta: 'Objednat',
@@ -36,6 +42,8 @@ export const EXPECTED: Record<
     notFound: 'Stránka nenalezena',
     notFound404: '404 — Stránka nenalezena',
     back: 'Zpět na hlavní stránku',
+    consentEssential: 'Jen nezbytné',
+    consentAnalytics: 'Povolit analytiku',
   },
 };
 

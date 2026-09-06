@@ -1,6 +1,8 @@
 import { defineMiddleware } from 'astro:middleware';
 
+import { env } from './env';
 import { DEFAULT_LOCALE, isLocale, type Locale } from './lib/locale';
+import { BASE_SECURITY_HEADERS, contentSecurityPolicy, HSTS_HEADER } from './lib/securityHeaders';
 
 declare global {
   namespace App {
@@ -31,12 +33,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (routeLocale !== undefined) {
     headers.set('Content-Language', context.locals.locale);
+    // Remember the served locale so a future prefix-less visit can honour it.
+    context.cookies.set('locale', context.locals.locale, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 180, // ~6 months, inside the 1–12 month window
+      sameSite: 'lax',
+      secure: env.NODE_ENV === 'production',
+    });
   }
 
-  headers.set('X-Content-Type-Options', 'nosniff');
-  headers.set('X-Frame-Options', 'DENY');
-  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  for (const [name, value] of Object.entries(BASE_SECURITY_HEADERS)) {
+    headers.set(name, value);
+  }
+  headers.set('Content-Security-Policy', contentSecurityPolicy());
+  if (env.NODE_ENV === 'production') {
+    headers.set('Strict-Transport-Security', HSTS_HEADER);
+  }
 
   if (context.request.method === 'GET' && !headers.has('Cache-Control')) {
     const contentType = headers.get('Content-Type') ?? '';

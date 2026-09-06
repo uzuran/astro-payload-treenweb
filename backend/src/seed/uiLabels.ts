@@ -22,6 +22,7 @@ export interface UiLabelsSeed {
     submitLabel: string;
     resultTemplate: string;
   };
+  consent: { body: string; essentialButton: string; analyticsButton: string };
   notFound: {
     pageMetaTitle: string;
     postMetaTitle: string;
@@ -55,6 +56,11 @@ export const uiLabelsSeed: Record<UiLabelLocale, UiLabelsSeed> = {
       resultTemplate:
         '{name}, всё заполнено: {service}, {date}. Это демонстрация — запись не создана и данные не отправлены.',
     },
+    consent: {
+      body: 'Мы храним cookie, чтобы запомнить язык. С вашего согласия загружаем приватную аналитику — без персональных данных и трекинга между сайтами.',
+      essentialButton: 'Только необходимые',
+      analyticsButton: 'Разрешить аналитику',
+    },
     notFound: {
       pageMetaTitle: 'Страница не найдена',
       postMetaTitle: 'Пост не найден',
@@ -86,6 +92,11 @@ export const uiLabelsSeed: Record<UiLabelLocale, UiLabelsSeed> = {
       resultTemplate:
         '{name}, all set: {service}, {date}. This is a demo — no booking was made and nothing was sent.',
     },
+    consent: {
+      body: 'We store a cookie to remember your language. With your consent we also load privacy-friendly analytics — no personal data, no cross-site tracking.',
+      essentialButton: 'Essential only',
+      analyticsButton: 'Allow analytics',
+    },
     notFound: {
       pageMetaTitle: 'Page not found',
       postMetaTitle: 'Post not found',
@@ -116,6 +127,11 @@ export const uiLabelsSeed: Record<UiLabelLocale, UiLabelsSeed> = {
       submitLabel: 'Zkontrolovat termín',
       resultTemplate:
         '{name}, hotovo: {service}, {date}. Toto je ukázka — žádná rezervace nevznikla a nic se neodeslalo.',
+    },
+    consent: {
+      body: 'Ukládáme cookie, abychom si zapamatovali jazyk. S vaším souhlasem načteme i analytiku šetrnou k soukromí — žádná osobní data, žádné sledování napříč weby.',
+      essentialButton: 'Jen nezbytné',
+      analyticsButton: 'Povolit analytiku',
     },
     notFound: {
       pageMetaTitle: 'Stránka nenalezena',

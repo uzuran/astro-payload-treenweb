@@ -51,8 +51,12 @@ typecheck: ## Type-check every package
 	pnpm typecheck
 
 .PHONY: check
-check: ## Pre-push gate: lint + format-check + typecheck + unit tests
+check: ## Full pre-push gate (heavy: runs `astro check`) — prefer CI, this OOMs on small boxes
 	pnpm check
+
+.PHONY: verify
+verify: ## Light local gate: lint + format-check + unit tests (skips astro check / e2e — CI runs those)
+	pnpm lint && pnpm format:check && pnpm test:unit
 
 # ─── Tests ──────────────────────────────────────────────────────────────────
 

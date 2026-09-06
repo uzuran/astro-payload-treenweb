@@ -19,9 +19,9 @@ for (const g of groups) {
 const groupNames = Object.keys(schema);
 
 describe('UiLabels global — structure', () => {
-  it('is the `ui-labels` global with the four chrome groups', () => {
+  it('is the `ui-labels` global with the chrome groups', () => {
     expect(UiLabels.slug).toBe('ui-labels');
-    expect(groupNames.sort()).toEqual(['booking', 'footer', 'header', 'notFound']);
+    expect(groupNames.sort()).toEqual(['booking', 'consent', 'footer', 'header', 'notFound']);
   });
 
   it('every leaf is a localized text/textarea field', () => {
@@ -40,6 +40,7 @@ describe('UiLabels global — structure', () => {
     expect(names).toEqual({
       header: ['cta'],
       footer: ['disclaimer', 'findUsHeading', 'hoursHeading'],
+      consent: ['analyticsButton', 'body', 'essentialButton'],
       booking: [
         'anyMasterOption',
         'dateLabel',

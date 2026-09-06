@@ -1,0 +1,57 @@
+---
+import { hasConsentDecision } from '../lib/consent';
+import { aria } from '../lib/i18n/aria';
+import type { Labels } from '../lib/i18n/labels';
+import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
+
+interface Props {
+  labels: Labels;
+  locale?: Locale;
+}
+
+const { labels, locale = DEFAULT_LOCALE } = Astro.props;
+
+// Renders only until the visitor has chosen. Progressive enhancement: with no
+// JS the banner still shows and the site works (analytics simply never loads).
+const decided = hasConsentDecision(Astro.cookies);
+---
+
+{
+  !decided && (
+    <div
+      id="cookie-consent"
+      role="dialog"
+      aria-label={aria(locale)('consentAria')}
+      class="fixed inset-x-0 bottom-0 z-50 border-t border-white/15 bg-black/90 px-4 py-4 text-sm text-white/80 backdrop-blur"
+    >
+      <div class="wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="max-w-2xl">{labels.consent.body}</p>
+        <div class="flex shrink-0 gap-3">
+          <button type="button" data-consent="essential" class="button">
+            {labels.consent.essentialButton}
+          </button>
+          <button type="button" data-consent="analytics" class="button">
+            {labels.consent.analyticsButton}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  const el = document.getElementById('cookie-consent');
+  if (el) {
+    const MAX_AGE = 60 * 60 * 24 * 180; // ~6 months
+    const choose = (value: 'essential' | 'analytics') => {
+      document.cookie = `cookie_consent=${value}; path=/; max-age=${MAX_AGE}; samesite=lax`;
+      el.remove();
+      if (value === 'analytics') location.reload(); // let the analytics script render
+    };
+    el.querySelectorAll<HTMLButtonElement>('button[data-consent]').forEach((b) =>
+      b.addEventListener('click', () =>
+        choose(b.dataset.consent === 'analytics' ? 'analytics' : 'essential'),
+      ),
+    );
+  }
+</script>

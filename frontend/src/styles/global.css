@@ -284,15 +284,18 @@
      page load. With <ClientRouter/> it would otherwise replay per swap;
      BaseLayout's `data-navigating` guard suppresses that (see BaseLayout). */
   @media (prefers-reduced-motion: no-preference) {
+    /* Fade / Slide up / Zoom take their length from AnimationSettings.duration,
+       passed in as `--hero-anim-duration` on the <section> (default 1.2s). */
     .hero--fade {
-      animation: hero-in-fade 0.7s ease-out both;
+      animation: hero-in-fade var(--hero-anim-duration, 1.2s) ease-out both;
     }
     .hero--slide-up {
-      animation: hero-in-slide 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation: hero-in-slide var(--hero-anim-duration, 1.2s) cubic-bezier(0.22, 1, 0.36, 1) both;
     }
     .hero--zoom {
-      animation: hero-in-zoom 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation: hero-in-zoom var(--hero-anim-duration, 1.2s) cubic-bezier(0.22, 1, 0.36, 1) both;
     }
+    /* Neon keeps its own fixed timeline — do not read the duration variable. */
     .hero--neon {
       animation: hero-in-fade 0.5s ease-out both;
     }
@@ -312,18 +315,19 @@
   @keyframes hero-in-fade {
     from {
       opacity: 0;
+      transform: translateY(8px);
     }
   }
   @keyframes hero-in-slide {
     from {
       opacity: 0;
-      transform: translateY(18px);
+      transform: translateY(32px);
     }
   }
   @keyframes hero-in-zoom {
     from {
       opacity: 0;
-      transform: scale(0.985);
+      transform: scale(0.94);
     }
   }
   @keyframes hero-in-neon {

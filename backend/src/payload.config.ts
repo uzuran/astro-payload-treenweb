@@ -14,6 +14,7 @@ import { Redirects } from './collections/Redirects';
 import { Users } from './collections/Users';
 import { env } from './env';
 import { About } from './globals/About';
+import { AnimationSettings } from './globals/AnimationSettings';
 import { Booking } from './globals/Booking';
 import { Hero } from './globals/Hero';
 import { Navigation } from './globals/Navigation';
@@ -44,7 +45,17 @@ export default buildConfig({
     fallback: true,
   },
   collections: [Pages, Posts, Media, Masters, Redirects, Users],
-  globals: [SiteSettings, Navigation, UiLabels, Hero, Services, About, Team, Booking],
+  globals: [
+    SiteSettings,
+    Navigation,
+    UiLabels,
+    AnimationSettings,
+    Hero,
+    Services,
+    About,
+    Team,
+    Booking,
+  ],
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL },
     push: env.PAYLOAD_DB_PUSH,

@@ -63,6 +63,16 @@ export const UiLabels: GlobalConfig = {
     },
     {
       type: 'group',
+      name: 'consent',
+      label: 'Cookie consent banner',
+      fields: [
+        area('body', 'Banner text shown until the visitor chooses.'),
+        text('essentialButton', '“Essential only” button.'),
+        text('analyticsButton', '“Allow analytics” button.'),
+      ],
+    },
+    {
+      type: 'group',
       name: 'notFound',
       fields: [
         text('pageMetaTitle', '<title> for a missing content page.'),

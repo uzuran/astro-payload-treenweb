@@ -7,6 +7,9 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 5_000 },
   fullyParallel: true,
+  // Local runs share the box with the dev stack + a Payload container; one
+  // worker keeps memory in check. CI gets more.
+  workers: process.env.CI ? 2 : 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL, trace: 'on-first-retry' },

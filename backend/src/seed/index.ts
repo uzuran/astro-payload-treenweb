@@ -83,6 +83,8 @@ await payload.updateGlobal({
 
 await payload.updateGlobal({ slug: 'ui-labels', data: uiLabelsSeed.ru });
 
+await payload.updateGlobal({ slug: 'animation-settings', data: { duration: 1.2 } });
+
 const NAV_MAIN_RU = [
   { label: 'О нас', href: '#about' },
   { label: 'Услуги и цены', href: '#services' },

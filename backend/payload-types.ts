@@ -99,6 +99,7 @@ export interface Config {
     'site-settings': SiteSetting;
     navigation: Navigation;
     'ui-labels': UiLabel;
+    'animation-settings': AnimationSetting;
     hero: Hero;
     services: Service;
     about: About;
@@ -109,6 +110,7 @@ export interface Config {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     'ui-labels': UiLabelsSelect<false> | UiLabelsSelect<true>;
+    'animation-settings': AnimationSettingsSelect<false> | AnimationSettingsSelect<true>;
     hero: HeroSelect<false> | HeroSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     about: AboutSelect<false> | AboutSelect<true>;
@@ -780,6 +782,20 @@ export interface UiLabel {
      */
     resultTemplate?: string | null;
   };
+  consent?: {
+    /**
+     * Banner text shown until the visitor chooses.
+     */
+    body?: string | null;
+    /**
+     * “Essential only” button.
+     */
+    essentialButton?: string | null;
+    /**
+     * “Allow analytics” button.
+     */
+    analyticsButton?: string | null;
+  };
   notFound?: {
     /**
      * <title> for a missing content page.
@@ -814,6 +830,19 @@ export interface UiLabel {
      */
     backHomeLabel?: string | null;
   };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "animation-settings".
+ */
+export interface AnimationSetting {
+  id: number;
+  /**
+   * Hero entrance length in seconds for Fade / Slide up / Zoom. Neon keeps its own timing. 0.2–5s, default 1.2.
+   */
+  duration?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1104,6 +1133,13 @@ export interface UiLabelsSelect<T extends boolean = true> {
         submitLabel?: T;
         resultTemplate?: T;
       };
+  consent?:
+    | T
+    | {
+        body?: T;
+        essentialButton?: T;
+        analyticsButton?: T;
+      };
   notFound?:
     | T
     | {
@@ -1116,6 +1152,16 @@ export interface UiLabelsSelect<T extends boolean = true> {
         postHeading?: T;
         backHomeLabel?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "animation-settings_select".
+ */
+export interface AnimationSettingsSelect<T extends boolean = true> {
+  duration?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

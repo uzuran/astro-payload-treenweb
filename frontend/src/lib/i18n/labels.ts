@@ -37,6 +37,11 @@ export function resolveLabels(cms: UiLabels | null | undefined, locale: Locale) 
       submitLabel: pick('booking', 'submitLabel'),
       resultTemplate: pick('booking', 'resultTemplate'),
     },
+    consent: {
+      body: pick('consent', 'body'),
+      essentialButton: pick('consent', 'essentialButton'),
+      analyticsButton: pick('consent', 'analyticsButton'),
+    },
     notFound: {
       pageMetaTitle: pick('notFound', 'pageMetaTitle'),
       postMetaTitle: pick('notFound', 'postMetaTitle'),

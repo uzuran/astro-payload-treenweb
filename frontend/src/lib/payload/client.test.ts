@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  getAnimationSettings,
   getHero,
   getPageBySlug,
   getSiteSettings,
@@ -172,6 +173,43 @@ describe('globals + masters getters', () => {
     );
     const labels = await getUiLabels();
     expect(labels.notFound?.missingPathTemplate).toBe('x {path} y');
+  });
+
+  it('parses siteSettings.heroAnimation (valid, garbage and absent all accepted)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ siteName: 'FORMA', heroAnimation: 'neon' })),
+    );
+    expect((await getSiteSettings()).heroAnimation).toBe('neon');
+
+    // the schema is intentionally loose — the whitelist lives in the component
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ siteName: 'FORMA', heroAnimation: 'disco' })),
+    );
+    expect((await getSiteSettings()).heroAnimation).toBe('disco');
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ siteName: 'FORMA' })),
+    );
+    expect((await getSiteSettings()).heroAnimation).toBeUndefined();
+  });
+
+  it('requests animation-settings at depth=0 and parses `duration` (present or absent)', async () => {
+    const fetchMock = vi.fn(async (_url: string | URL) => jsonResponse({ duration: 2.5 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const s = await getAnimationSettings();
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain(
+      '/api/globals/animation-settings?depth=0',
+    );
+    expect(s.duration).toBe(2.5);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({})),
+    );
+    expect((await getAnimationSettings()).duration).toBeUndefined();
   });
 
   it('parses siteSettings with an optional seo group', async () => {

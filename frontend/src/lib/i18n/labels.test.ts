@@ -46,9 +46,18 @@ describe('resolveLabels', () => {
   it('exposes the full label surface', () => {
     expect(Object.keys(resolveLabels(null, 'ru')).sort()).toEqual([
       'booking',
+      'consent',
       'footer',
       'header',
       'notFound',
     ]);
+  });
+
+  it('resolves the cookie-consent strings (CMS value wins, else fallback)', () => {
+    expect(resolveLabels(null, 'cs').consent.essentialButton).toBe('Jen nezbytné');
+    expect(resolveLabels({ consent: { body: 'Custom' } }, 'en').consent.body).toBe('Custom');
+    expect(resolveLabels({ consent: { body: '  ' } }, 'en').consent.analyticsButton).toBe(
+      'Allow analytics',
+    );
   });
 });

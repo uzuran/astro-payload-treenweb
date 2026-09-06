@@ -1,4 +1,5 @@
 ---
+import CookieConsent from '../components/CookieConsent.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import { resolveLabels } from '../lib/i18n/labels';
@@ -90,4 +91,5 @@ const mergedMeta: MetaTags = {
     footerItems={navigation?.footer}
     locale={locale}
   />
+  <CookieConsent labels={labels} locale={locale} />
 </BaseLayout>

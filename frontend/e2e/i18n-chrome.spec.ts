@@ -19,6 +19,22 @@ for (const locale of LOCALES) {
     await expect(form.getByRole('button', { name: new RegExp(e.submit) })).toBeVisible();
   });
 
+  test(`[${locale}] cookie-consent banner text comes from ui-labels`, async ({ page }) => {
+    await page.context().clearCookies(); // ensure the banner renders
+    await page.goto(`/${locale}`);
+
+    const banner = page.getByRole('dialog', { name: /cookie|согласие|souhlas/i });
+    await expect(banner).toBeVisible();
+    await expect(banner.getByRole('button', { name: e.consentEssential })).toBeVisible();
+    await expect(banner.getByRole('button', { name: e.consentAnalytics })).toBeVisible();
+
+    // choosing "essential" dismisses it and it stays dismissed on reload
+    await banner.getByRole('button', { name: e.consentEssential }).click();
+    await expect(banner).toBeHidden();
+    await page.reload();
+    await expect(page.getByRole('dialog', { name: /cookie|согласие|souhlas/i })).toHaveCount(0);
+  });
+
   test(`[${locale}] footer secondary nav renders locale-prefixed links`, async ({ page }) => {
     await page.goto(`/${locale}`);
     const footerNav = page.locator('footer nav');

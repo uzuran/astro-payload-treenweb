@@ -12,6 +12,7 @@ const RU = {
   menuOpen: 'Открыть меню',
   menuClose: 'Закрыть меню',
   switcherAria: 'Язык',
+  consentAria: 'Согласие на cookie',
 } as const;
 
 export type AriaKey = keyof typeof RU;
@@ -25,6 +26,7 @@ const EN: Record<AriaKey, string> = {
   menuOpen: 'Open menu',
   menuClose: 'Close menu',
   switcherAria: 'Language',
+  consentAria: 'Cookie consent',
 };
 
 const CS: Record<AriaKey, string> = {
@@ -35,6 +37,7 @@ const CS: Record<AriaKey, string> = {
   menuOpen: 'Otevřít menu',
   menuClose: 'Zavřít menu',
   switcherAria: 'Jazyk',
+  consentAria: 'Souhlas s cookies',
 };
 
 const ARIA: Record<Locale, Record<AriaKey, string>> = { ru: RU, en: EN, cs: CS };
