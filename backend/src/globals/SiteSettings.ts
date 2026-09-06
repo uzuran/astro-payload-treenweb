@@ -14,6 +14,31 @@ export const SiteSettings: GlobalConfig = {
     { name: 'description', type: 'textarea', localized: true },
     { name: 'ogImage', type: 'upload', relationTo: 'media' },
     {
+      type: 'group',
+      name: 'seo',
+      label: 'SEO defaults',
+      fields: [
+        {
+          name: 'titleTemplate',
+          type: 'text',
+          localized: true,
+          admin: {
+            description:
+              'Tokens: {page} {site}. e.g. "{page} · {site}". Blank keeps the default "{page} · {site}".',
+          },
+        },
+        {
+          name: 'defaultDescription',
+          type: 'textarea',
+          localized: true,
+          admin: {
+            description:
+              'Meta description for pages that have none of their own. Blank falls back to “Description” above.',
+          },
+        },
+      ],
+    },
+    {
       name: 'social',
       type: 'array',
       fields: [
@@ -70,7 +95,7 @@ export const SiteSettings: GlobalConfig = {
       admin: {
         position: 'sidebar',
         description:
-          'Where the bare "/" sends visitors. Each /xx page keeps its own <html lang>. Applies on the next request; no rebuild needed.',
+          'Landing redirect for "/" and the hreflang x-default target. Must be one of the enabled locales below. The fallback language for untranslated fields is fixed in code (ru) and is not affected by this.',
       },
     },
     {

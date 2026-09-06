@@ -1,6 +1,3 @@
-export const SITE_NAME = 'treenweb';
-const DEFAULT_DESCRIPTION = 'Secure, SEO-first web platform.';
-
 export interface Alternate {
   hreflang: string;
   href: string;
@@ -16,8 +13,10 @@ export interface SeoInput {
   image?: string | null;
   noindex?: boolean | null;
   type?: 'website' | 'article';
-  /** Site name for the title suffix + og:site_name. Defaults to SITE_NAME. */
+  /** Site name for the title suffix + og:site_name. Omit → no suffix, no og:site_name. */
   siteName?: string | null;
+  /** "{page} · {site}" template from SiteSettings.seo.titleTemplate. Overrides the default suffix. */
+  titleTemplate?: string | null;
   /** BCP-47 locale of this page — drives og:locale. */
   locale?: string | null;
   /** Other locales this page exists in — drives og:locale:alternate. */
@@ -28,6 +27,7 @@ export interface SeoInput {
 
 export interface MetaTags {
   title: string;
+  /** May be '' — BaseHead / og / twitter omit the tag when empty. */
   description: string;
   canonical: string;
   robots: string;
@@ -38,15 +38,26 @@ export interface MetaTags {
   alternates: Alternate[];
 }
 
-/** Pure builder for the <head> meta of a page. */
+/**
+ * Pure builder for the <head> meta of a page. Carries no hard-coded copy: the
+ * caller supplies title / description / siteName (from Payload, or the offline
+ * fallback bundle). An empty description or siteName just drops the tag.
+ */
 export function buildMeta(input: SeoInput, siteUrl: string): MetaTags {
-  const siteName = (input.siteName ?? SITE_NAME).trim() || SITE_NAME;
+  const siteName = (input.siteName ?? '').trim();
   const rawTitle = input.title.trim() || siteName;
-  // Append " · <siteName>" unless the title already carries the site name.
-  const title = rawTitle.toLowerCase().includes(siteName.toLowerCase())
-    ? rawTitle
-    : `${rawTitle} · ${siteName}`;
-  const description = (input.description ?? DEFAULT_DESCRIPTION).trim() || DEFAULT_DESCRIPTION;
+  const template = (input.titleTemplate ?? '').trim();
+
+  let title: string;
+  if (template) {
+    title = template.replaceAll('{page}', rawTitle).replaceAll('{site}', siteName).trim();
+  } else if (siteName && !rawTitle.toLowerCase().includes(siteName.toLowerCase())) {
+    title = `${rawTitle} · ${siteName}`;
+  } else {
+    title = rawTitle;
+  }
+
+  const description = (input.description ?? '').trim();
   const canonical = new URL(input.path, siteUrl).href;
   const image = input.image ? new URL(input.image, siteUrl).href : undefined;
   const robots = input.noindex ? 'noindex, nofollow' : 'index, follow';
@@ -54,10 +65,10 @@ export function buildMeta(input: SeoInput, siteUrl: string): MetaTags {
   const og: Record<string, string> = {
     'og:type': input.type ?? 'website',
     'og:title': title,
-    'og:description': description,
     'og:url': canonical,
-    'og:site_name': siteName,
   };
+  if (description) og['og:description'] = description;
+  if (siteName) og['og:site_name'] = siteName;
   if (image) og['og:image'] = image;
   if (input.locale) og['og:locale'] = input.locale;
 
@@ -68,8 +79,8 @@ export function buildMeta(input: SeoInput, siteUrl: string): MetaTags {
   const twitter: Record<string, string> = {
     'twitter:card': image ? 'summary_large_image' : 'summary',
     'twitter:title': title,
-    'twitter:description': description,
   };
+  if (description) twitter['twitter:description'] = description;
   if (image) twitter['twitter:image'] = image;
 
   return {

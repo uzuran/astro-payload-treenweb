@@ -98,6 +98,7 @@ export interface Config {
   globals: {
     'site-settings': SiteSetting;
     navigation: Navigation;
+    'ui-labels': UiLabel;
     hero: Hero;
     services: Service;
     about: About;
@@ -107,6 +108,7 @@ export interface Config {
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
+    'ui-labels': UiLabelsSelect<false> | UiLabelsSelect<true>;
     hero: HeroSelect<false> | HeroSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     about: AboutSelect<false> | AboutSelect<true>;
@@ -652,6 +654,16 @@ export interface SiteSetting {
   tagline?: string | null;
   description?: string | null;
   ogImage?: (number | null) | Media;
+  seo?: {
+    /**
+     * Tokens: {page} {site}. e.g. "{page} · {site}". Blank keeps the default "{page} · {site}".
+     */
+    titleTemplate?: string | null;
+    /**
+     * Meta description for pages that have none of their own. Blank falls back to “Description” above.
+     */
+    defaultDescription?: string | null;
+  };
   social?:
     | {
         platform: string;
@@ -682,7 +694,7 @@ export interface SiteSetting {
    */
   heroAnimation?: ('fade' | 'slide-up' | 'zoom' | 'neon') | null;
   /**
-   * Where the bare "/" sends visitors. Each /xx page keeps its own <html lang>. Applies on the next request; no rebuild needed.
+   * Landing redirect for "/" and the hreflang x-default target. Must be one of the enabled locales below. The fallback language for untranslated fields is fixed in code (ru) and is not affected by this.
    */
   defaultLocale: 'cs' | 'en' | 'ru';
   /**
@@ -719,6 +731,77 @@ export interface Navigation {
         id?: string | null;
       }[]
     | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Site-wide interface wording. A blank field falls back to the built-in translation for that locale.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-labels".
+ */
+export interface UiLabel {
+  id: number;
+  header?: {
+    /**
+     * Header “Book” button.
+     */
+    cta?: string | null;
+  };
+  footer?: {
+    findUsHeading?: string | null;
+    hoursHeading?: string | null;
+    disclaimer?: string | null;
+  };
+  booking?: {
+    nameLabel?: string | null;
+    namePlaceholder?: string | null;
+    phoneLabel?: string | null;
+    phonePlaceholder?: string | null;
+    serviceLabel?: string | null;
+    masterLabel?: string | null;
+    anyMasterOption?: string | null;
+    dateLabel?: string | null;
+    submitLabel?: string | null;
+    /**
+     * Confirmation line. Tokens: {name} {service} {date}.
+     */
+    resultTemplate?: string | null;
+  };
+  notFound?: {
+    /**
+     * <title> for a missing content page.
+     */
+    pageMetaTitle?: string | null;
+    /**
+     * <title> for a missing post.
+     */
+    postMetaTitle?: string | null;
+    /**
+     * On-page heading for a missing content page.
+     */
+    heading?: string | null;
+    /**
+     * Heading for the standalone /404 route.
+     */
+    heading404?: string | null;
+    /**
+     * Body text on the standalone /404 route.
+     */
+    body?: string | null;
+    /**
+     * Missing-page line. Token: {path} (rendered in <code>).
+     */
+    missingPathTemplate?: string | null;
+    /**
+     * On-page heading for a missing post.
+     */
+    postHeading?: string | null;
+    /**
+     * “Back to home” link text.
+     */
+    backHomeLabel?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -911,6 +994,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   tagline?: T;
   description?: T;
   ogImage?: T;
+  seo?:
+    | T
+    | {
+        titleTemplate?: T;
+        defaultDescription?: T;
+      };
   social?:
     | T
     | {
@@ -967,6 +1056,53 @@ export interface NavigationSelect<T extends boolean = true> {
         label?: T;
         href?: T;
         id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-labels_select".
+ */
+export interface UiLabelsSelect<T extends boolean = true> {
+  header?:
+    | T
+    | {
+        cta?: T;
+      };
+  footer?:
+    | T
+    | {
+        findUsHeading?: T;
+        hoursHeading?: T;
+        disclaimer?: T;
+      };
+  booking?:
+    | T
+    | {
+        nameLabel?: T;
+        namePlaceholder?: T;
+        phoneLabel?: T;
+        phonePlaceholder?: T;
+        serviceLabel?: T;
+        masterLabel?: T;
+        anyMasterOption?: T;
+        dateLabel?: T;
+        submitLabel?: T;
+        resultTemplate?: T;
+      };
+  notFound?:
+    | T
+    | {
+        pageMetaTitle?: T;
+        postMetaTitle?: T;
+        heading?: T;
+        heading404?: T;
+        body?: T;
+        missingPathTemplate?: T;
+        postHeading?: T;
+        backHomeLabel?: T;
       };
   updatedAt?: T;
   createdAt?: T;

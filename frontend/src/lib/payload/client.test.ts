@@ -4,6 +4,7 @@ import {
   getHero,
   getPageBySlug,
   getSiteSettings,
+  getUiLabels,
   listMasters,
   listSitemapEntries,
   mediaUrl,
@@ -142,6 +143,49 @@ describe('globals + masters getters', () => {
     expect(requested).toContain('locale=cs');
     // no fallback-locale => Payload config `fallback: true` fills untranslated fields
     expect(requested).not.toContain('fallback-locale');
+  });
+
+  it('requests ui-labels at depth=0 with the locale and parses a partial payload', async () => {
+    const fetchMock = vi.fn(async (_url: string | URL) =>
+      jsonResponse({ header: { cta: 'Book' } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const labels = await getUiLabels('en');
+    const requested = String(fetchMock.mock.calls[0]?.[0]);
+    expect(requested).toContain('/api/globals/ui-labels?depth=0');
+    expect(requested).toContain('locale=en');
+    expect(labels.header?.cta).toBe('Book');
+    expect(labels.footer).toBeUndefined();
+  });
+
+  it('parses a fully-populated ui-labels payload', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          header: { cta: 'X' },
+          footer: { findUsHeading: 'A', hoursHeading: 'B', disclaimer: 'C' },
+          booking: { submitLabel: 'S', resultTemplate: '{name} {service} {date}' },
+          notFound: { heading: 'H', missingPathTemplate: 'x {path} y' },
+        }),
+      ),
+    );
+    const labels = await getUiLabels();
+    expect(labels.notFound?.missingPathTemplate).toBe('x {path} y');
+  });
+
+  it('parses siteSettings with an optional seo group', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          siteName: 'FORMA',
+          seo: { titleTemplate: '{page} · {site}', defaultDescription: 'D' },
+        }),
+      ),
+    );
+    const s = await getSiteSettings('ru');
+    expect(s.seo?.titleTemplate).toBe('{page} · {site}');
   });
 
   it('returns the masters docs array sorted by the API', async () => {

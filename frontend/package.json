@@ -10,7 +10,8 @@
     "start": "node ./dist/server/entry.mjs",
     "typecheck": "astro check",
     "sync": "astro sync",
-    "test:unit": "vitest run src"
+    "test:unit": "vitest run src",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@astrojs/node": "^9",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@playwright/test": "^1.49.0",
     "@tailwindcss/vite": "^4.3.3",
     "@treenweb/tsconfig": "workspace:*",
     "tailwindcss": "^4.3.3",

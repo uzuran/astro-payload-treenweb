@@ -1,7 +1,14 @@
 import type { APIRoute } from 'astro';
 
 import { env } from '../env';
-import { LOCALES, isLocale, localizedPath, type Locale } from '../lib/locale';
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  isLocale,
+  localizedPath,
+  pickDefaultLocale,
+  type Locale,
+} from '../lib/locale';
 import {
   getSiteSettings,
   listSitemapEntries,
@@ -19,9 +26,10 @@ const urlBlocks = (
   basePath: string,
   updatedAt: string | undefined,
   locales: Locale[],
+  defaultLocale: Locale,
 ): string[] => {
   const lastmod = updatedAt ? `<lastmod>${new Date(updatedAt).toISOString()}</lastmod>` : '';
-  const alternates = buildAlternates(basePath, locales)
+  const alternates = buildAlternates(basePath, locales, defaultLocale)
     .map((alt) => `    <xhtml:link rel="alternate" hreflang="${alt.hreflang}" href="${alt.href}"/>`)
     .join('\n');
   return locales.map(
@@ -33,6 +41,7 @@ const urlBlocks = (
 export const GET: APIRoute = async () => {
   let entries: SitemapEntry[] = [];
   let locales: Locale[] = [...LOCALES];
+  let defaultLocale: Locale = DEFAULT_LOCALE;
 
   try {
     const [list, settings] = await Promise.all([
@@ -45,6 +54,7 @@ export const GET: APIRoute = async () => {
       .map((entry) => entry.code)
       .filter(isLocale);
     if (enabled.length > 0) locales = enabled;
+    defaultLocale = pickDefaultLocale(settings?.defaultLocale, locales);
   } catch (err) {
     if (!(err instanceof PayloadError)) throw err;
     // Degrade to a minimal (home-only, all-locales) sitemap rather than 500 the crawler.
@@ -55,7 +65,12 @@ export const GET: APIRoute = async () => {
 
   const urls = basePaths
     .flatMap((basePath) =>
-      urlBlocks(basePath, basePath === '/' ? undefined : updatedByPath.get(basePath), locales),
+      urlBlocks(
+        basePath,
+        basePath === '/' ? undefined : updatedByPath.get(basePath),
+        locales,
+        defaultLocale,
+      ),
     )
     .join('\n');
 

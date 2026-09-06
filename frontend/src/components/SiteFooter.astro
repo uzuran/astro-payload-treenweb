@@ -1,17 +1,15 @@
 ---
 import { SITE_FB } from '../lib/fallback';
-import { t } from '../lib/i18n/ui';
-import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
+import type { Labels } from '../lib/i18n/labels';
 import type { SiteSettings } from '../lib/payload/client';
 import Multiline from './Multiline.astro';
 
 interface Props {
   site?: SiteSettings | null;
-  locale?: Locale;
+  labels: Labels;
 }
 
-const { locale = DEFAULT_LOCALE } = Astro.props;
-const tr = t(locale);
+const { labels } = Astro.props;
 const site = Astro.props.site ?? {};
 const name = site.siteName || SITE_FB.siteName;
 const tagline = site.tagline || SITE_FB.tagline;
@@ -27,13 +25,13 @@ const footerNote = site.footerNote || SITE_FB.footerNote;
     </div>
 
     <div>
-      <p class="eyebrow orange mb-3">{tr('footer.findUs')}</p>
+      <p class="eyebrow orange mb-3">{labels.footer.findUsHeading}</p>
       <p><Multiline text={contact.address} /></p>
       {contact.phone && <p class="mt-2">{contact.phone}</p>}
     </div>
 
     <div>
-      <p class="eyebrow orange mb-3">{tr('footer.hours')}</p>
+      <p class="eyebrow orange mb-3">{labels.footer.hoursHeading}</p>
       {contact.hoursWeekday && <p>{contact.hoursWeekday}</p>}
       <p class="muted mt-2">
         {contact.hoursSaturday}
@@ -47,6 +45,6 @@ const footerNote = site.footerNote || SITE_FB.footerNote;
     class="wrap flex flex-wrap justify-between gap-3 border-t border-white/15 py-5 text-xs text-white/40"
   >
     <span>{footerNote}</span>
-    <span>{tr('footer.disclaimer')}</span>
+    <span>{labels.footer.disclaimer}</span>
   </div>
 </footer>

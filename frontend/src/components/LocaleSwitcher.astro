@@ -1,5 +1,5 @@
 ---
-import { t } from '../lib/i18n/ui';
+import { aria } from '../lib/i18n/aria';
 import { LOCALE_LABELS, isLocale, localizedPath, stripLocale, type Locale } from '../lib/locale';
 import type { SiteSettings } from '../lib/payload/client';
 
@@ -12,7 +12,6 @@ interface Props {
 }
 
 const { locale, supportedLocales, class: className } = Astro.props;
-const tr = t(locale);
 
 const options = (supportedLocales ?? [])
   .filter((entry) => entry.enabled !== false && isLocale(entry.code))
@@ -30,7 +29,7 @@ const search = Astro.url.search;
   options.length > 1 && (
     <nav
       class:list={['flex items-center gap-3 text-sm tracking-wide', className]}
-      aria-label={tr('switcher.aria')}
+      aria-label={aria(locale)('switcherAria')}
     >
       {options.map(({ code, label }) => (
         <a

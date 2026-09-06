@@ -7,6 +7,8 @@ import Team from '../../components/sections/Team.astro';
 import Ticker from '../../components/sections/Ticker.astro';
 import { env } from '../../env';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { SITE_FB } from '../../lib/fallback';
+import { resolveLabels } from '../../lib/i18n/labels';
 import { localizedPath } from '../../lib/locale';
 import {
   getAbout,
@@ -17,6 +19,7 @@ import {
   getServices,
   getSiteSettings,
   getTeam,
+  getUiLabels,
   listMasters,
   mediaUrl,
 } from '../../lib/payload/client';
@@ -32,7 +35,7 @@ const settle = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
 
 const locale = Astro.locals.locale;
 
-const [page, hero, services, about, team, booking, navigation, siteSettings, masters] =
+const [page, hero, services, about, team, booking, navigation, siteSettings, masters, uiLabels] =
   await Promise.all([
     settle(getPageBySlug('home', locale), 'home page'),
     settle(getHero(locale), 'hero'),
@@ -43,15 +46,22 @@ const [page, hero, services, about, team, booking, navigation, siteSettings, mas
     settle(getNavigation(locale), 'navigation'),
     settle(getSiteSettings(locale), 'site settings'),
     settle(listMasters(locale), 'masters'),
+    settle(getUiLabels(locale), 'ui labels'),
   ]);
 
-const siteName = siteSettings?.siteName || 'FORMA';
+const siteName = siteSettings?.siteName || SITE_FB.siteName || '';
+const labels = resolveLabels(uiLabels, locale);
 
 // hreflang / og:locale:alternate are added by SiteLayout from siteSettings.
 const meta = buildMeta(
   {
-    title: page?.seo?.title || page?.title || `${siteName} — барбершоп`,
-    description: page?.seo?.description || siteSettings?.description,
+    title: page?.seo?.title || page?.title || siteName,
+    description:
+      page?.seo?.description ||
+      siteSettings?.description ||
+      siteSettings?.seo?.defaultDescription ||
+      undefined,
+    titleTemplate: siteSettings?.seo?.titleTemplate,
     path: localizedPath(locale, '/'),
     noindex: page?.seo?.noindex ?? false,
     image: mediaUrl(siteSettings?.ogImage) ?? undefined,
@@ -67,8 +77,9 @@ const meta = buildMeta(
   locale={locale}
   navigation={navigation}
   siteSettings={siteSettings}
+  uiLabels={uiLabels}
   jsonLd={[
-    organizationJsonLd(env.PUBLIC_SITE_URL),
+    organizationJsonLd(env.PUBLIC_SITE_URL, siteName),
     webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
   ]}
 >
@@ -77,5 +88,5 @@ const meta = buildMeta(
   <Services data={services} />
   <About data={about} />
   <Team data={team} masters={masters} />
-  <Booking data={booking} services={services} masters={masters} locale={locale} />
+  <Booking data={booking} services={services} masters={masters} locale={locale} labels={labels} />
 </SiteLayout>

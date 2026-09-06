@@ -20,6 +20,7 @@ import { Navigation } from './globals/Navigation';
 import { Services } from './globals/Services';
 import { SiteSettings } from './globals/SiteSettings';
 import { Team } from './globals/Team';
+import { UiLabels } from './globals/UiLabels';
 import { lexicalFeatures } from './lexical/allowlist';
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES } from './locales';
 
@@ -43,7 +44,7 @@ export default buildConfig({
     fallback: true,
   },
   collections: [Pages, Posts, Media, Masters, Redirects, Users],
-  globals: [SiteSettings, Navigation, Hero, Services, About, Team, Booking],
+  globals: [SiteSettings, Navigation, UiLabels, Hero, Services, About, Team, Booking],
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL },
     push: env.PAYLOAD_DB_PUSH,

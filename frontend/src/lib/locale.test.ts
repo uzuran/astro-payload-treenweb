@@ -7,6 +7,7 @@ import {
   isLocale,
   LOCALES,
   localizedPath,
+  pickDefaultLocale,
   stripLocale,
 } from './locale';
 
@@ -99,5 +100,25 @@ describe('localizedPath', () => {
     for (const path of ['/about', '/posts/x', '/']) {
       expect(stripLocale(localizedPath('en', path))).toBe(path);
     }
+  });
+});
+
+describe('pickDefaultLocale', () => {
+  it('returns the wanted locale when it is enabled', () => {
+    expect(pickDefaultLocale('en', ['ru', 'en', 'cs'])).toBe('en');
+  });
+
+  it('degrades an unroutable code to DEFAULT_LOCALE when that is enabled', () => {
+    expect(pickDefaultLocale('de', ['ru', 'en', 'cs'])).toBe(DEFAULT_LOCALE);
+  });
+
+  it('falls back to the first enabled locale when the wanted one is not offered', () => {
+    expect(pickDefaultLocale('en', ['ru', 'cs'])).toBe('ru');
+    expect(pickDefaultLocale('cs', ['en', 'ru'])).toBe('en');
+  });
+
+  it('applies no constraint when the enabled set is empty', () => {
+    expect(pickDefaultLocale('en', [])).toBe('en');
+    expect(pickDefaultLocale('de', [])).toBe(DEFAULT_LOCALE);
   });
 });
