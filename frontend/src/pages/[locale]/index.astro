@@ -7,7 +7,7 @@ import Team from '../../components/sections/Team.astro';
 import Ticker from '../../components/sections/Ticker.astro';
 import { env } from '../../env';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { SITE_FB } from '../../lib/fallback';
+import { getFallback } from '../../lib/fallback';
 import { resolveLabels } from '../../lib/i18n/labels';
 import { localizedPath } from '../../lib/locale';
 import {
@@ -49,7 +49,7 @@ const [page, hero, services, about, team, booking, navigation, siteSettings, mas
     settle(getUiLabels(locale), 'ui labels'),
   ]);
 
-const siteName = siteSettings?.siteName || SITE_FB.siteName || '';
+const siteName = siteSettings?.siteName || getFallback(locale).site.siteName || '';
 const labels = resolveLabels(uiLabels, locale);
 
 // hreflang / og:locale:alternate are added by SiteLayout from siteSettings.
@@ -83,10 +83,10 @@ const meta = buildMeta(
     webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
   ]}
 >
-  <Hero data={hero} animation={siteSettings?.heroAnimation} />
-  <Ticker words={siteSettings?.ticker?.map((word) => word.word)} />
-  <Services data={services} />
-  <About data={about} />
-  <Team data={team} masters={masters} />
+  <Hero data={hero} animation={siteSettings?.heroAnimation} locale={locale} />
+  <Ticker words={siteSettings?.ticker?.map((word) => word.word)} locale={locale} />
+  <Services data={services} locale={locale} />
+  <About data={about} locale={locale} />
+  <Team data={team} masters={masters} locale={locale} />
   <Booking data={booking} services={services} masters={masters} locale={locale} labels={labels} />
 </SiteLayout>

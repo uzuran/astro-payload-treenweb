@@ -1,7 +1,7 @@
 ---
-import { BOOKING_FB, MASTERS_FB, SERVICES_FB } from '../../lib/fallback';
+import { getFallback } from '../../lib/fallback';
 import type { Labels } from '../../lib/i18n/labels';
-import { type Locale } from '../../lib/locale';
+import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import type { Booking, Master, Services } from '../../lib/payload/client';
 import { roundedClass } from '../../lib/rounded';
 import Multiline from '../Multiline.astro';
@@ -10,24 +10,25 @@ interface Props {
   data?: Booking | null;
   services?: Services | null;
   masters?: Master[] | null;
-  locale?: Locale; // consumed by Phase F (getFallback(locale)); kept as a stable prop
+  locale?: Locale;
   labels: Labels;
 }
 
 const { labels } = Astro.props;
+const fb = getFallback(Astro.props.locale ?? DEFAULT_LOCALE);
 const b = Astro.props.data ?? {};
-const eyebrow = b.eyebrow || BOOKING_FB.eyebrow;
-const heading = b.heading || BOOKING_FB.heading;
-const headingAccent = b.headingAccent || BOOKING_FB.headingAccent;
-const intro = b.intro || BOOKING_FB.intro;
-const disclaimer = b.disclaimer || BOOKING_FB.disclaimer;
+const eyebrow = b.eyebrow || fb.booking.eyebrow;
+const heading = b.heading || fb.booking.heading;
+const headingAccent = b.headingAccent || fb.booking.headingAccent;
+const intro = b.intro || fb.booking.intro;
+const disclaimer = b.disclaimer || fb.booking.disclaimer;
 
 const serviceItems = Astro.props.services?.items?.length
   ? Astro.props.services.items
-  : (SERVICES_FB.items ?? []);
+  : (fb.services.items ?? []);
 const serviceNames = serviceItems.map((item) => item.name);
 
-const masters = Astro.props.masters?.length ? Astro.props.masters : MASTERS_FB;
+const masters = Astro.props.masters?.length ? Astro.props.masters : fb.masters;
 const masterNames = masters.map((master) => master.name);
 ---
 

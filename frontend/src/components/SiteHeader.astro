@@ -1,5 +1,5 @@
 ---
-import { NAV_FB, SITE_FB } from '../lib/fallback';
+import { getFallback } from '../lib/fallback';
 import { aria } from '../lib/i18n/aria';
 import type { Labels } from '../lib/i18n/labels';
 import { type Locale, localizedPath } from '../lib/locale';
@@ -16,11 +16,12 @@ interface Props {
 }
 
 const { siteName, locale, supportedLocales, labels } = Astro.props;
-const name = siteName || SITE_FB.siteName || '';
+const fb = getFallback(locale);
+const name = siteName || fb.site.siteName || '';
 const ariaFor = aria(locale);
 const home = localizedPath(locale, '/');
 
-const links = (Astro.props.items?.length ? Astro.props.items : NAV_FB).map((link) => ({
+const links = (Astro.props.items?.length ? Astro.props.items : fb.nav).map((link) => ({
   label: link.label,
   href: resolveNavHref(link.href, locale),
 }));

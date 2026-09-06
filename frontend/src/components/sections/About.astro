@@ -1,19 +1,22 @@
 ---
-import { ABOUT_FB } from '../../lib/fallback';
+import { getFallback } from '../../lib/fallback';
+import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import type { About } from '../../lib/payload/client';
 import { roundedClass } from '../../lib/rounded';
 import Multiline from '../Multiline.astro';
 
 interface Props {
   data?: About | null;
+  locale?: Locale;
 }
 
+const fb = getFallback(Astro.props.locale ?? DEFAULT_LOCALE).about;
 const s = Astro.props.data ?? {};
-const eyebrow = s.eyebrow || ABOUT_FB.eyebrow;
-const heading = s.heading || ABOUT_FB.heading;
-const leadParagraph = s.leadParagraph || ABOUT_FB.leadParagraph;
-const bodyParagraph = s.bodyParagraph || ABOUT_FB.bodyParagraph;
-const footnote = s.footnote || ABOUT_FB.footnote;
+const eyebrow = s.eyebrow || fb.eyebrow;
+const heading = s.heading || fb.heading;
+const leadParagraph = s.leadParagraph || fb.leadParagraph;
+const bodyParagraph = s.bodyParagraph || fb.bodyParagraph;
+const footnote = s.footnote || fb.footnote;
 ---
 
 <section id="about" class:list={['about', roundedClass(s.rounded)]}>

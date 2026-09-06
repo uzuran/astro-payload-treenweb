@@ -2,7 +2,7 @@
 import RichText from '../../components/RichText.astro';
 import { env } from '../../env';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { SITE_FB } from '../../lib/fallback';
+import { getFallback } from '../../lib/fallback';
 import { resolveLabels } from '../../lib/i18n/labels';
 import { localizedPath } from '../../lib/locale';
 import { getPageBySlug, getSiteSettings, getUiLabels } from '../../lib/payload/client';
@@ -37,7 +37,7 @@ try {
 } catch (error) {
   console.error(`[slug] ui labels failed (${locale}):`, error);
 }
-const siteName = siteSettings?.siteName || SITE_FB.siteName || '';
+const siteName = siteSettings?.siteName || getFallback(locale).site.siteName || '';
 const labels = resolveLabels(uiLabels, locale);
 const [missingBefore, missingAfter] = labels.notFound.missingPathTemplate.split('{path}');
 
