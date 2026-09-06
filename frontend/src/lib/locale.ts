@@ -1,10 +1,16 @@
 /**
  * Frontend locale plumbing.
  *
- * `LOCALES` / `DEFAULT_LOCALE` are the physically routable set — they MUST match
- * `astro.config.mjs` `i18n.locales` and `backend/src/locales.ts`. Which of these
- * are actually offered (switcher, hreflang, sitemap) is a separate runtime
- * toggle read from `SiteSettings.supportedLocales[].enabled`.
+ * `LOCALES` is the physically routable set (the `src/pages/[locale]/**` prefixes
+ * the middleware accepts) — it MUST match `backend/src/locales.ts`.
+ *
+ * `DEFAULT_LOCALE` is only the bootstrap fallback: the locale used when the CMS
+ * is unreachable or a stored code is unroutable. The live default that a
+ * prefix-less `/` redirects to is `SiteSettings.defaultLocale` (Payload admin,
+ * source of truth) — see `resolveDefaultLocale` in `./defaultLocale`.
+ *
+ * Which locales are actually offered (switcher, hreflang, sitemap) is a further
+ * runtime toggle read from `SiteSettings.supportedLocales[].enabled`.
  */
 export const LOCALES = ['ru', 'en', 'cs'] as const;
 export type Locale = (typeof LOCALES)[number];

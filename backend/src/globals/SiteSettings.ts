@@ -69,7 +69,8 @@ export const SiteSettings: GlobalConfig = {
       options: localeSelectOptions,
       admin: {
         position: 'sidebar',
-        description: 'Locale assumed when a request carries no /xx prefix. Drives <html lang>.',
+        description:
+          'Where the bare "/" sends visitors. Each /xx page keeps its own <html lang>. Applies on the next request; no rebuild needed.',
       },
     },
     {

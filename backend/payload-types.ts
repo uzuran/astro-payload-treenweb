@@ -682,7 +682,7 @@ export interface SiteSetting {
    */
   heroAnimation?: ('fade' | 'slide-up' | 'zoom' | 'neon') | null;
   /**
-   * Locale assumed when a request carries no /xx prefix. Drives <html lang>.
+   * Where the bare "/" sends visitors. Each /xx page keeps its own <html lang>. Applies on the next request; no rebuild needed.
    */
   defaultLocale: 'cs' | 'en' | 'ru';
   /**

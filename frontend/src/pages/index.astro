@@ -1,5 +1,16 @@
 ---
-// The bare `/` carries no locale — redirect to the default locale's home
-// (`/ru`, = DEFAULT_LOCALE in ../lib/locale). All content is under [locale]/**.
-return Astro.redirect('/ru', 302);
+// The bare `/` carries no locale. Redirect to the locale chosen in
+// SiteSettings → Default locale (the Payload admin is the source of truth);
+// the bundled DEFAULT_LOCALE is only the fallback when the CMS is unreachable.
+// All content lives under [locale]/**.
+import { resolveDefaultLocale } from '../lib/defaultLocale';
+
+export const prerender = false;
+
+const target = await resolveDefaultLocale();
+
+Astro.response.status = 302;
+Astro.response.headers.set('Location', `/${target}`);
+// Dynamic target — never let a CDN pin one locale.
+Astro.response.headers.set('Cache-Control', 'no-store');
 ---
