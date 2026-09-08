@@ -44,3 +44,25 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export type Env = typeof env;
+
+/**
+ * Fail-fast guard: `PAYLOAD_DB_PUSH=true` auto-syncs the Postgres schema from
+ * the models on boot. That is a dev-only convenience — production must apply
+ * reviewed migrations instead, or an unintended model edit silently rewrites
+ * the live schema. (The CI e2e job sets it against a throwaway database and
+ * never boots the backend with NODE_ENV=production; vitest runs as `test`.)
+ */
+export function productionEnvProblems(values: Pick<Env, 'NODE_ENV' | 'PAYLOAD_DB_PUSH'>): string[] {
+  if (values.NODE_ENV !== 'production') return [];
+  return values.PAYLOAD_DB_PUSH
+    ? ['PAYLOAD_DB_PUSH must be false in production — apply migrations, not schema push']
+    : [];
+}
+
+const problems = productionEnvProblems(env);
+if (problems.length > 0) {
+  console.error(
+    `\n✖ Invalid backend environment:\n${problems.map((p) => `  - ${p}`).join('\n')}\n`,
+  );
+  throw new Error('Invalid backend environment — see the errors above');
+}
