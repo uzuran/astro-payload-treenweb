@@ -47,3 +47,31 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export type Env = typeof env;
+
+const LOCALHOST_ORIGIN = /^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/i;
+
+/**
+ * Fail-fast guard: the browser-visible origins must be real in production. The
+ * localhost defaults are fine for dev/test but would silently break canonical
+ * URLs, hreflang, the sitemap and every CMS media link if they reached prod.
+ * `PAYLOAD_INTERNAL_URL` is deliberately excluded — it is server-internal and
+ * `localhost` is a legitimate value there.
+ */
+export function productionEnvProblems(values: {
+  NODE_ENV: string;
+  PUBLIC_SITE_URL: string;
+  PUBLIC_CMS_URL: string;
+}): string[] {
+  if (values.NODE_ENV !== 'production') return [];
+  return (['PUBLIC_SITE_URL', 'PUBLIC_CMS_URL'] as const)
+    .filter((key) => LOCALHOST_ORIGIN.test(values[key]))
+    .map((key) => `${key} points at localhost — set it to the real public origin for production`);
+}
+
+const problems = productionEnvProblems(env);
+if (problems.length > 0) {
+  console.error(
+    `\n✖ Invalid frontend environment:\n${problems.map((p) => `  - ${p}`).join('\n')}\n`,
+  );
+  throw new Error('Invalid frontend environment — see the errors above');
+}
