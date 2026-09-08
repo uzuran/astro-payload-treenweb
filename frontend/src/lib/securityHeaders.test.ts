@@ -38,11 +38,14 @@ describe('contentSecurityPolicy', () => {
     expect(directive('frame-ancestors')).toBe("frame-ancestors 'none'");
   });
 
-  it('allows inline scripts/styles (Astro is:inline + Tailwind) but never eval', () => {
-    expect(directive('script-src')).toBe("script-src 'self' 'unsafe-inline'");
-    expect(directive('style-src')).toBe("style-src 'self' 'unsafe-inline'");
+  it('keeps script-src at self only (no inline, no eval)', () => {
+    expect(directive('script-src')).toBe("script-src 'self'");
     expect(csp).not.toContain("'unsafe-eval'");
     expect(csp).not.toContain('*');
+  });
+
+  it('still allows inline styles (Astro scoped <style> + style="" attrs)', () => {
+    expect(directive('style-src')).toBe("style-src 'self' 'unsafe-inline'");
   });
 
   it('permits CMS media + API and data: images, nothing wider', () => {
