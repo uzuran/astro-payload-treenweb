@@ -45,6 +45,7 @@ describe('writeConsent', () => {
       path: '/',
       maxAge: CONSENT_MAX_AGE_S,
       sameSite: 'lax',
+      secure: false, // import.meta.env.PROD is false under vitest
     });
   });
 

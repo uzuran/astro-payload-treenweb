@@ -35,6 +35,8 @@ export function writeConsent(cookies: Pick<AstroCookies, 'set'>, value: Consent)
     path: '/',
     maxAge: CONSENT_MAX_AGE_S,
     sameSite: 'lax',
+    // Match the `locale` cookie: HTTPS-only in a production build.
+    secure: import.meta.env.PROD,
   });
 }
 

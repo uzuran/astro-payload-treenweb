@@ -1,5 +1,6 @@
 ---
-import { hasConsentDecision } from '../lib/consent';
+import { env } from '../env';
+import { CONSENT_COOKIE, CONSENT_MAX_AGE_S, hasConsentDecision } from '../lib/consent';
 import { aria } from '../lib/i18n/aria';
 import type { Labels } from '../lib/i18n/labels';
 import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
@@ -12,7 +13,7 @@ interface Props {
 const { labels, locale = DEFAULT_LOCALE } = Astro.props;
 
 // Renders only until the visitor has chosen. Progressive enhancement: with no
-// JS the banner still shows and the site works (analytics simply never loads).
+// JS the form POSTs to /consent, which sets the cookie and redirects back.
 const decided = hasConsentDecision(Astro.cookies);
 ---
 
@@ -24,34 +25,44 @@ const decided = hasConsentDecision(Astro.cookies);
       aria-label={aria(locale)('consentAria')}
       class="fixed inset-x-0 bottom-0 z-50 border-t border-white/15 bg-black/90 px-4 py-4 text-sm text-white/80 backdrop-blur"
     >
-      <div class="wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <form
+        method="POST"
+        action="/consent"
+        data-secure={env.NODE_ENV === 'production' || undefined}
+        class="wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <input type="hidden" name="next" value={Astro.url.pathname} />
         <p class="max-w-2xl">{labels.consent.body}</p>
         <div class="flex shrink-0 gap-3">
-          <button type="button" data-consent="essential" class="button">
+          <button type="submit" name="value" value="essential" class="button">
             {labels.consent.essentialButton}
           </button>
-          <button type="button" data-consent="analytics" class="button">
+          <button type="submit" name="value" value="analytics" class="button">
             {labels.consent.analyticsButton}
           </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
 
 <script>
-  const el = document.getElementById('cookie-consent');
-  if (el) {
-    const MAX_AGE = 60 * 60 * 24 * 180; // ~6 months
-    const choose = (value: 'essential' | 'analytics') => {
-      document.cookie = `cookie_consent=${value}; path=/; max-age=${MAX_AGE}; samesite=lax`;
-      el.remove();
+  import { CONSENT_COOKIE, CONSENT_MAX_AGE_S } from '../lib/consent';
+
+  const form = document.querySelector<HTMLFormElement>('#cookie-consent form');
+  if (form) {
+    const dialog = form.closest('#cookie-consent');
+    const secure = form.hasAttribute('data-secure') ? '; secure' : '';
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const value =
+        (event.submitter as HTMLButtonElement | null)?.value === 'analytics'
+          ? 'analytics'
+          : 'essential';
+      document.cookie = `${CONSENT_COOKIE}=${value}; path=/; max-age=${CONSENT_MAX_AGE_S}; samesite=lax${secure}`;
+      dialog?.remove();
       if (value === 'analytics') location.reload(); // let the analytics script render
-    };
-    el.querySelectorAll<HTMLButtonElement>('button[data-consent]').forEach((b) =>
-      b.addEventListener('click', () =>
-        choose(b.dataset.consent === 'analytics' ? 'analytics' : 'essential'),
-      ),
-    );
+    });
   }
 </script>
