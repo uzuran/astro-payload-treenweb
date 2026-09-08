@@ -11,15 +11,14 @@ afterEach(() => {
 
 describe('checkReadiness', () => {
   it('is ready when the CMS global fetch returns 2xx', async () => {
-    const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }));
+    const fetchMock = vi.fn(async (_url: string | URL) => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await checkReadiness(BASE);
 
     expect(result).toMatchObject({ httpStatus: 200, status: 'ready', cms: 200 });
     expect(typeof result.ms).toBe('number');
-    const requested = String(fetchMock.mock.calls[0][0]);
-    expect(requested).toBe(`${BASE}/api/globals/site-settings?depth=0`);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe(`${BASE}/api/globals/site-settings?depth=0`);
   });
 
   it('is unavailable (503) when the CMS answers non-2xx', async () => {
