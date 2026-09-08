@@ -8,57 +8,36 @@ const REAL = {
 };
 
 describe('productionEnvProblems', () => {
-  it('is silent outside production even with localhost origins', () => {
-    for (const NODE_ENV of ['development', 'test']) {
-      expect(
-        productionEnvProblems({
-          NODE_ENV,
-          PUBLIC_SITE_URL: 'http://localhost:4321',
-          PUBLIC_CMS_URL: 'http://localhost:3000',
-        }),
-      ).toEqual([]);
+  it('is silent outside production, even with nothing provided', () => {
+    for (const nodeEnv of ['development', 'test']) {
+      expect(productionEnvProblems(nodeEnv, {})).toEqual([]);
     }
   });
 
-  it('passes in production when both origins are real', () => {
-    expect(productionEnvProblems({ NODE_ENV: 'production', ...REAL })).toEqual([]);
-  });
-
-  it('flags each localhost / loopback origin in production', () => {
-    for (const bad of [
-      'http://localhost:4321',
-      'https://localhost',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1/',
-      'http://[::1]:3000',
-    ]) {
-      const problems = productionEnvProblems({
-        NODE_ENV: 'production',
-        ...REAL,
-        PUBLIC_SITE_URL: bad,
-      });
-      expect(problems, bad).toHaveLength(1);
-      expect(problems[0], bad).toContain('PUBLIC_SITE_URL');
-    }
-  });
-
-  it('reports both origins when both are localhost', () => {
+  it('passes in production when both origins are provided — any value', () => {
+    expect(productionEnvProblems('production', REAL)).toEqual([]);
+    // a production build served locally on purpose (CI e2e / astro preview)
     expect(
-      productionEnvProblems({
-        NODE_ENV: 'production',
+      productionEnvProblems('production', {
         PUBLIC_SITE_URL: 'http://localhost:4321',
         PUBLIC_CMS_URL: 'http://localhost:3000',
       }),
-    ).toHaveLength(2);
+    ).toEqual([]);
   });
 
-  it('does not confuse a real host that merely contains "localhost"', () => {
+  it('flags an origin that is missing or blank in production', () => {
+    expect(productionEnvProblems('production', { PUBLIC_CMS_URL: REAL.PUBLIC_CMS_URL })).toEqual([
+      'PUBLIC_SITE_URL is not set — it must be the real public origin in production',
+    ]);
+    expect(productionEnvProblems('production', { ...REAL, PUBLIC_SITE_URL: '   ' })).toHaveLength(
+      1,
+    );
     expect(
-      productionEnvProblems({
-        NODE_ENV: 'production',
-        ...REAL,
-        PUBLIC_CMS_URL: 'https://localhost.forma.example.com',
-      }),
-    ).toEqual([]);
+      productionEnvProblems('production', { ...REAL, PUBLIC_CMS_URL: undefined }),
+    ).toHaveLength(1);
+  });
+
+  it('reports both origins when neither is provided in production', () => {
+    expect(productionEnvProblems('production', {})).toHaveLength(2);
   });
 });
