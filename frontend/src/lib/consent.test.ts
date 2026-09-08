@@ -8,6 +8,7 @@ import {
   hasConsentDecision,
   parseConsent,
   readConsent,
+  safeNextPath,
   writeConsent,
 } from './consent';
 
@@ -74,6 +75,35 @@ describe('analyticsAllowed', () => {
         const expected = c === 'analytics' && envName === 'production';
         expect(analyticsAllowed(c, envName), `${c} / ${envName}`).toBe(expected);
       }
+    }
+  });
+});
+
+describe('safeNextPath', () => {
+  it('keeps single-slash, locale-rooted local paths verbatim', () => {
+    for (const p of ['/ru', '/en/foo', '/cs/posts/bar', '/en#booking', '/ru?x=1']) {
+      expect(safeNextPath(p), p).toBe(p);
+    }
+  });
+
+  it('collapses off-site, protocol-relative and non-locale targets to "/"', () => {
+    for (const p of [
+      '//evil.com', // protocol-relative
+      '/\\evil.com', // backslash authority (browsers fold \ -> /)
+      '/\\/\\evil.com',
+      'https://evil.com',
+      'http://evil.com',
+      '/%2F%2Fevil.com', // encoded double slash
+      '/admin', // local but not a locale root
+      '/foo',
+      '/',
+      '',
+      'ru/foo', // no leading slash
+      null,
+      undefined,
+      42,
+    ]) {
+      expect(safeNextPath(p as unknown), JSON.stringify(p)).toBe('/');
     }
   });
 });

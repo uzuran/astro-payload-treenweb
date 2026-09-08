@@ -1,5 +1,7 @@
 import type { AstroCookies } from 'astro';
 
+import { LOCALES } from './locale';
+
 /**
  * Cookie-consent plumbing. Mirrors the `toRounded` / `toHeroAnimation` pattern:
  * a whitelist + a narrowing helper, plus thin read/write wrappers over Astro's
@@ -47,4 +49,18 @@ export function writeConsent(cookies: Pick<AstroCookies, 'set'>, value: Consent)
  */
 export function analyticsAllowed(consent: Consent, nodeEnv: string): boolean {
   return consent === 'analytics' && nodeEnv === 'production';
+}
+
+/**
+ * The `next` value the `/consent` endpoint is willing to 303 to. Must be a
+ * single-slash, locale-rooted local path; rejects protocol-relative targets
+ * (`//host`, `/\host` — browsers fold `\` to `/`), absolute URLs, and any
+ * non-locale root. Anything else collapses to `/`.
+ */
+export function safeNextPath(raw: unknown): string {
+  const value = typeof raw === 'string' ? raw : '';
+  // Char 2 must exist and be neither `/` nor `\` (i.e. not the authority slot).
+  if (!/^\/[^/\\]/.test(value)) return '/';
+  const seg = value.slice(1).split(/[/?#]/, 1)[0];
+  return (LOCALES as readonly string[]).includes(seg) ? value : '/';
 }
