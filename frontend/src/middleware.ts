@@ -1,6 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 
 import { env } from './env';
+import { htmlCacheControl, withVaryCookie } from './lib/httpCache';
 import { DEFAULT_LOCALE, isLocale, type Locale } from './lib/locale';
 import { BASE_SECURITY_HEADERS, contentSecurityPolicy, HSTS_HEADER } from './lib/securityHeaders';
 
@@ -53,7 +54,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (context.request.method === 'GET' && !headers.has('Cache-Control')) {
     const contentType = headers.get('Content-Type') ?? '';
     if (contentType.includes('text/html')) {
-      headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
+      headers.set('Cache-Control', htmlCacheControl(context.request.headers.has('cookie')));
+      headers.set('Vary', withVaryCookie(headers.get('Vary')));
     }
   }
 
