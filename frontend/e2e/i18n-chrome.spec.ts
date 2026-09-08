@@ -2,6 +2,16 @@ import { expect, test } from '@playwright/test';
 
 import { EXPECTED, LOCALES } from './_expected';
 
+// The consent banner is a full-width bottom gate that covers the viewport edge
+// and blocks clicks on anything near it. A real returning visitor has dismissed
+// it; pre-seed the decision so feature tests aren't fighting it. The dedicated
+// banner test clears cookies first, so it still renders there.
+test.beforeEach(async ({ context, baseURL }) => {
+  await context.addCookies([
+    { name: 'cookie_consent', value: 'essential', url: baseURL ?? 'http://localhost:4321' },
+  ]);
+});
+
 for (const locale of LOCALES) {
   const e = EXPECTED[locale];
 
@@ -67,7 +77,7 @@ for (const locale of LOCALES) {
     const btn = page.locator('#back-to-top');
 
     await expect(btn).toBeHidden(); // hidden at the top of the page
-    await page.evaluate(() => window.scrollTo(0, 2000));
+    await page.evaluate(() => window.scrollTo(0, 10_000)); // clamps to max scroll
     await expect(btn).toBeVisible();
     await expect(btn).toHaveAttribute('aria-label', /.+/);
 

@@ -119,6 +119,14 @@
     color: var(--color-ink);
   }
 
+  /* `[hidden]` must win over Tailwind display utilities (e.g. a `.grid` /
+     `.flex` element toggled via the `hidden` attribute — #back-to-top,
+     #mobile-menu). Equal specificity would otherwise let `display: grid`
+     override the UA `[hidden] { display: none }`. */
+  [hidden] {
+    display: none !important;
+  }
+
   /* Turn the full-page reload from a snap into a brief fade. Runs on every
      navigation, including first load; 160ms is short enough not to feel slow. */
   @media (prefers-reduced-motion: no-preference) {
@@ -551,10 +559,12 @@
     display: flex;
   }
 
-  /* Back-to-top control (see components/BackToTop.astro). While the cookie
-     banner is on screen, lift the button clear of it. */
+  /* Back-to-top control (see components/BackToTop.astro). The consent banner is
+     a full-width bottom gate; while it is up, suppress the button rather than
+     try to dodge a banner whose height varies by locale/viewport. It returns
+     once the visitor dismisses the banner. */
   body:has(#cookie-consent) #back-to-top {
-    bottom: 7.5rem;
+    display: none;
   }
 
   @media (max-width: 767px) {
