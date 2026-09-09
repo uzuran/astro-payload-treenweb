@@ -13,12 +13,19 @@ describe('Media upload config', () => {
   });
 
   it('defines thumbnail / card / hero widths, WebP-encoded, never upscaled', () => {
-    const sizes = Object.fromEntries((upload.imageSizes ?? []).map((s) => [s.name, s]));
-    expect(Object.keys(sizes).sort()).toEqual(['card', 'hero', 'thumbnail']);
-    expect(sizes.thumbnail.width).toBe(400);
-    expect(sizes.card.width).toBe(768);
-    expect(sizes.hero.width).toBe(1600);
-    for (const s of Object.values(sizes)) {
+    const sizes = upload.imageSizes ?? [];
+    expect(sizes.map((s) => s.name).sort()).toEqual(['card', 'hero', 'thumbnail']);
+
+    const byName = (name: string) => {
+      const found = sizes.find((s) => s.name === name);
+      if (!found) throw new Error(`missing image size: ${name}`);
+      return found;
+    };
+    expect(byName('thumbnail').width).toBe(400);
+    expect(byName('card').width).toBe(768);
+    expect(byName('hero').width).toBe(1600);
+
+    for (const s of sizes) {
       expect(s.formatOptions?.format).toBe('webp');
       expect(s.withoutEnlargement).toBe(true);
     }

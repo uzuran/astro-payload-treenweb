@@ -13,6 +13,7 @@
     "payload": "payload",
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create",
+    "migrate:down": "payload migrate:down",
     "migrate:status": "payload migrate:status",
     "seed": "tsx src/seed/index.ts",
     "typecheck": "tsc --noEmit",

@@ -20,6 +20,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    # Bound container log growth (applies in dev and prod).
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
     networks:
       - data
 

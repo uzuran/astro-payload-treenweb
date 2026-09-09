@@ -27,6 +27,10 @@ infra/secrets/*
 !infra/secrets/.gitkeep
 infra/traefik/acme.json
 
+# database dumps (infra/scripts/db-backup.sh)
+infra/backups/*
+!infra/backups/.gitkeep
+
 # logs
 *.log
 npm-debug.log*

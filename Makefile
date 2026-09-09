@@ -168,6 +168,19 @@ seed: ## Seed the dev database (admin user + sample pages)
 types: ## Regenerate backend Payload types (payload-types.ts)
 	pnpm --filter @treenweb/backend run generate:types
 
+.PHONY: migrate-status
+migrate-status: ## Show pending Payload migrations (dev DB)
+	$(COMPOSE) exec backend pnpm --filter @treenweb/backend run migrate:status
+
+.PHONY: db-backup
+db-backup: ## pg_dump the dev DB to infra/backups/ (gzip, keeps newest 14)
+	infra/scripts/db-backup.sh
+
+.PHONY: db-restore
+db-restore: ## Restore a dump into the dev DB — DUMP=infra/backups/treenweb-<ts>.sql.gz
+	@test -n "$(DUMP)" || { echo "set DUMP=<path-to-*.sql.gz>"; exit 1; }
+	infra/scripts/db-restore.sh "$(DUMP)"
+
 .PHONY: env
 env: ## Copy root .env into backend/ and frontend/ (needed only for host-run commands)
 	@test -f .env || cp .env.example .env

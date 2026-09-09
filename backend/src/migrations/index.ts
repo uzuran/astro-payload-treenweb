@@ -5,6 +5,7 @@ import * as migration_20260905_225343_hero_photo_rounded from './20260905_225343
 import * as migration_20260906_161203_ui_labels_and_seo from './20260906_161203_ui_labels_and_seo';
 import * as migration_20260906_192537_animation_settings from './20260906_192537_animation_settings';
 import * as migration_20260906_203612_ui_labels_consent from './20260906_203612_ui_labels_consent';
+import * as migration_20260909_174640_bookings from './20260909_174640_bookings';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20260906_203612_ui_labels_consent.up,
     down: migration_20260906_203612_ui_labels_consent.down,
-    name: '20260906_203612_ui_labels_consent'
+    name: '20260906_203612_ui_labels_consent',
+  },
+  {
+    up: migration_20260909_174640_bookings.up,
+    down: migration_20260909_174640_bookings.down,
+    name: '20260909_174640_bookings'
   },
 ];

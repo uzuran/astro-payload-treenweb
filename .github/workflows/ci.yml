@@ -97,7 +97,22 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Install Chromium for Playwright
-        run: pnpm --filter @treenweb/frontend exec playwright install --with-deps chromium
+        run: |
+          set -u
+          # The runner image ships a google-chrome apt source that intermittently
+          # serves a corrupt Packages.gz. We don't use system Chrome (Playwright
+          # bundles chromium), so drop it before `--with-deps` runs apt.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+          echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries >/dev/null
+          for attempt in 1 2 3; do
+            if pnpm --filter @treenweb/frontend exec playwright install --with-deps chromium; then
+              exit 0
+            fi
+            echo "playwright install attempt ${attempt} failed; retrying in 20s"
+            sudo apt-get update || true
+            sleep 20
+          done
+          exit 1
 
       - name: Build the Astro SSR bundle
         run: pnpm --filter @treenweb/frontend run build
