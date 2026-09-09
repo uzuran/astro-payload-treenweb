@@ -1,0 +1,53 @@
+# Traefik v3 — static configuration. Mounted read-only at
+# /etc/traefik/traefik.yml. The ACME email is injected by the compose service
+# via TRAEFIK_CERTIFICATESRESOLVERS_LE_ACME_EMAIL (Traefik merges env over file).
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: INFO
+
+accessLog: {}
+
+# Dashboard/API off by default — it exposes routing internals. To enable it,
+# add a router + basic-auth middleware in dynamic/ and set api.dashboard: true.
+api:
+  dashboard: false
+  insecure: false
+
+entryPoints:
+  web:
+    address: ':80'
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ':443'
+    http:
+      middlewares:
+        - security-headers@file
+        - rate-limit@file
+        - compress@file
+      tls:
+        certResolver: le
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: treenweb_edge
+    watch: true
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+certificatesResolvers:
+  le:
+    acme:
+      # email: injected via env (see above)
+      storage: /acme/acme.json
+      tlsChallenge: {}

@@ -16,7 +16,7 @@
 #   PAYLOAD_PUBLIC_SERVER_URL                  = PUBLIC_CMS_URL
 #   CORS_ORIGINS, CSRF_ORIGINS                 the real origins
 #   CMS_CACHE_TTL_S  15–30                     SSR read cache
-#   SITE_DOMAIN, CMS_DOMAIN                    for the Traefik routers (Step 8)
+#   SITE_DOMAIN, CMS_DOMAIN, ACME_EMAIL        Traefik routers + Let's Encrypt
 #   PUBLIC_PLAUSIBLE_DOMAIN, PUBLIC_PLAUSIBLE_SRC   only if analytics goes live
 #
 # NOTE: PAYLOAD_DB_PUSH is deliberately never set here — prod applies the
@@ -30,6 +30,32 @@ x-logging: &logging
     max-file: '5'
 
 services:
+  traefik:
+    image: traefik:v3.3
+    restart: unless-stopped
+    logging: *logging
+    mem_limit: 256m
+    cpus: 0.5
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TRAEFIK_CERTIFICATESRESOLVERS_LE_ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL for Let's Encrypt}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - traefik-acme:/acme
+    networks:
+      - edge
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+
   db:
     # No published ports — reachable only on the private `data` network.
     restart: unless-stopped
@@ -66,7 +92,7 @@ services:
       - data
       - edge
     labels:
-      # Traefik routers (inert until infra/traefik/ lands — Step 8).
+      # Traefik routers (see infra/traefik/).
       - traefik.enable=true
       - traefik.docker.network=treenweb_edge
       - traefik.http.routers.cms.rule=Host(`${CMS_DOMAIN:-cms.localhost}`)
@@ -106,3 +132,6 @@ services:
       - traefik.http.routers.site.entrypoints=websecure
       - traefik.http.routers.site.tls.certresolver=le
       - traefik.http.services.site.loadbalancer.server.port=4321
+
+volumes:
+  traefik-acme:

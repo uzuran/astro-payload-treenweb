@@ -1,0 +1,38 @@
+# Traefik v3 — dynamic middlewares (hot-reloaded).
+
+http:
+  middlewares:
+    # Transport + framing headers. CSP is deliberately NOT set here — the app
+    # (frontend/src/lib/securityHeaders.ts) builds it with the CMS origin
+    # interpolated and unit-tests it. Traefik owns the rest.
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        stsSeconds: 63072000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        customResponseHeaders:
+          Referrer-Policy: 'strict-origin-when-cross-origin'
+          Permissions-Policy: 'geolocation=(), microphone=(), camera=()'
+          X-Powered-By: ''
+          Server: ''
+
+    # General per-client-IP limit. Payload's own maxLoginAttempts/lockTime
+    # still guards credential brute-force at the app layer.
+    rate-limit:
+      rateLimit:
+        average: 100
+        period: 1m
+        burst: 50
+
+    # Tighter limit for /admin and the public write endpoints. Attach per-router
+    # once path routers exist (labels on the app services).
+    rate-limit-strict:
+      rateLimit:
+        average: 20
+        period: 1m
+        burst: 10
+
+    compress:
+      compress: {}

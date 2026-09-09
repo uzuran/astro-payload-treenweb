@@ -30,8 +30,6 @@ reference `${IMAGE_TAG}` in each service's `image:`.
   push on in production (`backend/src/env.ts`).
 - A cron/systemd timer running `infra/scripts/db-backup.sh` (e.g. every 6 h)
   with `BACKUP_DIR` on a volume that is itself backed up off-box.
-- A cron/systemd timer running `infra/scripts/db-backup.sh` (e.g. every 6 h)
-  with `BACKUP_DIR` on a volume that is itself backed up off-box.
 
 ---
 
@@ -119,8 +117,28 @@ tune to the host). `db` publishes no ports. `PAYLOAD_DB_PUSH=false` and
 `NODE_ENV=production` are pinned. Every critical var is `${VAR:?}` so a
 `config` / `up` with an incomplete `.env` fails immediately.
 
-Traefik router labels are on both app services but **inert** until
-`infra/traefik/` (Step 8) adds the proxy and the `le` cert resolver.
+## `infra/traefik/` (edge proxy)
+
+The `traefik` service (v3) terminates TLS, redirects `:80 → :443` (permanent),
+and fronts both apps by `Host()` rule (`SITE_DOMAIN` → frontend:4321,
+`CMS_DOMAIN` → backend:3000). Certs: Let's Encrypt TLS-ALPN-01 challenge (only
+:443 needs to be reachable), email from `ACME_EMAIL`, stored in the
+`traefik-acme` volume.
+
+Global middlewares on the `websecure` entrypoint (`infra/traefik/dynamic/`):
+
+- **security-headers** — HSTS (2y, includeSubDomains, preload), `X-Frame-Options
+DENY`, `X-Content-Type-Options nosniff`, `Referrer-Policy`,
+  `Permissions-Policy`, and strips `Server` / `X-Powered-By`. **CSP stays in the
+  app** (`frontend/src/lib/securityHeaders.ts` — it needs the CMS origin and is
+  unit-tested); Traefik does not duplicate it.
+- **rate-limit** — 100 req / client-IP / minute, burst 50. A tighter
+  `rate-limit-strict` (20/min) is defined for `/admin` + write endpoints —
+  attach it once path routers are added to the app labels.
+- **compress**.
+
+Prereqs: DNS `A`/`AAAA` for `SITE_DOMAIN` and `CMS_DOMAIN` → the host; ports
+80/443 open. Dashboard is off (`api.dashboard: false`).
 
 ## Still open (needs an infra decision)
 
@@ -128,6 +146,6 @@ Traefik router labels are on both app services but **inert** until
   are the building blocks; a workflow needs the deploy target chosen
   (compose-over-SSH, a Docker context, Kamal, Swarm, k8s) and a release-tag /
   image-push step wired to GHCR.
-- **`infra/traefik/`** (TLS termination, HTTP→HTTPS, HSTS, rate-limit
-  middleware, authoritative security headers).
 - Off-box backup destination for `infra/backups/` (S3 per `.env.example`).
+- Sentry wiring (DSNs already in the env schemas) + an uptime probe on
+  `/readyz`.
