@@ -33,6 +33,13 @@ const schema = z.object({
   // Optional analytics — the script renders only when both are set.
   PUBLIC_PLAUSIBLE_DOMAIN: z.preprocess(emptyToUndefined, z.string().optional()),
   PUBLIC_PLAUSIBLE_SRC: z.preprocess(emptyToUndefined, z.string().url().optional()),
+
+  // In-process TTL (seconds) for CMS reads during SSR. 0 disables the cache
+  // (dev default; CI e2e sets 0 for determinism). Prod sets e.g. 15–30.
+  CMS_CACHE_TTL_S: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().min(0).max(3600).default(0),
+  ),
 });
 
 const parsed = schema.safeParse(process.env);

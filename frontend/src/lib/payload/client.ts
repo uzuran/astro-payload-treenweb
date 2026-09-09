@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { env } from '../../env';
+import { cached } from './cache';
 
 const TIMEOUT_MS = 8_000;
 
@@ -13,7 +14,12 @@ export class PayloadError extends Error {
   }
 }
 
+/** Cached wrapper — `path` fully identifies the read (slug, depth, locale, query). */
 async function apiFetch<T>(path: string, schema: z.ZodType<T>): Promise<T> {
+  return cached(path, env.CMS_CACHE_TTL_S * 1000, () => apiFetchUncached(path, schema));
+}
+
+async function apiFetchUncached<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   const url = new URL(path, env.PAYLOAD_INTERNAL_URL);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
