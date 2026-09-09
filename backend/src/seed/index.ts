@@ -193,7 +193,8 @@ await payload.updateGlobal({
     heading: 'ВРЕМЯ\nОБНОВИТЬ',
     headingAccent: 'ФОРМУ.',
     intro: 'Выбери услугу и удобную дату.',
-    disclaimer: 'Демонстрационная форма: данные не отправляются, время не бронируется.',
+    disclaimer:
+      'Отправляя форму, вы соглашаетесь на обработку контактов для записи. Мы свяжемся для подтверждения.',
   },
 });
 
@@ -334,7 +335,8 @@ const TRANSLATIONS = {
       heading: 'TIME TO\nRESHAPE',
       headingAccent: 'YOUR SHAPE.',
       intro: 'Choose a service and a date that works.',
-      disclaimer: 'Demo form: nothing is sent and no slot is booked.',
+      disclaimer:
+        "By submitting you agree we may use your contact details to arrange the booking. We'll confirm with you.",
     },
     navMain: ['About', 'Services & prices', 'Barbers', 'Contacts'],
     ticker: ['HAIRCUT', 'BEARD', 'CHARACTER'],
@@ -418,7 +420,8 @@ const TRANSLATIONS = {
       heading: 'ČAS NA\nNOVÝ',
       headingAccent: 'TVAR.',
       intro: 'Vyber si službu a termín, který ti vyhovuje.',
-      disclaimer: 'Ukázkový formulář: nic se neodesílá a žádný termín se nerezervuje.',
+      disclaimer:
+        'Odesláním souhlasíte s použitím kontaktů k domluvení rezervace. Potvrzení vám dáme vědět.',
     },
     navMain: ['O nás', 'Služby a ceny', 'Holiči', 'Kontakty'],
     ticker: ['STŘIH', 'VOUSY', 'CHARAKTER'],

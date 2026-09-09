@@ -22,9 +22,9 @@ const RU = {
     masterLabel: 'Мастер',
     anyMasterOption: 'Любой мастер',
     dateLabel: 'Желаемая дата',
-    submitLabel: 'Проверить запись',
+    submitLabel: 'Отправить заявку',
     resultTemplate:
-      '{name}, всё заполнено: {service}, {date}. Это демонстрация — запись не создана и данные не отправлены.',
+      '{name}, заявка отправлена: {service} — {date}. Мы свяжемся с вами для подтверждения.',
   },
   consent: {
     body: 'Мы храним cookie, чтобы запомнить язык. С вашего согласия загружаем приватную аналитику — без персональных данных и трекинга между сайтами.',
@@ -61,9 +61,8 @@ const EN: UiFallback = {
     masterLabel: 'Barber',
     anyMasterOption: 'Any barber',
     dateLabel: 'Preferred date',
-    submitLabel: 'Check availability',
-    resultTemplate:
-      '{name}, all set: {service}, {date}. This is a demo — no booking was made and nothing was sent.',
+    submitLabel: 'Send request',
+    resultTemplate: "{name}, request sent: {service} — {date}. We'll get in touch to confirm.",
   },
   consent: {
     body: 'We store a cookie to remember your language. With your consent we also load privacy-friendly analytics — no personal data, no cross-site tracking.',
@@ -98,9 +97,8 @@ const CS: UiFallback = {
     masterLabel: 'Holič',
     anyMasterOption: 'Kterýkoli holič',
     dateLabel: 'Preferovaný termín',
-    submitLabel: 'Zkontrolovat termín',
-    resultTemplate:
-      '{name}, hotovo: {service}, {date}. Toto je ukázka — žádná rezervace nevznikla a nic se neodeslalo.',
+    submitLabel: 'Odeslat žádost',
+    resultTemplate: '{name}, žádost odeslána: {service} — {date}. Ozveme se vám s potvrzením.',
   },
   consent: {
     body: 'Ukládáme cookie, abychom si zapamatovali jazyk. S vaším souhlasem načteme i analytiku šetrnou k soukromí — žádná osobní data, žádné sledování napříč weby.',

@@ -26,7 +26,7 @@ describe('getFallback', () => {
     expect(getFallback('cs').hero.headingLine1).toBe('TVŮJ TVAR.');
 
     expect(getFallback('en').site.siteName).toBe('FORMA');
-    expect(getFallback('cs').booking.disclaimer).toContain('Ukázkový');
+    expect(getFallback('cs').booking.disclaimer).toContain('rezervace');
   });
 
   it('every locale bundle has the same shape', () => {

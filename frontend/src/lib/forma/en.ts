@@ -109,7 +109,8 @@ export const formaEn: FormaContent = {
     headingAccent: 'YOUR SHAPE.',
     note: null,
     intro: 'Choose a service and a date that works.',
-    disclaimer: 'Demo form: nothing is sent and no slot is booked.',
+    disclaimer:
+      "By submitting you agree we may use your contact details to arrange the booking. We'll confirm with you.",
   },
   site: {
     siteName: 'FORMA',

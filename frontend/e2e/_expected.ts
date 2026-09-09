@@ -18,7 +18,7 @@ export const EXPECTED: Record<
   ru: {
     cta: 'Записаться',
     findUs: 'НАЙДИ НАС',
-    submit: 'Проверить запись',
+    submit: 'Отправить заявку',
     notFound: 'Страница не найдена',
     notFound404: '404 — Страница не найдена',
     back: 'На главную',
@@ -28,7 +28,7 @@ export const EXPECTED: Record<
   en: {
     cta: 'Book',
     findUs: 'FIND US',
-    submit: 'Check availability',
+    submit: 'Send request',
     notFound: 'Page not found',
     notFound404: '404 — Page not found',
     back: 'Go to the home page',
@@ -38,7 +38,7 @@ export const EXPECTED: Record<
   cs: {
     cta: 'Objednat',
     findUs: 'NAJDI NÁS',
-    submit: 'Zkontrolovat termín',
+    submit: 'Odeslat žádost',
     notFound: 'Stránka nenalezena',
     notFound404: '404 — Stránka nenalezena',
     back: 'Zpět na hlavní stránku',

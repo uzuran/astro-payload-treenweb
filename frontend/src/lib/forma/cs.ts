@@ -109,7 +109,8 @@ export const formaCs: FormaContent = {
     headingAccent: 'TVAR.',
     note: null,
     intro: 'Vyber si službu a termín, který ti vyhovuje.',
-    disclaimer: 'Ukázkový formulář: nic se neodesílá a žádný termín se nerezervuje.',
+    disclaimer:
+      'Odesláním souhlasíte s použitím kontaktů k domluvení rezervace. Potvrzení vám dáme vědět.',
   },
   site: {
     siteName: 'FORMA',
