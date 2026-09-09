@@ -3,20 +3,20 @@
 Infrastructure-as-code. Nothing here imports app code; apps never import
 from here.
 
-| Path                      | Purpose                                                  | Step             |
-| ------------------------- | -------------------------------------------------------- | ---------------- |
-| `docker-compose.yml`      | Base stack (`db`, networks, volumes)                     | 3                |
-| `docker-compose.dev.yml`  | Dev override (app services, bind mounts, ports)          | 3                |
-| `docker-compose.prod.yml` | Prod override (GHCR images, secrets, hardening)          | 11               |
-| `dev/stub-server.mjs`     | Temporary health stub for `backend`/`frontend`           | 3 (removed in 5) |
-| `postgres/init/`          | First-boot SQL (extensions)                              | 3                |
-| `postgres/backup/`        | `pg_dump` backup sidecar                                 | 11               |
-| `traefik/`                | Static + dynamic Traefik v3 config                       | 8                |
-| `plausible/`              | optional self-hosted analytics fragment                  | 8                |
-| `secrets/`                | host-side secret files (git-ignored)                     | 11               |
-| `scripts/`                | `deploy.sh` `rollback.sh` `db-backup.sh` `db-restore.sh` | 10               |
-| `backups/`                | local `pg_dump` output (git-ignored)                     | 10               |
-| `RUNBOOK.md`              | deploy / rollback / restore procedure                    | 10               |
+| Path                      | Purpose                                                         | Step             |
+| ------------------------- | --------------------------------------------------------------- | ---------------- |
+| `docker-compose.yml`      | Base stack (`db`, networks, volumes)                            | 3                |
+| `docker-compose.dev.yml`  | Dev override (app services, bind mounts, ports)                 | 3                |
+| `docker-compose.prod.yml` | Prod override (GHCR images, limits, hardening) — see RUNBOOK.md | 11               |
+| `dev/stub-server.mjs`     | Temporary health stub for `backend`/`frontend`                  | 3 (removed in 5) |
+| `postgres/init/`          | First-boot SQL (extensions)                                     | 3                |
+| `postgres/backup/`        | `pg_dump` backup sidecar                                        | 11               |
+| `traefik/`                | Static + dynamic Traefik v3 config                              | 8                |
+| `plausible/`              | optional self-hosted analytics fragment                         | 8                |
+| `secrets/`                | host-side secret files (git-ignored)                            | 11               |
+| `scripts/`                | `deploy.sh` `rollback.sh` `db-backup.sh` `db-restore.sh`        | 10               |
+| `backups/`                | local `pg_dump` output (git-ignored)                            | 10               |
+| `RUNBOOK.md`              | deploy / rollback / restore procedure                           | 10               |
 
 ## Dev stack
 

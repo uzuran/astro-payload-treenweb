@@ -19,15 +19,17 @@ reference `${IMAGE_TAG}` in each service's `image:`.
 ## Prerequisites (once per host)
 
 - Docker Engine + Compose v2.
-- `infra/docker-compose.prod.yml` present (GHCR `image:` per service using
-  `${IMAGE_TAG}`, `env_file`/secrets, `restart: unless-stopped`, resource
-  limits — see "Prod compose checklist" below). **Not yet in the repo.**
-- Real secrets in place (`infra/secrets/` or the host's secret store): a
-  ≥32-char `PAYLOAD_SECRET`, `DATABASE_URL`, `PUBLIC_SITE_URL` /
-  `PUBLIC_CMS_URL` set to the real origins (the app **refuses to boot** in
-  production if either is unset — `frontend/src/env.ts`), `PAYLOAD_DB_PUSH`
-  unset or `false` (it also refuses to boot with push on in production —
-  `backend/src/env.ts`).
+- A root `.env` on the host (chmod 600, git-ignored) with every var the
+  header of `infra/docker-compose.prod.yml` lists. Compose reads it for
+  `${VAR}` interpolation and the services `env_file` it; missing required vars
+  fail the deploy immediately. Key ones: `IMAGE_REGISTRY`, `PAYLOAD_SECRET`
+  (≥32, unique to prod), `DATABASE_URL`, `PUBLIC_SITE_URL` / `PUBLIC_CMS_URL`
+  as real `https://` origins (the app **refuses to boot** on localhost in
+  production — `frontend/src/env.ts`), `CORS_ORIGINS`, `CSRF_ORIGINS`. The prod
+  compose pins `PAYLOAD_DB_PUSH=false`; the backend also refuses to boot with
+  push on in production (`backend/src/env.ts`).
+- A cron/systemd timer running `infra/scripts/db-backup.sh` (e.g. every 6 h)
+  with `BACKUP_DIR` on a volume that is itself backed up off-box.
 - A cron/systemd timer running `infra/scripts/db-backup.sh` (e.g. every 6 h)
   with `BACKUP_DIR` on a volume that is itself backed up off-box.
 
@@ -107,20 +109,18 @@ them on the next release.
 
 ---
 
-## Prod compose checklist (`infra/docker-compose.prod.yml`, not yet written)
+## `infra/docker-compose.prod.yml`
 
-- `backend` + `frontend`: `image: ghcr.io/<org>/treenweb-<svc>:${IMAGE_TAG}`
-  (no `build:`), `restart: unless-stopped`, `env_file` / `secrets`,
-  `logging` (inherited from base — json-file, 10m×5), and
-  `deploy.resources.limits` / `mem_limit` + `cpus` (Compose honours these
-  without Swarm). Suggested starting points: backend 1 GB / 1.0 cpu,
-  frontend 512 MB / 0.5 cpu, db 1 GB / 1.0 cpu.
-- `db`: no published ports (reachable only on the `data` network); volume on
-  durable storage.
-- No `PAYLOAD_DB_PUSH`. `NODE_ENV=production` on both apps.
-- Traefik (`infra/traefik/`, Step 8) terminates TLS and owns the
-  authoritative security headers; the app's middleware headers are
-  defense-in-depth.
+Present. `backend` + `frontend` run GHCR images
+(`${IMAGE_REGISTRY}/treenweb-<svc>:${IMAGE_TAG}`, `pull_policy: always`, no
+`build:`), `restart: unless-stopped`, json-file log rotation (10m×5), and
+`mem_limit` / `cpus` (backend 1 GB/1.0, frontend 512 MB/0.5, db 1 GB/1.0 —
+tune to the host). `db` publishes no ports. `PAYLOAD_DB_PUSH=false` and
+`NODE_ENV=production` are pinned. Every critical var is `${VAR:?}` so a
+`config` / `up` with an incomplete `.env` fails immediately.
+
+Traefik router labels are on both app services but **inert** until
+`infra/traefik/` (Step 8) adds the proxy and the `le` cert resolver.
 
 ## Still open (needs an infra decision)
 
@@ -128,5 +128,6 @@ them on the next release.
   are the building blocks; a workflow needs the deploy target chosen
   (compose-over-SSH, a Docker context, Kamal, Swarm, k8s) and a release-tag /
   image-push step wired to GHCR.
-- **`infra/docker-compose.prod.yml`**, **`infra/traefik/`**, off-box backup
-  destination for `infra/backups/`.
+- **`infra/traefik/`** (TLS termination, HTTP→HTTPS, HSTS, rate-limit
+  middleware, authoritative security headers).
+- Off-box backup destination for `infra/backups/` (S3 per `.env.example`).
