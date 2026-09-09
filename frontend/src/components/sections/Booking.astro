@@ -1,5 +1,6 @@
 ---
 import { getFallback } from '../../lib/fallback';
+import { aria } from '../../lib/i18n/aria';
 import type { Labels } from '../../lib/i18n/labels';
 import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import type { Booking, Master, Services } from '../../lib/payload/client';
@@ -14,7 +15,12 @@ interface Props {
   labels: Labels;
 }
 
-const { labels } = Astro.props;
+const { labels, locale = DEFAULT_LOCALE } = Astro.props;
+const errorText = aria(locale)('bookingError');
+// Mirror of the server check in lib/booking.ts. `(` `)` `-` are escaped so the
+// browser's `v`-flag `pattern` engine accepts the character class; bound as an
+// expression because Astro unescapes backslashes in a literal attribute.
+const PHONE_PATTERN = '[+0-9 \\(\\)\\-]{9,20}';
 const fb = getFallback(Astro.props.locale ?? DEFAULT_LOCALE);
 const b = Astro.props.data ?? {};
 const eyebrow = b.eyebrow || fb.booking.eyebrow;
@@ -46,9 +52,19 @@ const masterNames = masters.map((master) => master.name);
 
     <form
       id="booking-form"
+      method="POST"
+      action="/booking"
       class="grid gap-5 self-center"
       data-result-template={labels.booking.resultTemplate}
+      data-error-text={errorText}
     >
+      <div class="hidden" aria-hidden="true">
+        <label>
+          Company
+          <input type="text" name="company" tabindex="-1" autocomplete="off" />
+        </label>
+      </div>
+
       <div class="grid gap-5 sm:grid-cols-2">
         <label>
           {labels.booking.nameLabel}
@@ -66,7 +82,7 @@ const masterNames = masters.map((master) => master.name);
             required
             type="tel"
             autocomplete="tel"
-            pattern="[+0-9 ()-]{9,20}"
+            pattern={PHONE_PATTERN}
             placeholder={labels.booking.phonePlaceholder}
           />
         </label>
@@ -138,23 +154,45 @@ const masterNames = masters.map((master) => master.name);
 
     const template =
       form.dataset.resultTemplate ?? '{name}: {service}, {date}. Demo — nothing was sent.';
+    const errorText = form.dataset.errorText ?? 'Could not send. Please try again.';
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!form.reportValidity()) return;
+
       const name = form.elements.namedItem('name');
       const service = form.elements.namedItem('service');
       if (
-        result &&
-        name instanceof HTMLInputElement &&
-        service instanceof HTMLSelectElement &&
-        dateEl instanceof HTMLInputElement
+        !(name instanceof HTMLInputElement) ||
+        !(service instanceof HTMLSelectElement) ||
+        !(dateEl instanceof HTMLInputElement) ||
+        !result
       ) {
-        const date = dateEl.value.split('-').reverse().join('.');
-        result.textContent = template
-          .replaceAll('{name}', name.value.trim())
-          .replaceAll('{service}', service.value)
-          .replaceAll('{date}', date);
+        return;
+      }
+
+      const submit = form.querySelector('button[type="submit"]');
+      submit?.setAttribute('disabled', '');
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(form))),
+        });
+        const body = (await res.json().catch(() => ({}))) as { ok?: boolean };
+        if (res.ok && body.ok) {
+          const date = dateEl.value.split('-').reverse().join('.');
+          result.textContent = template
+            .replaceAll('{name}', name.value.trim())
+            .replaceAll('{service}', service.value)
+            .replaceAll('{date}', date);
+        } else {
+          result.textContent = errorText;
+        }
+      } catch {
+        result.textContent = errorText;
+      } finally {
+        submit?.removeAttribute('disabled');
       }
     });
 

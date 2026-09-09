@@ -71,6 +71,7 @@ export interface Config {
     posts: Post;
     media: Media;
     masters: Master;
+    bookings: Booking;
     redirects: Redirect;
     users: User;
     'payload-kv': PayloadKv;
@@ -84,6 +85,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     masters: MastersSelect<false> | MastersSelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -104,7 +106,7 @@ export interface Config {
     services: Service;
     about: About;
     team: Team;
-    booking: Booking;
+    booking: Booking1;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
@@ -346,6 +348,22 @@ export interface Master {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  name: string;
+  phone: string;
+  service: string;
+  master?: string | null;
+  date: string;
+  status?: ('new' | 'confirmed' | 'cancelled') | null;
+  source?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -404,6 +422,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'masters';
         value: number | Master;
+      } | null)
+    | ({
+        relationTo: 'bookings';
+        value: number | Booking;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -569,6 +591,21 @@ export interface MastersSelect<T extends boolean = true> {
   bookingLabel?: T;
   photo?: T;
   order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  service?: T;
+  master?: T;
+  date?: T;
+  status?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1002,7 +1039,7 @@ export interface Team {
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "booking".
  */
-export interface Booking {
+export interface Booking1 {
   id: number;
   /**
    * e.g. "01 / УСЛУГИ".

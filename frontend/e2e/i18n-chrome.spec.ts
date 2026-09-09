@@ -148,3 +148,25 @@ for (const locale of LOCALES) {
     await expect(page.locator('main p.muted')).not.toHaveText('');
   });
 }
+
+test('POST /booking validates input and honours the honeypot', async ({ request }) => {
+  const good = {
+    name: 'Tester',
+    phone: '+420 123 456 789',
+    service: 'Haircut',
+    master: 'Any',
+    date: '2999-01-02',
+  };
+
+  const ok = await request.post('/booking', { data: good });
+  expect(ok.status()).toBe(200);
+  expect((await ok.json()).ok).toBe(true);
+
+  const bad = await request.post('/booking', { data: { ...good, phone: 'nope', date: 'x' } });
+  expect(bad.status()).toBe(422);
+  expect((await bad.json()).errors).toMatchObject({ phone: 'invalid', date: 'invalid' });
+
+  // honeypot filled → accepted, but nothing is processed
+  const bot = await request.post('/booking', { data: { ...good, company: 'Acme' } });
+  expect(bot.status()).toBe(200);
+});

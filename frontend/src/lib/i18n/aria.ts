@@ -14,6 +14,7 @@ const RU = {
   switcherAria: 'Язык',
   consentAria: 'Согласие на cookie',
   backToTop: 'Наверх',
+  bookingError: 'Не удалось отправить. Проверьте поля и попробуйте ещё раз.',
 } as const;
 
 export type AriaKey = keyof typeof RU;
@@ -29,6 +30,7 @@ const EN: Record<AriaKey, string> = {
   switcherAria: 'Language',
   consentAria: 'Cookie consent',
   backToTop: 'Back to top',
+  bookingError: 'Could not send. Check the fields and try again.',
 };
 
 const CS: Record<AriaKey, string> = {
@@ -41,6 +43,7 @@ const CS: Record<AriaKey, string> = {
   switcherAria: 'Jazyk',
   consentAria: 'Souhlas s cookies',
   backToTop: 'Nahoru',
+  bookingError: 'Odeslání se nezdařilo. Zkontrolujte pole a zkuste to znovu.',
 };
 
 const ARIA: Record<Locale, Record<AriaKey, string>> = { ru: RU, en: EN, cs: CS };

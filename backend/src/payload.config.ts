@@ -6,6 +6,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { buildConfig } from 'payload';
 import sharp from 'sharp';
 
+import { Bookings } from './collections/Bookings';
 import { Masters } from './collections/Masters';
 import { Media } from './collections/Media';
 import { Pages } from './collections/Pages';
@@ -44,7 +45,7 @@ export default buildConfig({
     defaultLocale: DEFAULT_LOCALE,
     fallback: true,
   },
-  collections: [Pages, Posts, Media, Masters, Redirects, Users],
+  collections: [Pages, Posts, Media, Masters, Bookings, Redirects, Users],
   globals: [
     SiteSettings,
     Navigation,
