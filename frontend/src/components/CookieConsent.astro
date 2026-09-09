@@ -2,8 +2,9 @@
 import { env } from '../env';
 import { hasConsentDecision } from '../lib/consent';
 import { aria } from '../lib/i18n/aria';
+import { legal } from '../lib/i18n/legal';
 import type { Labels } from '../lib/i18n/labels';
-import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
+import { DEFAULT_LOCALE, type Locale, localizedPath } from '../lib/locale';
 
 interface Props {
   labels: Labels;
@@ -32,7 +33,12 @@ const decided = hasConsentDecision(Astro.cookies);
         class="wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
         <input type="hidden" name="next" value={Astro.url.pathname} />
-        <p class="max-w-2xl">{labels.consent.body}</p>
+        <p class="max-w-2xl">
+          {labels.consent.body}{' '}
+          <a href={localizedPath(locale, '/privacy')} class="underline hover:text-orange">
+            {legal(locale).footerLink}
+          </a>
+        </p>
         <div class="flex shrink-0 gap-3">
           <button type="submit" name="value" value="essential" class="button">
             {labels.consent.essentialButton}

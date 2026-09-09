@@ -1,0 +1,68 @@
+---
+import ConsentReset from '../../components/ConsentReset.astro';
+import { env } from '../../env';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { getFallback } from '../../lib/fallback';
+import { legal } from '../../lib/i18n/legal';
+import { localizedPath } from '../../lib/locale';
+import { getSiteSettings, getUiLabels } from '../../lib/payload/client';
+import { buildMeta } from '../../lib/seo/buildMeta';
+
+const locale = Astro.locals.locale;
+const content = legal(locale);
+
+let siteSettings = null;
+try {
+  siteSettings = await getSiteSettings(locale);
+} catch (error) {
+  console.error(`[privacy] site settings failed (${locale}):`, error);
+}
+let uiLabels = null;
+try {
+  uiLabels = await getUiLabels(locale);
+} catch (error) {
+  console.error(`[privacy] ui labels failed (${locale}):`, error);
+}
+
+const siteName = siteSettings?.siteName || getFallback(locale).site.siteName || '';
+
+const meta = buildMeta(
+  {
+    title: content.metaTitle,
+    path: localizedPath(locale, '/privacy'),
+    locale,
+    siteName,
+    titleTemplate: siteSettings?.seo?.titleTemplate,
+  },
+  env.PUBLIC_SITE_URL,
+);
+---
+
+<SiteLayout meta={meta} locale={locale} siteSettings={siteSettings} uiLabels={uiLabels}>
+  <article class="wrap section max-w-2xl">
+    <h1>{content.title}</h1>
+    <p class="muted mt-4">{content.intro}</p>
+
+    <h2 class="mt-10">{content.cookiesHeading}</h2>
+    <dl class="mt-4 grid gap-4">
+      {
+        content.cookies.map((row) => (
+          <div class="border-t border-white/15 pt-4">
+            <dt class="font-mono text-sm text-orange">{row.name}</dt>
+            <dd class="mt-1">{row.purpose}</dd>
+            <dd class="muted mt-1 text-sm">{row.retention}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <h2 class="mt-10">{content.analyticsHeading}</h2>
+    <p class="mt-4">{content.analyticsBody}</p>
+
+    <h2 class="mt-10">{content.manageHeading}</h2>
+    <p class="mt-4">{content.manageBody}</p>
+    <div class="mt-6">
+      <ConsentReset locale={locale} next={localizedPath(locale, '/privacy')} class="button" />
+    </div>
+  </article>
+</SiteLayout>

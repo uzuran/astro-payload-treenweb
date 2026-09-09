@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   analyticsAllowed,
+  clearConsent,
   CONSENT_COOKIE,
   CONSENT_MAX_AGE_S,
   CONSENT_VALUES,
@@ -55,6 +56,14 @@ describe('writeConsent', () => {
     // @ts-expect-error — deliberately bad value
     writeConsent({ set }, 'everything');
     expect(set).toHaveBeenCalledWith(CONSENT_COOKIE, 'essential', expect.anything());
+  });
+});
+
+describe('clearConsent', () => {
+  it('deletes the consent cookie at the root path', () => {
+    const del = vi.fn();
+    clearConsent({ delete: del });
+    expect(del).toHaveBeenCalledWith(CONSENT_COOKIE, { path: '/' });
   });
 
   it('the cookie lifetime sits inside the 1–12 month window', () => {

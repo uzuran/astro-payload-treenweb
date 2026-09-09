@@ -86,6 +86,30 @@ for (const locale of LOCALES) {
     await expect(btn).toBeHidden();
   });
 
+  test(`[${locale}] privacy page + footer "manage consent" reopens the banner`, async ({
+    page,
+  }) => {
+    const bannerByRole = () => page.getByRole('dialog', { name: /cookie|согласие|souhlas/i });
+
+    // beforeEach seeded cookie_consent → no banner
+    await page.goto(`/${locale}`);
+    await expect(bannerByRole()).toHaveCount(0);
+
+    // footer → privacy page
+    const privacyLink = page.locator(`footer a[href="/${locale}/privacy"]`);
+    await expect(privacyLink).toBeVisible();
+    await privacyLink.click();
+    await expect(page).toHaveURL(new RegExp(`/${locale}/privacy$`));
+    await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('');
+    await expect(page.locator('dt', { hasText: 'cookie_consent' })).toBeVisible();
+
+    // footer "manage consent" → withdraws consent → banner returns, same page
+    await page.goto(`/${locale}`);
+    await page.locator('footer [data-consent-reset] button').click();
+    await expect(page).toHaveURL(new RegExp(`/${locale}$`));
+    await expect(bannerByRole()).toBeVisible();
+  });
+
   test(`[${locale}] booking confirmation interpolates, no raw tokens`, async ({ page }) => {
     await page.goto(`/${locale}#booking`);
     const form = page.locator('#booking-form');

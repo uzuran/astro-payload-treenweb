@@ -1,11 +1,13 @@
 ---
 import { getFallback } from '../lib/fallback';
 import { aria } from '../lib/i18n/aria';
+import { legal } from '../lib/i18n/legal';
 import type { Labels } from '../lib/i18n/labels';
-import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
+import { DEFAULT_LOCALE, type Locale, localizedPath } from '../lib/locale';
 import { resolveNavHref } from '../lib/nav';
 import type { NavItem, SiteSettings } from '../lib/payload/client';
 import { socialIcon } from '../lib/social';
+import ConsentReset from './ConsentReset.astro';
 import Multiline from './Multiline.astro';
 
 interface Props {
@@ -32,6 +34,9 @@ const footerLinks = (Astro.props.footerItems ?? []).map((link) => ({
 const socials = (site.social ?? [])
   .filter((s) => s.url)
   .map((s) => ({ url: s.url, icon: socialIcon(s.platform) }));
+
+const legalText = legal(locale);
+const privacyHref = localizedPath(locale, '/privacy');
 ---
 
 <footer id="contacts" class="border-t border-white/15">
@@ -101,6 +106,13 @@ const socials = (site.social ?? [])
       </nav>
     )
   }
+
+  <div
+    class="wrap flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/15 py-4 text-xs text-white/60"
+  >
+    <a href={privacyHref} class="hover:text-orange">{legalText.footerLink}</a>
+    <ConsentReset locale={locale} next={Astro.url.pathname} class="hover:text-orange" />
+  </div>
 
   <div
     class="wrap flex flex-wrap justify-between gap-3 border-t border-white/15 py-5 text-xs text-white/40"

@@ -42,6 +42,11 @@ export function writeConsent(cookies: Pick<AstroCookies, 'set'>, value: Consent)
   });
 }
 
+/** Withdraw consent — drops the cookie so the banner asks again next load. */
+export function clearConsent(cookies: Pick<AstroCookies, 'delete'>): void {
+  cookies.delete(CONSENT_COOKIE, { path: '/' });
+}
+
 /**
  * Analytics (Plausible) may load only with explicit `analytics` consent **and**
  * in production. Everything else — dev, test, `essential` consent, no cookie —

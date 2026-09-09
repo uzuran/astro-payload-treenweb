@@ -1,0 +1,33 @@
+---
+import { legal } from '../lib/i18n/legal';
+import { DEFAULT_LOCALE, type Locale } from '../lib/locale';
+
+interface Props {
+  locale?: Locale;
+  /** Where the no-JS POST bounces back to. */
+  next: string;
+  class?: string;
+}
+
+const { locale = DEFAULT_LOCALE, next, class: className } = Astro.props;
+---
+
+<form method="POST" action="/consent" class="contents" data-consent-reset>
+  <input type="hidden" name="next" value={next} />
+  <button type="submit" name="value" value="reset" class={className}>
+    {legal(locale).manageButton}
+  </button>
+</form>
+
+<script>
+  // JS-first (mirrors CookieConsent.astro): drop the cookie client-side and
+  // reload so the banner asks again. The <form> POST to /consent is the no-JS
+  // fallback.
+  document.querySelectorAll<HTMLFormElement>('form[data-consent-reset]').forEach((form) =>
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      document.cookie = 'cookie_consent=; path=/; max-age=0; samesite=lax';
+      location.reload();
+    }),
+  );
+</script>
