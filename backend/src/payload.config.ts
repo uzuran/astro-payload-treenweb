@@ -66,6 +66,9 @@ export default buildConfig({
   // origin. Prod uses the explicit allowlists.
   cors: env.NODE_ENV === 'production' ? env.CORS_ORIGINS : '*',
   csrf: env.NODE_ENV === 'production' ? env.CSRF_ORIGINS : [],
+  // Cap relationship population on the public REST API (default 10). The
+  // frontend never asks for more than depth=1; the admin stays well under 5.
+  maxDepth: 5,
   graphQL: { disablePlaygroundInProduction: true },
   telemetry: false,
   sharp,
