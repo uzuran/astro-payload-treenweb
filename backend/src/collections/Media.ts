@@ -8,6 +8,9 @@ import { authenticated } from '../access/authenticated';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/** Re-encode every generated image size to WebP at a sensible quality. */
+const webp = { format: 'webp' as const, options: { quality: 78 } };
+
 export const Media: CollectionConfig = {
   slug: 'media',
   access: {
@@ -27,10 +30,12 @@ export const Media: CollectionConfig = {
       'image/gif',
       'application/pdf',
     ],
+    // Generated variants are re-encoded to WebP (smaller than JPEG/PNG at equal
+    // quality, universally supported) and never upscaled past the original.
     imageSizes: [
-      { name: 'thumbnail', width: 400 },
-      { name: 'card', width: 768 },
-      { name: 'hero', width: 1600 },
+      { name: 'thumbnail', width: 400, withoutEnlargement: true, formatOptions: webp },
+      { name: 'card', width: 768, withoutEnlargement: true, formatOptions: webp },
+      { name: 'hero', width: 1600, withoutEnlargement: true, formatOptions: webp },
     ],
     adminThumbnail: 'thumbnail',
     focalPoint: true,

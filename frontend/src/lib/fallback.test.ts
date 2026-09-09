@@ -1,7 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import { getFallback } from './fallback';
+import {
+  getFallback,
+  HERO_PHOTO_FB_H,
+  HERO_PHOTO_FB_W,
+  HERO_PHOTO_SRC_FB,
+  HERO_PHOTO_SRCSET_FB,
+} from './fallback';
 import { LOCALES } from './locale';
+
+describe('hero fallback image', () => {
+  it('is a responsive WebP set with known dimensions', () => {
+    expect(HERO_PHOTO_SRC_FB).toMatch(/\.webp$/);
+    expect(HERO_PHOTO_SRCSET_FB).toMatch(/\.webp \d+w/);
+    expect(HERO_PHOTO_SRCSET_FB.split(',').length).toBeGreaterThanOrEqual(2);
+    expect(HERO_PHOTO_FB_W).toBeGreaterThan(0);
+    expect(HERO_PHOTO_FB_H).toBeGreaterThan(0);
+  });
+});
 
 describe('getFallback', () => {
   it('returns per-locale content for every routable locale', () => {

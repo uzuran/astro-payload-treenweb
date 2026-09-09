@@ -1,5 +1,11 @@
 ---
-import { getFallback, HERO_PHOTO_SRC_FB } from '../../lib/fallback';
+import {
+  getFallback,
+  HERO_PHOTO_FB_H,
+  HERO_PHOTO_FB_W,
+  HERO_PHOTO_SRC_FB,
+  HERO_PHOTO_SRCSET_FB,
+} from '../../lib/fallback';
 import { heroAnimationDurationCss, toHeroAnimation } from '../../lib/heroAnimation';
 import { DEFAULT_LOCALE, type Locale } from '../../lib/locale';
 import { mediaUrl, type Hero } from '../../lib/payload/client';
@@ -30,7 +36,13 @@ const photo = d.photo ?? null;
 const card = mediaUrl(photo, 'card');
 const hero = mediaUrl(photo, 'hero');
 const src = card ?? mediaUrl(photo) ?? HERO_PHOTO_SRC_FB;
-const srcset = [card && `${card} 768w`, hero && `${hero} 1600w`].filter(Boolean).join(', ');
+const srcset = photo
+  ? [card && `${card} 768w`, hero && `${hero} 1600w`].filter(Boolean).join(', ')
+  : HERO_PHOTO_SRCSET_FB;
+// Photo branch keeps its prior behaviour (dims or nothing); the bundled
+// fallback has known dims so its <img> always reserves the right box.
+const imgWidth = photo ? (photo.width ?? undefined) : HERO_PHOTO_FB_W;
+const imgHeight = photo ? (photo.height ?? undefined) : HERO_PHOTO_FB_H;
 const alt = photo?.alt || fb.heroPhotoAlt;
 ---
 
@@ -67,10 +79,11 @@ const alt = photo?.alt || fb.heroPhotoAlt;
         src={src}
         srcset={srcset || undefined}
         sizes="(min-width: 768px) 65vw, 100vw"
-        width={photo?.width ?? undefined}
-        height={photo?.height ?? undefined}
+        width={imgWidth}
+        height={imgHeight}
         alt={alt}
         fetchpriority="high"
+        decoding="async"
       />
       <div class="photo-caption">
         <span>{d.photoCaptionLeft}</span>
