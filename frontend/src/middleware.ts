@@ -3,6 +3,7 @@ import { defineMiddleware } from 'astro:middleware';
 import { env } from './env';
 import { htmlCacheControl, withVaryCookie } from './lib/httpCache';
 import { DEFAULT_LOCALE, isLocale, type Locale } from './lib/locale';
+import { Sentry } from './lib/sentry';
 import { BASE_SECURITY_HEADERS, contentSecurityPolicy, HSTS_HEADER } from './lib/securityHeaders';
 
 declare global {
@@ -29,7 +30,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
   context.locals.locale = isLocale(routeLocale) ? routeLocale : DEFAULT_LOCALE;
 
-  const response = await next();
+  let response: Response;
+  try {
+    response = await next();
+  } catch (error) {
+    // A no-op unless Sentry was initialised (SENTRY_DSN + production).
+    Sentry.captureException(error);
+    throw error;
+  }
   const headers = response.headers;
 
   if (routeLocale !== undefined) {

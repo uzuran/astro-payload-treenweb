@@ -147,5 +147,8 @@ Prereqs: DNS `A`/`AAAA` for `SITE_DOMAIN` and `CMS_DOMAIN` → the host; ports
   (compose-over-SSH, a Docker context, Kamal, Swarm, k8s) and a release-tag /
   image-push step wired to GHCR.
 - Off-box backup destination for `infra/backups/` (S3 per `.env.example`).
-- Sentry wiring (DSNs already in the env schemas) + an uptime probe on
-  `/readyz`.
+- **Sentry**: server-side capture is wired in both apps (frontend middleware,
+  backend `instrumentation.ts`) — set `SENTRY_DSN` in the prod `.env` to turn
+  it on (no-op otherwise). Still to do: browser-side capture (`PUBLIC_SENTRY_DSN`
+  - `@sentry/browser`), sourcemap upload in the Docker build
+    (`SENTRY_AUTH_TOKEN`), and an uptime probe hitting `/readyz` with an alert.

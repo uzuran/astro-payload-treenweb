@@ -40,6 +40,16 @@ const schema = z.object({
     emptyToUndefined,
     z.coerce.number().int().min(0).max(3600).default(0),
   ),
+
+  // Server-side error tracking. Sentry stays a no-op unless SENTRY_DSN is set
+  // AND NODE_ENV is production (browser-side capture would use
+  // PUBLIC_SENTRY_DSN — not wired yet).
+  SENTRY_DSN: z.preprocess(emptyToUndefined, z.string().optional()),
+  SENTRY_ENVIRONMENT: z.preprocess(emptyToUndefined, z.string().default('development')),
+  SENTRY_TRACES_SAMPLE_RATE: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().min(0).max(1).default(0),
+  ),
 });
 
 const parsed = schema.safeParse(process.env);

@@ -85,6 +85,9 @@ services:
       PAYLOAD_PUBLIC_SERVER_URL: ${PAYLOAD_PUBLIC_SERVER_URL:-${PUBLIC_CMS_URL:?}}
       CORS_ORIGINS: ${CORS_ORIGINS:?}
       CSRF_ORIGINS: ${CSRF_ORIGINS:?}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
     depends_on:
       db:
         condition: service_healthy
@@ -120,6 +123,9 @@ services:
       CMS_CACHE_TTL_S: ${CMS_CACHE_TTL_S:-20}
       PUBLIC_PLAUSIBLE_DOMAIN: ${PUBLIC_PLAUSIBLE_DOMAIN:-}
       PUBLIC_PLAUSIBLE_SRC: ${PUBLIC_PLAUSIBLE_SRC:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
     depends_on:
       backend:
         condition: service_healthy
