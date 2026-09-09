@@ -20,5 +20,11 @@ export default defineConfig({
   // (not Astro's `i18n` route generation, which fought the dynamic segment).
   // Locale codes + validation live in src/lib/locale.ts; `/` redirects to /ru/.
   // Tailwind v4 — configured entirely in src/styles/global.css (@import + @theme)
-  vite: { plugins: [tailwindcss()] },
+  vite: {
+    plugins: [tailwindcss()],
+    // Emit every hoisted <script> as an external /_astro/*.js file instead of
+    // inlining small ones. Inline module scripts would need 'unsafe-inline' (or
+    // per-hash) in the CSP; external files are covered by `script-src 'self'`.
+    build: { assetsInlineLimit: 0 },
+  },
 });
