@@ -15,15 +15,18 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('deliverToPayload', () => {
   it('POSTs the enquiry as JSON to /api/bookings and reports success on 2xx', async () => {
-    const fetchMock = vi.fn(async () => new Response(null, { status: 201 }));
+    const fetchMock = vi.fn(
+      async (_url: URL | string, _init?: RequestInit) => new Response(null, { status: 201 }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(deliverToPayload('http://cms.internal:3000', data)).resolves.toBe(true);
 
-    const [url, init] = fetchMock.mock.calls[0] as [URL, RequestInit];
-    expect(String(url)).toBe('http://cms.internal:3000/api/bookings');
-    expect(init.method).toBe('POST');
-    expect(JSON.parse(String(init.body))).toMatchObject({ ...data, source: 'website' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const call = fetchMock.mock.calls[0];
+    expect(String(call?.[0])).toBe('http://cms.internal:3000/api/bookings');
+    expect(call?.[1]?.method).toBe('POST');
+    expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({ ...data, source: 'website' });
   });
 
   it('reports failure on a non-2xx response', async () => {

@@ -99,20 +99,24 @@ jobs:
       - name: Install Chromium for Playwright
         run: |
           set -u
-          # The runner image ships a google-chrome apt source that intermittently
-          # serves a corrupt Packages.gz. We don't use system Chrome (Playwright
-          # bundles chromium), so drop it before `--with-deps` runs apt.
-          sudo rm -f /etc/apt/sources.list.d/google-chrome.list
-          echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries >/dev/null
+          # No `--with-deps`: the ubuntu-latest runner already has chromium's
+          # shared libraries, and `--with-deps` runs `apt-get update`, which
+          # trips over the runner image's flaky google-chrome apt source
+          # ("Hash Sum mismatch"). Retry the browser download for CDN blips.
+          ok=
           for attempt in 1 2 3; do
-            if pnpm --filter @treenweb/frontend exec playwright install --with-deps chromium; then
-              exit 0
+            if pnpm --filter @treenweb/frontend exec playwright install chromium; then
+              ok=1
+              break
             fi
-            echo "playwright install attempt ${attempt} failed; retrying in 20s"
-            sudo apt-get update || true
-            sleep 20
+            echo "chromium download attempt ${attempt} failed; retrying in 15s"
+            sleep 15
           done
-          exit 1
+          [ -n "$ok" ] || { echo "::error::playwright could not download chromium"; exit 1; }
+          # OS libraries are best-effort — they are normally preinstalled; do not
+          # fail the job if apt is having a bad day.
+          pnpm --filter @treenweb/frontend exec playwright install-deps chromium \
+            || echo "::warning::playwright install-deps failed (runner apt); continuing"
 
       - name: Build the Astro SSR bundle
         run: pnpm --filter @treenweb/frontend run build
