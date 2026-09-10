@@ -188,20 +188,27 @@ jobs:
           restore-keys: |
             trivy-db-${{ runner.os }}-
 
+      # Install the Trivy CLI from the official script rather than the
+      # marketplace action — the action's version tags are easy to get wrong
+      # (0.28.0 does not exist) and the CLI is a single static binary.
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sudo sh -s -- -b /usr/local/bin
+          trivy --version
+
       - name: Trivy filesystem scan (vuln + misconfig + secret)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          scanners: vuln,misconfig,secret
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true # only fail on vulns that have a fix
-          exit-code: '1' # HIGH/CRITICAL -> non-zero -> job fails
-          format: sarif
-          output: trivy-fs.sarif
-          trivyignores: .trivyignore # optional accepted-CVE allowlist
-        env:
-          TRIVY_CACHE_DIR: ~/.cache/trivy
+        run: |
+          export TRIVY_CACHE_DIR="$HOME/.cache/trivy"
+          mkdir -p "$TRIVY_CACHE_DIR"
+          trivy fs . \
+            --scanners vuln,misconfig,secret \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --ignorefile .trivyignore \
+            --exit-code 1 \
+            --format sarif \
+            --output trivy-fs.sarif
 
       - name: Detect SARIF
         id: sarif
@@ -474,20 +481,24 @@ jobs:
         id: ref
         run: echo "image=$(cat image.txt)@$(cat digest.txt)" >> "$GITHUB_OUTPUT"
 
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sudo sh -s -- -b /usr/local/bin
+          trivy --version
+
       - name: Trivy image scan (${{ matrix.service }})
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: image
-          image-ref: ${{ steps.ref.outputs.image }}
-          scanners: vuln
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: '1'
-          format: sarif
-          output: trivy-image-${{ matrix.service }}.sarif
-          trivyignores: .trivyignore
-        env:
-          TRIVY_CACHE_DIR: ~/.cache/trivy
+        run: |
+          export TRIVY_CACHE_DIR="$HOME/.cache/trivy"
+          mkdir -p "$TRIVY_CACHE_DIR"
+          trivy image "${{ steps.ref.outputs.image }}" \
+            --scanners vuln \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --ignorefile .trivyignore \
+            --exit-code 1 \
+            --format sarif \
+            --output trivy-image-${{ matrix.service }}.sarif
 
       - name: Detect SARIF
         id: sarif
