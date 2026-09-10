@@ -9,6 +9,38 @@ export function organizationJsonLd(siteUrl: string, siteName: string): JsonLd {
   };
 }
 
+/**
+ * schema.org HairSalon (a LocalBusiness subtype) for the home page. Only emits
+ * fields that are actually filled — a half-configured CMS still produces valid
+ * markup, richer as more is entered. Free-text opening hours are left out
+ * rather than guessed into an invalid `openingHours`.
+ */
+export function hairSalonJsonLd(opts: {
+  name: string;
+  url: string;
+  image?: string;
+  telephone?: string | null;
+  streetAddress?: string | null;
+  mapUrl?: string | null;
+}): JsonLd {
+  const node: JsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'HairSalon',
+    name: opts.name,
+    url: opts.url,
+  };
+  if (opts.image) node.image = opts.image;
+  if (opts.telephone?.trim()) node.telephone = opts.telephone.trim();
+  if (opts.streetAddress?.trim()) {
+    node.address = {
+      '@type': 'PostalAddress',
+      streetAddress: opts.streetAddress.trim().replace(/\s*\n\s*/g, ', '),
+    };
+  }
+  if (opts.mapUrl?.trim()) node.hasMap = opts.mapUrl.trim();
+  return node;
+}
+
 export function webPageJsonLd(opts: { title: string; description?: string; url: string }): JsonLd {
   const node: JsonLd = {
     '@context': 'https://schema.org',

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { articleJsonLd, breadcrumbJsonLd, serializeJsonLd, webPageJsonLd } from './jsonLd';
+import {
+  articleJsonLd,
+  breadcrumbJsonLd,
+  hairSalonJsonLd,
+  serializeJsonLd,
+  webPageJsonLd,
+} from './jsonLd';
 
 describe('jsonLd builders', () => {
   it('builds a WebPage node', () => {
@@ -30,6 +36,38 @@ describe('jsonLd builders', () => {
     ]);
     const items = node.itemListElement as { position: number }[];
     expect(items.map((i) => i.position)).toEqual([1, 2]);
+  });
+
+  it('builds a HairSalon node, omitting blank contact fields', () => {
+    const full = hairSalonJsonLd({
+      name: 'FORMA',
+      url: 'https://forma.example',
+      image: 'https://forma.example/og.jpg',
+      telephone: ' +420 777 111 222 ',
+      streetAddress: 'Klatovská 12\nPlzeň',
+      mapUrl: 'https://maps.example/forma',
+    });
+    expect(full).toMatchObject({
+      '@type': 'HairSalon',
+      name: 'FORMA',
+      telephone: '+420 777 111 222',
+      hasMap: 'https://maps.example/forma',
+      address: { '@type': 'PostalAddress', streetAddress: 'Klatovská 12, Plzeň' },
+    });
+
+    const minimal = hairSalonJsonLd({
+      name: 'FORMA',
+      url: 'https://forma.example',
+      telephone: '',
+      streetAddress: '   ',
+      mapUrl: null,
+    });
+    expect(minimal).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'HairSalon',
+      name: 'FORMA',
+      url: 'https://forma.example',
+    });
   });
 
   it('escapes "<" so the payload cannot break out of a <script> tag', () => {

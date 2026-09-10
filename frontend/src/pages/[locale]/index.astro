@@ -25,7 +25,7 @@ import {
   mediaUrl,
 } from '../../lib/payload/client';
 import { buildMeta } from '../../lib/seo/buildMeta';
-import { organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
+import { hairSalonJsonLd, organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
 
 /** Resolve a fetch, logging and swallowing failures so one dead section never 500s the page. */
 const settle = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
@@ -93,6 +93,14 @@ const meta = buildMeta(
   uiLabels={uiLabels}
   jsonLd={[
     organizationJsonLd(env.PUBLIC_SITE_URL, siteName),
+    hairSalonJsonLd({
+      name: siteName,
+      url: env.PUBLIC_SITE_URL,
+      image: mediaUrl(siteSettings?.ogImage) ?? undefined,
+      telephone: siteSettings?.contact?.phone,
+      streetAddress: siteSettings?.contact?.address,
+      mapUrl: siteSettings?.contact?.mapUrl,
+    }),
     webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
   ]}
 >
