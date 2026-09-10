@@ -22,10 +22,10 @@
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3",
+    "@payloadcms/email-nodemailer": "^3.88.0",
     "@payloadcms/next": "^3",
     "@payloadcms/richtext-lexical": "^3",
     "@payloadcms/ui": "^3",
-    "@sentry/node": "^10.74.0",
     "graphql": "^16.9.0",
     "next": "~15.4.11",
     "payload": "^3",

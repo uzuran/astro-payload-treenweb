@@ -13,6 +13,7 @@ import { Pages } from './collections/Pages';
 import { Posts } from './collections/Posts';
 import { Redirects } from './collections/Redirects';
 import { Users } from './collections/Users';
+import { emailAdapter } from './email';
 import { env } from './env';
 import { About } from './globals/About';
 import { AnimationSettings } from './globals/AnimationSettings';
@@ -63,6 +64,8 @@ export default buildConfig({
     migrationDir: path.resolve(dirname, 'migrations'),
   }),
   secret: env.PAYLOAD_SECRET,
+  // Real SMTP when SMTP_URL is set; otherwise Payload's console adapter (dev).
+  email: emailAdapter(),
   // Dev is permissive so the admin works through any local or tunnelled
   // origin. Prod uses the explicit allowlists.
   cors: env.NODE_ENV === 'production' ? env.CORS_ORIGINS : '*',

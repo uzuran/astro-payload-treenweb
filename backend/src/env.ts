@@ -30,7 +30,17 @@ const schema = z.object({
 
   SENTRY_DSN: z.string().optional(),
   SENTRY_ENVIRONMENT: z.string().default('development'),
-  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
+
+  // Transactional email (password reset, etc.). A nodemailer connection string,
+  // e.g. smtps://user:pass@smtp.example.com:465. Without it Payload logs mail to
+  // the console — fine for dev, refused in production unless EMAIL_OPTOUT=true.
+  SMTP_URL: z.string().optional(),
+  EMAIL_FROM: z.string().default('noreply@localhost'),
+  EMAIL_FROM_NAME: z.string().default('treenweb'),
+  EMAIL_OPTOUT: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -47,17 +57,31 @@ export const env = parsed.data;
 export type Env = typeof env;
 
 /**
- * Fail-fast guard: `PAYLOAD_DB_PUSH=true` auto-syncs the Postgres schema from
- * the models on boot. That is a dev-only convenience — production must apply
- * reviewed migrations instead, or an unintended model edit silently rewrites
- * the live schema. (The CI e2e job sets it against a throwaway database and
- * never boots the backend with NODE_ENV=production; vitest runs as `test`.)
+ * Fail-fast guards for production boot:
+ *  - `PAYLOAD_DB_PUSH=true` auto-syncs the Postgres schema on boot — a dev-only
+ *    convenience; prod must apply reviewed migrations.
+ *  - no `SMTP_URL` means password-reset tokens get logged to the console;
+ *    `EMAIL_OPTOUT=true` acknowledges that admin recovery is CLI-only.
+ * Only fires when `NODE_ENV=production` — CI e2e runs the backend as
+ * development, vitest as `test`.
  */
-export function productionEnvProblems(values: Pick<Env, 'NODE_ENV' | 'PAYLOAD_DB_PUSH'>): string[] {
+export function productionEnvProblems(
+  values: Pick<Env, 'NODE_ENV' | 'PAYLOAD_DB_PUSH' | 'SMTP_URL' | 'EMAIL_OPTOUT'>,
+): string[] {
   if (values.NODE_ENV !== 'production') return [];
-  return values.PAYLOAD_DB_PUSH
-    ? ['PAYLOAD_DB_PUSH must be false in production — apply migrations, not schema push']
-    : [];
+  const problems: string[] = [];
+  if (values.PAYLOAD_DB_PUSH) {
+    problems.push(
+      'PAYLOAD_DB_PUSH must be false in production — apply migrations, not schema push',
+    );
+  }
+  if (!values.SMTP_URL && !values.EMAIL_OPTOUT) {
+    problems.push(
+      'SMTP_URL is not set — the admin password-reset flow would write reset tokens to the log. ' +
+        'Set SMTP_URL, or EMAIL_OPTOUT=true to accept CLI-only admin recovery.',
+    );
+  }
+  return problems;
 }
 
 const problems = productionEnvProblems(env);

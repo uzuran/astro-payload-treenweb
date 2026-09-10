@@ -25,9 +25,11 @@ reference `${IMAGE_TAG}` in each service's `image:`.
   fail the deploy immediately. Key ones: `IMAGE_REGISTRY`, `PAYLOAD_SECRET`
   (≥32, unique to prod), `DATABASE_URL`, `PUBLIC_SITE_URL` / `PUBLIC_CMS_URL`
   as real `https://` origins (the app **refuses to boot** on localhost in
-  production — `frontend/src/env.ts`), `CORS_ORIGINS`, `CSRF_ORIGINS`. The prod
-  compose pins `PAYLOAD_DB_PUSH=false`; the backend also refuses to boot with
-  push on in production (`backend/src/env.ts`).
+  production — `frontend/src/env.ts`), `CORS_ORIGINS`, `CSRF_ORIGINS`, and
+  `SMTP_URL` (or `EMAIL_OPTOUT=true` — without one the backend refuses to boot,
+  because password-reset tokens would be written to the log). The prod compose
+  pins `PAYLOAD_DB_PUSH=false`; the backend also refuses to boot with push on in
+  production (`backend/src/env.ts`).
 - A cron/systemd timer running `infra/scripts/db-backup.sh` (e.g. every 6 h)
   with `BACKUP_DIR` on a volume that is itself backed up off-box.
 
@@ -147,8 +149,10 @@ Prereqs: DNS `A`/`AAAA` for `SITE_DOMAIN` and `CMS_DOMAIN` → the host; ports
   (compose-over-SSH, a Docker context, Kamal, Swarm, k8s) and a release-tag /
   image-push step wired to GHCR.
 - Off-box backup destination for `infra/backups/` (S3 per `.env.example`).
-- **Sentry**: server-side capture is wired in both apps (frontend middleware,
-  backend `instrumentation.ts`) — set `SENTRY_DSN` in the prod `.env` to turn
-  it on (no-op otherwise). Still to do: browser-side capture (`PUBLIC_SENTRY_DSN`
-  - `@sentry/browser`), sourcemap upload in the Docker build
-    (`SENTRY_AUTH_TOKEN`), and an uptime probe hitting `/readyz` with an alert.
+- **Sentry**: server-side capture is wired in the **frontend** (Astro
+  middleware, `@sentry/node`) — set `SENTRY_DSN` in the prod `.env` to turn it
+  on (no-op otherwise). The **backend** is not wired: `@sentry/node` breaks
+  Next's instrumentation-hook bundling; it needs `@sentry/nextjs` (a separate,
+  larger change). Also still to do: browser-side capture (`PUBLIC_SENTRY_DSN` +
+  `@sentry/browser`), sourcemap upload in the Docker build (`SENTRY_AUTH_TOKEN`),
+  and an uptime probe hitting `/readyz` with an alert.
