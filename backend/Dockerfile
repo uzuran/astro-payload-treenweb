@@ -52,6 +52,9 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 WORKDIR /app
+# The standalone server runs with `node`; npm/npx (and their bundled, CVE-prone
+# vendor tree) are never used at runtime. Drop them.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 RUN useradd --system --uid 1001 --user-group nextjs
 COPY --from=build --chown=nextjs:nextjs /repo/backend/.next/standalone ./
 COPY --from=build --chown=nextjs:nextjs /repo/backend/.next/static ./backend/.next/static

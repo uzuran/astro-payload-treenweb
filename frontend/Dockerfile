@@ -37,6 +37,9 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=4321
 WORKDIR /app
+# The SSR server runs with `node`; npm/npx (and their bundled, CVE-prone vendor
+# tree) are never used at runtime. Drop them.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 RUN useradd --system --uid 1001 --user-group astro
 COPY --from=build --chown=astro:astro /out/node_modules ./node_modules
 COPY --from=build --chown=astro:astro /repo/frontend/dist ./dist
