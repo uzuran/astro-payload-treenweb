@@ -30,15 +30,14 @@ FROM deps AS build
 COPY . .
 # Placeholder env is scoped to this RUN only (never baked into the image) so
 # config validation / codegen pass. Real values are injected at runtime.
+# Exported into a single `sh -c` so every step below (not just the first)
+# sees them — env.ts validates on import in codegen too.
 RUN DATABASE_URL=postgres://build:build@localhost:5432/build \
     PAYLOAD_SECRET=build-time-placeholder-secret-0123456789 \
     PAYLOAD_DB_PUSH=false \
-    pnpm --filter @treenweb/backend run generate:types \
- && pnpm --filter @treenweb/backend run generate:importmap \
- && DATABASE_URL=postgres://build:build@localhost:5432/build \
-    PAYLOAD_SECRET=build-time-placeholder-secret-0123456789 \
-    PAYLOAD_DB_PUSH=false \
-    pnpm --filter @treenweb/backend exec next build
+    sh -c 'pnpm --filter @treenweb/backend run generate:types \
+        && pnpm --filter @treenweb/backend run generate:importmap \
+        && pnpm --filter @treenweb/backend exec next build'
 
 # ---------- runtime (minimal standalone) ----------
 FROM ${NODE_IMAGE} AS runtime
