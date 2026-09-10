@@ -15,6 +15,7 @@ import { Redirects } from './collections/Redirects';
 import { Users } from './collections/Users';
 import { emailAdapter } from './email';
 import { env } from './env';
+import { reportError } from './lib/errorReporter';
 import { About } from './globals/About';
 import { AnimationSettings } from './globals/AnimationSettings';
 import { Booking } from './globals/Booking';
@@ -64,6 +65,14 @@ export default buildConfig({
     migrationDir: path.resolve(dirname, 'migrations'),
   }),
   secret: env.PAYLOAD_SECRET,
+  // Forward unhandled 5xx errors to ALERT_WEBHOOK_URL (throttled). No-op if unset.
+  hooks: {
+    afterError: [
+      ({ error }) => {
+        void reportError(error);
+      },
+    ],
+  },
   // Real SMTP when SMTP_URL is set; otherwise Payload's console adapter (dev).
   email: emailAdapter(),
   // Dev is permissive so the admin works through any local or tunnelled

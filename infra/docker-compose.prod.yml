@@ -93,9 +93,10 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-noreply@localhost}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-treenweb}
       EMAIL_OPTOUT: ${EMAIL_OPTOUT:-false}
-      # Backend error tracking is not wired yet (@sentry/node breaks Next's
-      # instrumentation hook; needs @sentry/nextjs). SENTRY_DSN is declared but
-      # unused server-side; the frontend uses it.
+      # Backend 5xx errors are POSTed to ALERT_WEBHOOK_URL (throttled). Full APM
+      # via @sentry/nextjs is a later add — @sentry/node breaks Next's
+      # instrumentation hook. SENTRY_DSN is declared but unused server-side.
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
     depends_on:

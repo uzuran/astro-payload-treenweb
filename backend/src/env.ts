@@ -31,6 +31,10 @@ const schema = z.object({
   SENTRY_DSN: z.string().optional(),
   SENTRY_ENVIRONMENT: z.string().default('development'),
 
+  // Incoming webhook for backend 5xx alerts (shared with infra healthcheck).
+  // Blank = no alerting. See src/lib/errorReporter.ts.
+  ALERT_WEBHOOK_URL: z.string().url().optional(),
+
   // Transactional email (password reset, etc.). A nodemailer connection string,
   // e.g. smtps://user:pass@smtp.example.com:465. Without it Payload logs mail to
   // the console — fine for dev, refused in production unless EMAIL_OPTOUT=true.

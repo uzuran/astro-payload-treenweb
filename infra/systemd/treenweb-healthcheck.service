@@ -1,0 +1,17 @@
+# Polls the app health endpoints and alerts on state change.
+# Paired with treenweb-healthcheck.timer. Install alongside the backup units:
+#   sudo cp infra/systemd/treenweb-healthcheck.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now treenweb-healthcheck.timer
+
+[Unit]
+Description=treenweb health poll (readyz + health, alert on change)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/treenweb
+# ALERT_WEBHOOK_URL, SITE_LABEL, and any *_URL overrides come from the prod .env:
+EnvironmentFile=/opt/treenweb/.env
+Environment=STATE_DIR=/var/lib/treenweb
+ExecStart=/opt/treenweb/infra/scripts/healthcheck.sh
+# A failing poll is expected to exit non-zero; don't spam the journal red.
+SuccessExitStatus=1

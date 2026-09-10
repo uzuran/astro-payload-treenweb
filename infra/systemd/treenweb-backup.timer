@@ -1,0 +1,14 @@
+# Schedule for treenweb-backup.service — every 6 hours, plus once shortly
+# after boot, with a jitter so many hosts don't hit storage at the same second.
+
+[Unit]
+Description=Run treenweb database backup every 6h
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=6h
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

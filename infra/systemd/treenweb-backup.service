@@ -1,0 +1,23 @@
+# Runs one database backup. Paired with treenweb-backup.timer.
+# Install: copy both files to /etc/systemd/system/, adjust the paths, then
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now treenweb-backup.timer
+
+[Unit]
+Description=treenweb database backup (pg_dump -> local + off-box)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# Where the repo (with infra/scripts/) is checked out on the host:
+WorkingDirectory=/opt/treenweb
+# The prod .env supplies POSTGRES_*, and BACKUP_S3_DEST / AWS_* for the off-box copy:
+EnvironmentFile=/opt/treenweb/.env
+Environment=COMPOSE_FILES=infra/docker-compose.yml:infra/docker-compose.prod.yml
+Environment=BACKUP_DIR=/var/backups/treenweb
+Environment=KEEP=14
+ExecStart=/opt/treenweb/infra/scripts/db-backup.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

@@ -3,12 +3,13 @@
 Operational procedure for the treenweb prod stack. Scripts live in
 `infra/scripts/`; all are `set -euo pipefail` and take config via env vars.
 
-| Script          | What it does                                                             |
-| --------------- | ------------------------------------------------------------------------ |
-| `deploy.sh`     | backup → pull → start (health-gated) → migrate → smoke-check `/readyz`   |
-| `rollback.sh`   | backup → pull+start a previous tag → (optional) `migrate:down` → recheck |
-| `db-backup.sh`  | `pg_dump` the running `db` service → `infra/backups/*.sql.gz`, keeps 14  |
-| `db-restore.sh` | restore a gzipped dump (destructive; prompts)                            |
+| Script           | What it does                                                             |
+| ---------------- | ------------------------------------------------------------------------ |
+| `deploy.sh`      | backup → pull → start (health-gated) → migrate → smoke-check `/readyz`   |
+| `rollback.sh`    | backup → pull+start a previous tag → (optional) `migrate:down` → recheck |
+| `db-backup.sh`   | `pg_dump` → `*.sql.gz` (keeps 14) + off-box copy if `BACKUP_S3_DEST` set |
+| `db-restore.sh`  | restore a gzipped dump (destructive; prompts)                            |
+| `healthcheck.sh` | poll `/readyz` + `/health`, alert `ALERT_WEBHOOK_URL` on up↔down         |
 
 `COMPOSE_FILES` (default `infra/docker-compose.yml:infra/docker-compose.prod.yml`)
 is a `:`-separated list. `IMAGE_TAG` selects the release; the prod compose must
@@ -30,8 +31,7 @@ reference `${IMAGE_TAG}` in each service's `image:`.
   because password-reset tokens would be written to the log). The prod compose
   pins `PAYLOAD_DB_PUSH=false`; the backend also refuses to boot with push on in
   production (`backend/src/env.ts`).
-- A cron/systemd timer running `infra/scripts/db-backup.sh` (e.g. every 6 h)
-  with `BACKUP_DIR` on a volume that is itself backed up off-box.
+- The backup timer installed (see **Backups** below).
 
 ---
 
@@ -91,6 +91,61 @@ anything worth keeping.
 
 ---
 
+## Backups
+
+`infra/scripts/db-backup.sh` writes `treenweb-<utc>.sql.gz` to `$BACKUP_DIR`
+(keeps the newest `$KEEP`, default 14) and, when `BACKUP_S3_DEST` is set, copies
+it off-box with `aws s3 cp` (`--endpoint-url $BACKUP_S3_ENDPOINT` for
+MinIO / R2 / B2 / …; credentials via the standard `AWS_*` env vars). An
+off-box copy failing only prints a warning — the local dump still succeeds.
+
+**Install the timer** (`infra/systemd/`):
+
+```bash
+sudo cp infra/systemd/treenweb-backup.{service,timer} /etc/systemd/system/
+sudo mkdir -p /var/backups/treenweb
+# edit the .service: WorkingDirectory / EnvironmentFile to match the host
+sudo systemctl daemon-reload
+sudo systemctl enable --now treenweb-backup.timer
+
+systemctl list-timers treenweb-backup.timer     # verify schedule
+sudo systemctl start treenweb-backup.service     # run one now
+journalctl -u treenweb-backup.service -n 30      # check output
+```
+
+Runs 15 min after boot, then every 6 h. Prod `.env` needs `BACKUP_S3_DEST`
+(+ `AWS_*`) for the off-box copy; without it backups stay on the host only.
+
+---
+
+## Monitoring
+
+`infra/scripts/healthcheck.sh` polls `/readyz` (frontend → CMS → DB) and
+`/health` (backend), and on an **up↔down state change** POSTs one message to
+`ALERT_WEBHOOK_URL` (Slack / Discord / Mattermost / any `{"text":…}` incoming
+webhook). It debounces via `$STATE_DIR/health.state`, so a sustained outage
+alerts once, and recovery alerts once. Exit code is 0 healthy / 1 not.
+
+**Install the timer** (`infra/systemd/`):
+
+```bash
+sudo cp infra/systemd/treenweb-healthcheck.{service,timer} /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now treenweb-healthcheck.timer
+journalctl -u treenweb-healthcheck.service -f     # watch it
+```
+
+This is the **floor** — a host-local poller can't tell you the host itself is
+down. Also point an external monitor (BetterStack / UptimeRobot / Pingdom /
+…) at the public `https://<SITE_DOMAIN>/readyz` for off-host coverage.
+
+The backend also POSTs unhandled **5xx errors** to the same `ALERT_WEBHOOK_URL`
+(Payload `afterError` hook → `backend/src/lib/errorReporter.ts`, throttled to
+one alert per distinct error / 5 min). Full APM (`@sentry/nextjs`) is a later
+add.
+
+---
+
 ## Authoring a migration
 
 Dev auto-syncs the schema (`PAYLOAD_DB_PUSH=true`); prod never does. For any
@@ -144,15 +199,18 @@ Prereqs: DNS `A`/`AAAA` for `SITE_DOMAIN` and `CMS_DOMAIN` → the host; ports
 
 ## Still open (needs an infra decision)
 
-- **CD workflow.** No `.github/workflows/deploy.yml`. `deploy.sh`/`rollback.sh`
-  are the building blocks; a workflow needs the deploy target chosen
-  (compose-over-SSH, a Docker context, Kamal, Swarm, k8s) and a release-tag /
-  image-push step wired to GHCR.
-- Off-box backup destination for `infra/backups/` (S3 per `.env.example`).
-- **Sentry**: server-side capture is wired in the **frontend** (Astro
-  middleware, `@sentry/node`) — set `SENTRY_DSN` in the prod `.env` to turn it
-  on (no-op otherwise). The **backend** is not wired: `@sentry/node` breaks
-  Next's instrumentation-hook bundling; it needs `@sentry/nextjs` (a separate,
-  larger change). Also still to do: browser-side capture (`PUBLIC_SENTRY_DSN` +
-  `@sentry/browser`), sourcemap upload in the Docker build (`SENTRY_AUTH_TOKEN`),
+- **Deploy step.** Images build + push to GHCR on a `v*` tag
+  (`.github/workflows/release.yml`). What's left is running the deploy on the
+  host — `IMAGE_TAG=v1.4.0 infra/scripts/deploy.sh` manually, or a `deploy`
+  job added to that workflow once the mechanism is chosen (compose-over-SSH,
+  a Docker context, Kamal, Swarm, k8s).
+- Off-box backup **credentials** — the copy is wired (`BACKUP_S3_DEST` + `AWS_*`
+  in the prod `.env`); pick a bucket/provider.
+- **External uptime monitor.** The host-local poll is wired (see **Monitoring**);
+  add an off-host check on `https://<SITE_DOMAIN>/readyz` too.
+- **Full APM**: frontend server errors go to Sentry (`@sentry/node`, set
+  `SENTRY_DSN`); backend 5xx go to the webhook (`afterError` hook). To go
+  further: `@sentry/nextjs` for the backend (`@sentry/node` alone breaks Next's
+  instrumentation-hook bundling), browser-side capture (`PUBLIC_SENTRY_DSN` +
+  `@sentry/browser`), and sourcemap upload in the Docker build (`SENTRY_AUTH_TOKEN`),
   and an uptime probe hitting `/readyz` with an alert.

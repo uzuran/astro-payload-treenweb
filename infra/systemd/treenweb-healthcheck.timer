@@ -1,0 +1,12 @@
+# Schedule for treenweb-healthcheck.service — every 2 minutes.
+
+[Unit]
+Description=Run the treenweb health poll every 2 min
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target
