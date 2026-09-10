@@ -1,0 +1,684 @@
+# ---------------------------------------------------------------------------
+# Security pipeline — SAST, SCA, secrets, IaC, container scanning, keyless
+# image signing + verification, and Sentry release tagging for the treenweb
+# pnpm monorepo (Astro frontend + Payload backend, GHCR images).
+#
+# Tools (all stable, industry-standard):
+#   Semgrep   — SAST over source (OWASP / security-audit / JS-TS / Dockerfile /
+#               GitHub Actions rulesets)
+#   Trivy     — SCA + IaC + secrets on the filesystem, and vuln scan of the
+#               pushed GHCR images by digest
+#   Gitleaks  — secret scanning across the full git history
+#   Checkov   — IaC misconfiguration (Dockerfiles, compose, workflows)
+#   Cosign    — keyless (Sigstore / Fulcio, GitHub OIDC) image signing + verify
+#   CodeQL    — deep SAST, opt-in only (workflow_dispatch or vars.ENABLE_CODEQL)
+#   Dependabot— see .github/dependabot.yml
+#
+# Gate:
+#   * Trivy   — HIGH/CRITICAL vulnerabilities *with an available fix* fail.
+#   * Semgrep — ERROR-severity findings fail; lower severities -> SARIF only.
+#   * Gitleaks / Checkov — any finding fails.
+#   * A final `summary` job aggregates every report and fails the run if any
+#     security job failed.
+#
+# Image lifecycle:
+#   * pull_request           -> source scans + both Dockerfiles build as a
+#                               smoke test. Nothing is pushed (forks cannot).
+#   * push to main / dispatch -> build + push
+#     ghcr.io/<owner>/treenweb-{backend,frontend}:<sha> (immutable per commit),
+#     then Trivy-scan that digest, Cosign-sign it, Cosign-verify it, and (main
+#     only) tag a Sentry release. A vulnerable image never reaches sign/verify.
+#
+# Deploy (infra/scripts/deploy.sh) runs the SAME `cosign verify` before
+# `docker compose up`, so only images signed by this pipeline can ship.
+# ---------------------------------------------------------------------------
+
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Supersede in-flight PR runs; never cancel a push/dispatch run mid-sign.
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least privilege by default; jobs widen scope explicitly.
+permissions:
+  contents: read
+
+env:
+  # Pin scanner versions for reproducible results; bump deliberately.
+  SEMGREP_VERSION: "1.97.0"
+
+jobs:
+  # =========================================================================
+  # prepare — checkout + pnpm workspace install (validates pnpm-lock.yaml,
+  # warms the pnpm store cache) and derive shared values.
+  # =========================================================================
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      image_prefix: ${{ steps.vars.outputs.image_prefix }}
+      short_sha: ${{ steps.vars.outputs.short_sha }}
+      is_push: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node (with pnpm store cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install workspace dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Derive shared values
+        id: vars
+        run: |
+          owner="${{ github.repository_owner }}"
+          # GHCR requires a lowercase repository path.
+          echo "image_prefix=ghcr.io/${owner,,}/treenweb" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+
+  # =========================================================================
+  # semgrep — SAST. Reports every finding to code scanning; FAILS only on
+  # ERROR-severity findings (the block tier).
+  # =========================================================================
+  semgrep:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # upload SARIF to the Security tab
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache Semgrep (pip wheels + downloaded rule registry)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/semgrep
+          key: semgrep-${{ runner.os }}-${{ env.SEMGREP_VERSION }}-${{ hashFiles('.semgrepignore') }}
+          restore-keys: |
+            semgrep-${{ runner.os }}-${{ env.SEMGREP_VERSION }}-
+
+      - name: Install Semgrep
+        run: pip install "semgrep==${{ env.SEMGREP_VERSION }}"
+
+      - name: Run Semgrep (OSS engine, curated rulesets)
+        run: |
+          set -o pipefail
+          semgrep scan \
+            --oss-only \
+            --metrics off \
+            --error \
+            --severity ERROR \
+            --config p/default \
+            --config p/security-audit \
+            --config p/owasp-top-ten \
+            --config p/secrets \
+            --config p/javascript \
+            --config p/typescript \
+            --config p/dockerfile \
+            --config p/github-actions \
+            --exclude node_modules \
+            --exclude dist \
+            --exclude .next \
+            --sarif-output semgrep.sarif \
+            --json-output semgrep.json
+          # `--severity ERROR` above means a non-zero exit == an ERROR finding.
+
+      - name: Full-severity SARIF for the Security tab (non-blocking)
+        if: always()
+        run: |
+          semgrep scan \
+            --oss-only --metrics off \
+            --config p/default \
+            --config p/security-audit \
+            --config p/owasp-top-ten \
+            --config p/secrets \
+            --config p/javascript \
+            --config p/typescript \
+            --config p/dockerfile \
+            --config p/github-actions \
+            --exclude node_modules --exclude dist --exclude .next \
+            --sarif-output semgrep-full.sarif || true
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('semgrep-full.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-full.sarif
+          category: semgrep
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-semgrep
+          path: |
+            semgrep.sarif
+            semgrep.json
+            semgrep-full.sarif
+          if-no-files-found: warn
+
+  # =========================================================================
+  # trivy-fs — filesystem scan: dependency vulnerabilities (pnpm-lock.yaml),
+  # IaC misconfig, hard-coded secrets. Fails on HIGH/CRITICAL fixable vulns.
+  # =========================================================================
+  trivy-fs:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trivy DB cache key (daily)
+        id: trivycache
+        run: echo "date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Trivy vulnerability DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ runner.os }}-${{ steps.trivycache.outputs.date }}
+          restore-keys: |
+            trivy-db-${{ runner.os }}-
+
+      - name: Trivy filesystem scan (vuln + misconfig + secret)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true        # only fail on vulns that have a fix
+          exit-code: "1"              # HIGH/CRITICAL -> non-zero -> job fails
+          format: sarif
+          output: trivy-fs.sarif
+          trivyignores: .trivyignore  # optional accepted-CVE allowlist
+        env:
+          TRIVY_CACHE_DIR: ~/.cache/trivy
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('trivy-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-trivy-fs
+          path: trivy-fs.sarif
+          if-no-files-found: warn
+
+  # =========================================================================
+  # gitleaks — full git-history secret scan. Exits non-zero on any finding.
+  # =========================================================================
+  gitleaks:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
+          GITLEAKS_ENABLE_SUMMARY: "true"
+          # Only required for repos owned by a GitHub Organization:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+          category: gitleaks
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-gitleaks
+          path: results.sarif
+          if-no-files-found: ignore   # no file == no leaks
+
+  # =========================================================================
+  # checkov — IaC misconfiguration scan. Hard fail on any finding. Dev-only
+  # Dockerfiles / compose are excluded.
+  # =========================================================================
+  checkov:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: dockerfile,github_actions,secrets
+          quiet: true
+          compact: true
+          soft_fail: false                     # findings fail the job
+          output_format: cli,sarif
+          output_file_path: console,checkov-reports
+          # Dev-only images/compose intentionally run as root with bind mounts:
+          skip_path: >-
+            .*Dockerfile\.dev$,
+            infra/docker-compose\.dev\.yml
+          # Accepted / non-applicable checks — review before extending:
+          skip_check: ""
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('checkov-reports/results_sarif.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-reports/results_sarif.sarif
+          category: checkov
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-checkov
+          path: checkov-reports/
+          if-no-files-found: warn
+
+  # =========================================================================
+  # build-images — build both images from the repo-root context.
+  #   * push / dispatch -> push :<sha> to GHCR + export the digest.
+  #   * pull_request     -> build only (Dockerfile smoke test), no push.
+  # Docker layers cached in the GHA cache, scoped per service.
+  # =========================================================================
+  build-images:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write     # push to GHCR
+      id-token: write      # OIDC for the gha build cache backend
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: needs.prepare.outputs.is_push == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build ${{ matrix.service }} image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.service }}/Dockerfile
+          push: ${{ needs.prepare.outputs.is_push == 'true' }}
+          tags: ${{ needs.prepare.outputs.image_prefix }}-${{ matrix.service }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+          # Single manifest (no provenance index) so steps.build.outputs.digest
+          # is the exact image digest Cosign signs.
+          provenance: false
+
+      - name: Export image reference + digest
+        if: needs.prepare.outputs.is_push == 'true'
+        run: |
+          echo "${{ needs.prepare.outputs.image_prefix }}-${{ matrix.service }}" > image.txt
+          echo "${{ steps.build.outputs.digest }}" > digest.txt
+          cat image.txt digest.txt
+
+      - name: Upload digest
+        if: needs.prepare.outputs.is_push == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-digest-${{ matrix.service }}
+          path: |
+            image.txt
+            digest.txt
+
+      # ---- Sentry release tagging (main pushes only) ----------------------
+      # Ties this commit to a Sentry release + a production deploy marker so
+      # runtime errors are attributed to it. SENTRY_DSN is a runtime value for
+      # the app (prod .env / compose); passed here only for parity.
+      - name: Sentry release — ${{ matrix.service }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_PROJECT: >-
+            ${{ matrix.service == 'backend'
+                && (secrets.SENTRY_PROJECT_BACKEND || secrets.SENTRY_PROJECT)
+                || (secrets.SENTRY_PROJECT_FRONTEND || secrets.SENTRY_PROJECT) }}
+          SENTRY_RELEASE: ${{ github.sha }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ] || [ -z "$SENTRY_ORG" ] || [ -z "$SENTRY_PROJECT" ]; then
+            echo "Sentry not fully configured (org/project/token) — skipping release tagging."
+            exit 0
+          fi
+          SC="npx --yes @sentry/cli@2"
+          $SC releases new "$SENTRY_RELEASE"
+          $SC releases set-commits "$SENTRY_RELEASE" --auto || true
+          $SC releases finalize "$SENTRY_RELEASE"
+          $SC releases deploys "$SENTRY_RELEASE" new -e production
+
+  # =========================================================================
+  # trivy-image — scan the pushed GHCR image by immutable digest for OS +
+  # app vulnerabilities. HIGH/CRITICAL fails. Skipped on pull requests.
+  # =========================================================================
+  trivy-image:
+    needs: [prepare, build-images]
+    if: needs.prepare.outputs.is_push == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trivy DB cache key (daily)
+        id: trivycache
+        run: echo "date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Trivy vulnerability DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ runner.os }}-${{ steps.trivycache.outputs.date }}
+          restore-keys: |
+            trivy-db-${{ runner.os }}-
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Download image digest
+        uses: actions/download-artifact@v4
+        with:
+          name: image-digest-${{ matrix.service }}
+
+      - name: Resolve image reference (name@sha256:...)
+        id: ref
+        run: echo "image=$(cat image.txt)@$(cat digest.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Trivy image scan (${{ matrix.service }})
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: image
+          image-ref: ${{ steps.ref.outputs.image }}
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: sarif
+          output: trivy-image-${{ matrix.service }}.sarif
+          trivyignores: .trivyignore
+        env:
+          TRIVY_CACHE_DIR: ~/.cache/trivy
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles(format('trivy-image-{0}.sarif', matrix.service)) != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image-${{ matrix.service }}.sarif
+          category: trivy-image-${{ matrix.service }}
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-trivy-image-${{ matrix.service }}
+          path: trivy-image-${{ matrix.service }}.sarif
+          if-no-files-found: warn
+
+  # =========================================================================
+  # cosign-sign — keyless (Sigstore / Fulcio) signature over each image
+  # digest, using the workflow's ambient GitHub OIDC identity. No private
+  # keys. Runs only after the image passed trivy-image. Skipped on PRs.
+  # =========================================================================
+  cosign-sign:
+    needs: [prepare, build-images, trivy-image]
+    if: needs.prepare.outputs.is_push == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write     # write the signature artifact to GHCR
+      id-token: write      # OIDC token for keyless signing
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Download image digest
+        uses: actions/download-artifact@v4
+        with:
+          name: image-digest-${{ matrix.service }}
+
+      - name: Cosign sign (keyless)
+        run: |
+          IMAGE="$(cat image.txt)@$(cat digest.txt)"
+          echo "Signing $IMAGE"
+          cosign sign --yes \
+            -a "repo=${{ github.repository }}" \
+            -a "sha=${{ github.sha }}" \
+            -a "ref=${{ github.ref }}" \
+            -a "run=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            "$IMAGE"
+
+  # =========================================================================
+  # cosign-verify — verify the signature just created, pinning the certificate
+  # identity to THIS workflow and the GitHub Actions OIDC issuer. This is the
+  # same check infra/scripts/deploy.sh must run before `docker compose up`.
+  # Skipped on pull requests.
+  # =========================================================================
+  cosign-verify:
+    needs: [prepare, cosign-sign]
+    if: needs.prepare.outputs.is_push == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Download image digest
+        uses: actions/download-artifact@v4
+        with:
+          name: image-digest-${{ matrix.service }}
+
+      - name: Cosign verify
+        run: |
+          IMAGE="$(cat image.txt)@$(cat digest.txt)"
+          echo "Verifying $IMAGE"
+          cosign verify "$IMAGE" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            --certificate-identity-regexp "^https://github\.com/${{ github.repository }}/\.github/workflows/security\.yml@" \
+            --output text | tee "cosign-verify-${{ matrix.service }}.txt"
+
+      - name: Upload verification artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-cosign-verify-${{ matrix.service }}
+          path: cosign-verify-${{ matrix.service }}.txt
+          if-no-files-found: warn
+
+  # =========================================================================
+  # codeql — deep SAST. OPTIONAL: runs only on manual dispatch or when the
+  # repo/org variable ENABLE_CODEQL == 'true'. No build needed for JS/TS.
+  # =========================================================================
+  codeql:
+    needs: prepare
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      vars.ENABLE_CODEQL == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # =========================================================================
+  # summary — always runs. Downloads every report, prints an aggregated table
+  # plus the Cosign verification transcript to the run summary, and fails the
+  # pipeline if any security job failed.
+  # =========================================================================
+  summary:
+    needs:
+      - semgrep
+      - trivy-fs
+      - trivy-image
+      - gitleaks
+      - checkov
+      - cosign-sign
+      - cosign-verify
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all security reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: security-report-*
+          path: reports
+
+      - name: Render summary
+        run: |
+          say() { echo "$@" >> "$GITHUB_STEP_SUMMARY"; }
+          # Count SARIF results; "-" when the file is absent (i.e. clean).
+          sarif_count() {
+            if [ -f "$1" ]; then
+              jq '[.runs[].results[]] | length' "$1" 2>/dev/null || echo "?"
+            else
+              echo "-"
+            fi
+          }
+
+          say "## Security pipeline summary"
+          say ""
+          say "| Scan | Job result | Findings |"
+          say "| --- | --- | --- |"
+          say "| Semgrep (SAST) | \`${{ needs.semgrep.result }}\` | $(sarif_count reports/security-report-semgrep/semgrep-full.sarif) |"
+          say "| Trivy — filesystem (SCA + IaC + secrets) | \`${{ needs.trivy-fs.result }}\` | $(sarif_count reports/security-report-trivy-fs/trivy-fs.sarif) |"
+          say "| Trivy — image (backend) | \`${{ needs.trivy-image.result }}\` | $(sarif_count reports/security-report-trivy-image-backend/trivy-image-backend.sarif) |"
+          say "| Trivy — image (frontend) | \`${{ needs.trivy-image.result }}\` | $(sarif_count reports/security-report-trivy-image-frontend/trivy-image-frontend.sarif) |"
+          say "| Gitleaks (secrets) | \`${{ needs.gitleaks.result }}\` | $(sarif_count reports/security-report-gitleaks/results.sarif) |"
+          say "| Checkov (IaC) | \`${{ needs.checkov.result }}\` | $(sarif_count reports/security-report-checkov/results_sarif.sarif) |"
+          say "| Cosign sign | \`${{ needs.cosign-sign.result }}\` | — |"
+          say "| Cosign verify | \`${{ needs.cosign-verify.result }}\` | see below |"
+          say ""
+          say "### Cosign verification"
+          say '```'
+          if ls reports/security-report-cosign-verify-*/*.txt >/dev/null 2>&1; then
+            cat reports/security-report-cosign-verify-*/*.txt >> "$GITHUB_STEP_SUMMARY"
+          else
+            say "(no verification output — pull request build, or signing was skipped)"
+          fi
+          say '```'
+
+      - name: Fail the pipeline if any security job failed
+        if: >-
+          needs.semgrep.result == 'failure' ||
+          needs.trivy-fs.result == 'failure' ||
+          needs.trivy-image.result == 'failure' ||
+          needs.gitleaks.result == 'failure' ||
+          needs.checkov.result == 'failure' ||
+          needs.cosign-sign.result == 'failure' ||
+          needs.cosign-verify.result == 'failure'
+        run: |
+          echo "::error::One or more security jobs failed — see the summary table above."
+          exit 1

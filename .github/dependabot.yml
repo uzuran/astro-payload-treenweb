@@ -1,0 +1,43 @@
+# Automated dependency updates. Grouped to keep PR volume sane; majors are
+# raised but held out of the auto groups so they always get manual review.
+version: 2
+updates:
+  # pnpm workspace — the root lockfile covers @treenweb/frontend,
+  # @treenweb/backend and packages/*.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    groups:
+      production-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+      development-minor-patch:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions pinned across ci.yml, release.yml and security.yml.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Base images in the production Dockerfiles.
+  - package-ecosystem: docker
+    directory: "/backend"
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: "/frontend"
+    schedule:
+      interval: weekly
