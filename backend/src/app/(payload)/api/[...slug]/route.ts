@@ -9,11 +9,6 @@ import {
   REST_PUT,
 } from '@payloadcms/next/routes';
 
-// Payload's REST API is fully dynamic (auth + live data). Marking it so keeps
-// `next build` from executing these handlers during page-data collection,
-// where they would init Payload and connect to a database that isn't there.
-export const dynamic = 'force-dynamic';
-
 export const GET = REST_GET(config);
 export const POST = REST_POST(config);
 export const DELETE = REST_DELETE(config);

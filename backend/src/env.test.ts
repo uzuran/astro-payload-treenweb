@@ -52,4 +52,22 @@ describe('productionEnvProblems', () => {
       }),
     ).toHaveLength(2);
   });
+
+  it('is silent during a Next production build (NEXT_PHASE set)', () => {
+    const prev = process.env.NEXT_PHASE;
+    process.env.NEXT_PHASE = 'phase-production-build';
+    try {
+      expect(
+        productionEnvProblems({
+          NODE_ENV: 'production',
+          PAYLOAD_DB_PUSH: true,
+          SMTP_URL: undefined,
+          EMAIL_OPTOUT: false,
+        }),
+      ).toEqual([]);
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PHASE;
+      else process.env.NEXT_PHASE = prev;
+    }
+  });
 });

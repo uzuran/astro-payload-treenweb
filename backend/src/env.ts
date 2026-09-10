@@ -72,6 +72,10 @@ export type Env = typeof env;
 export function productionEnvProblems(
   values: Pick<Env, 'NODE_ENV' | 'PAYLOAD_DB_PUSH' | 'SMTP_URL' | 'EMAIL_OPTOUT'>,
 ): string[] {
+  // `next build` sets NODE_ENV=production and imports this module while
+  // collecting page data, but a compile has no runtime config. These guard the
+  // running server, not the build.
+  if (process.env.NEXT_PHASE === 'phase-production-build') return [];
   if (values.NODE_ENV !== 'production') return [];
   const problems: string[] = [];
   if (values.PAYLOAD_DB_PUSH) {
