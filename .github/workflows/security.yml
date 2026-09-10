@@ -205,7 +205,6 @@ jobs:
             --scanners vuln,misconfig,secret \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
-            --ignorefile .trivyignore \
             --exit-code 1 \
             --format sarif \
             --output trivy-fs.sarif
@@ -495,7 +494,6 @@ jobs:
             --scanners vuln \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
-            --ignorefile .trivyignore \
             --exit-code 1 \
             --format sarif \
             --output trivy-image-${{ matrix.service }}.sarif
