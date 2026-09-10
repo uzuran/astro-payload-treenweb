@@ -163,6 +163,7 @@ jobs:
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('semgrep-full.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: semgrep-full.sarif
           category: semgrep
@@ -222,6 +223,7 @@ jobs:
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('trivy-fs.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: trivy-fs.sarif
           category: trivy-fs
@@ -261,6 +263,7 @@ jobs:
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: results.sarif
           category: gitleaks
@@ -307,6 +310,7 @@ jobs:
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('checkov-reports/results_sarif.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: checkov-reports/results_sarif.sarif
           category: checkov
@@ -349,7 +353,10 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          # Prefer a dedicated PAT (cross-org, longer-lived) when provided;
+          # otherwise fall back to the run's GITHUB_TOKEN, which can push to
+          # ghcr.io/<this repo owner>/* given `permissions: packages: write`.
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Build ${{ matrix.service }} image
         id: build
@@ -447,7 +454,10 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          # Prefer a dedicated PAT (cross-org, longer-lived) when provided;
+          # otherwise fall back to the run's GITHUB_TOKEN, which can push to
+          # ghcr.io/<this repo owner>/* given `permissions: packages: write`.
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Download image digest
         uses: actions/download-artifact@v4
@@ -476,6 +486,7 @@ jobs:
       - name: Upload SARIF to code scanning
         if: always() && hashFiles(format('trivy-image-{0}.sarif', matrix.service)) != ''
         uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: trivy-image-${{ matrix.service }}.sarif
           category: trivy-image-${{ matrix.service }}
@@ -514,7 +525,10 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          # Prefer a dedicated PAT (cross-org, longer-lived) when provided;
+          # otherwise fall back to the run's GITHUB_TOKEN, which can push to
+          # ghcr.io/<this repo owner>/* given `permissions: packages: write`.
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Download image digest
         uses: actions/download-artifact@v4
@@ -559,7 +573,10 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          # Prefer a dedicated PAT (cross-org, longer-lived) when provided;
+          # otherwise fall back to the run's GITHUB_TOKEN, which can push to
+          # ghcr.io/<this repo owner>/* given `permissions: packages: write`.
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Download image digest
         uses: actions/download-artifact@v4
