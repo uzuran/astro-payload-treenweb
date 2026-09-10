@@ -52,7 +52,7 @@ permissions:
 
 env:
   # Pin scanner versions for reproducible results; bump deliberately.
-  SEMGREP_VERSION: "1.97.0"
+  SEMGREP_VERSION: '1.97.0'
 
 jobs:
   # =========================================================================
@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write   # upload SARIF to the Security tab
+      security-events: write # upload SARIF to the Security tab
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -106,7 +106,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
       - name: Cache Semgrep (pip wheels + downloaded rule registry)
         uses: actions/cache@v4
@@ -165,7 +165,7 @@ jobs:
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('semgrep-full.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
+        continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: semgrep-full.sarif
           category: semgrep
@@ -214,18 +214,18 @@ jobs:
           scan-ref: .
           scanners: vuln,misconfig,secret
           severity: HIGH,CRITICAL
-          ignore-unfixed: true        # only fail on vulns that have a fix
-          exit-code: "1"              # HIGH/CRITICAL -> non-zero -> job fails
+          ignore-unfixed: true # only fail on vulns that have a fix
+          exit-code: '1' # HIGH/CRITICAL -> non-zero -> job fails
           format: sarif
           output: trivy-fs.sarif
-          trivyignores: .trivyignore  # optional accepted-CVE allowlist
+          trivyignores: .trivyignore # optional accepted-CVE allowlist
         env:
           TRIVY_CACHE_DIR: ~/.cache/trivy
 
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('trivy-fs.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
+        continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: trivy-fs.sarif
           category: trivy-fs
@@ -257,15 +257,15 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
-          GITLEAKS_ENABLE_SUMMARY: "true"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'true'
+          GITLEAKS_ENABLE_SUMMARY: 'true'
           # Only required for repos owned by a GitHub Organization:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
+        continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: results.sarif
           category: gitleaks
@@ -276,7 +276,7 @@ jobs:
         with:
           name: security-report-gitleaks
           path: results.sarif
-          if-no-files-found: ignore   # no file == no leaks
+          if-no-files-found: ignore # no file == no leaks
 
   # =========================================================================
   # checkov — IaC misconfiguration scan. Hard fail on any finding. Dev-only
@@ -299,7 +299,7 @@ jobs:
           framework: dockerfile,github_actions,secrets
           quiet: true
           compact: true
-          soft_fail: false                     # findings fail the job
+          soft_fail: false # findings fail the job
           output_format: cli,sarif
           output_file_path: console,checkov-reports
           # Dev-only images/compose intentionally run as root with bind mounts:
@@ -307,12 +307,12 @@ jobs:
             .*Dockerfile\.dev$,
             infra/docker-compose\.dev\.yml
           # Accepted / non-applicable checks — review before extending:
-          skip_check: ""
+          skip_check: ''
 
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('checkov-reports/results_sarif.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
+        continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: checkov-reports/results_sarif.sarif
           category: checkov
@@ -336,8 +336,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write     # push to GHCR
-      id-token: write      # OIDC for the gha build cache backend
+      packages: write # push to GHCR
+      id-token: write # OIDC for the gha build cache backend
     strategy:
       fail-fast: false
       matrix:
@@ -478,7 +478,7 @@ jobs:
           scanners: vuln
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-          exit-code: "1"
+          exit-code: '1'
           format: sarif
           output: trivy-image-${{ matrix.service }}.sarif
           trivyignores: .trivyignore
@@ -488,7 +488,7 @@ jobs:
       - name: Upload SARIF to code scanning
         if: always() && hashFiles(format('trivy-image-{0}.sarif', matrix.service)) != ''
         uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true  # non-fatal if code scanning / Advanced Security is not enabled
+        continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
           sarif_file: trivy-image-${{ matrix.service }}.sarif
           category: trivy-image-${{ matrix.service }}
@@ -512,8 +512,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write     # write the signature artifact to GHCR
-      id-token: write      # OIDC token for keyless signing
+      packages: write # write the signature artifact to GHCR
+      id-token: write # OIDC token for keyless signing
     strategy:
       fail-fast: false
       matrix:
@@ -630,7 +630,7 @@ jobs:
       - name: Analyze
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:javascript-typescript"
+          category: '/language:javascript-typescript'
 
   # =========================================================================
   # summary — always runs. Downloads every report, prints an aggregated table

@@ -5,7 +5,7 @@ updates:
   # pnpm workspace — the root lockfile covers @treenweb/frontend,
   # @treenweb/backend and packages/*.
   - package-ecosystem: npm
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
       day: monday
@@ -19,25 +19,25 @@ updates:
         dependency-type: development
         update-types: [minor, patch]
     ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
 
   # GitHub Actions pinned across ci.yml, release.yml and security.yml.
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
       day: monday
     groups:
       actions:
-        patterns: ["*"]
+        patterns: ['*']
 
   # Base images in the production Dockerfiles.
   - package-ecosystem: docker
-    directory: "/backend"
+    directory: '/backend'
     schedule:
       interval: weekly
   - package-ecosystem: docker
-    directory: "/frontend"
+    directory: '/frontend'
     schedule:
       interval: weekly
