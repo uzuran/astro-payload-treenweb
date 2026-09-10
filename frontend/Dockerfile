@@ -30,6 +30,13 @@ FROM deps AS build
 COPY . .
 RUN PUBLIC_SITE_URL=http://localhost:4321 pnpm --filter @treenweb/frontend build
 RUN pnpm --filter @treenweb/frontend deploy --prod --legacy /out
+# esbuild ships a Go binary (Astro's build-time bundler, via Vite). The
+# standalone SSR server (dist/server/entry.mjs + @astrojs/node) never invokes
+# it, so it is dead weight in the runtime image — and every Go stdlib CVE it
+# was compiled against shows up in the image scan. Drop it.
+RUN rm -rf /out/node_modules/.pnpm/*esbuild* \
+           /out/node_modules/esbuild \
+           /out/node_modules/@esbuild
 
 # ---------- runtime ----------
 FROM ${NODE_IMAGE} AS runtime
