@@ -29,20 +29,21 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # ---------- build (codegen + next build) ----------
 FROM deps AS build
 COPY . .
-# Placeholder env for this stage only — the runtime image is a separate FROM,
-# so none of this reaches it. env.ts validates on import, so codegen needs it
-# too. No user:pass in the URL: nothing connects at build time (GraphQL is
-# disabled), env.ts only needs a syntactically valid string, and a `user:pass@`
-# form trips secret scanners on a non-credential. Three separate RUNs so a
-# failure names the exact step.
-ENV DATABASE_URL=postgres://localhost:5432/build \
-    PAYLOAD_SECRET=build-time-placeholder-secret-0123456789 \
-    PAYLOAD_DB_PUSH=false \
-    NODE_OPTIONS=--max-old-space-size=4096
+# next build of the Payload admin bundle is memory-heavy (matches ci.yml).
+ENV NODE_OPTIONS=--max-old-space-size=4096
 
-RUN pnpm --filter @treenweb/backend run generate:types
-RUN pnpm --filter @treenweb/backend run generate:importmap
-RUN pnpm --filter @treenweb/backend exec next build
+# Placeholder env is inlined per RUN (not ARG/ENV, which would bake it into the
+# stage's metadata and trip `SecretsUsedInArgOrEnv`). env.ts validates on
+# import, so codegen needs it too. No user:pass in the URL — nothing connects
+# at build time now that the admin/API routes are `force-dynamic` and GraphQL
+# is disabled; env.ts only needs a syntactically valid string. Three separate
+# RUNs so a failure names the exact step.
+RUN DATABASE_URL=postgres://localhost:5432/build PAYLOAD_SECRET=build-time-placeholder-secret-0123456789 PAYLOAD_DB_PUSH=false \
+    pnpm --filter @treenweb/backend run generate:types
+RUN DATABASE_URL=postgres://localhost:5432/build PAYLOAD_SECRET=build-time-placeholder-secret-0123456789 PAYLOAD_DB_PUSH=false \
+    pnpm --filter @treenweb/backend run generate:importmap
+RUN DATABASE_URL=postgres://localhost:5432/build PAYLOAD_SECRET=build-time-placeholder-secret-0123456789 PAYLOAD_DB_PUSH=false \
+    pnpm --filter @treenweb/backend exec next build
 
 # ---------- runtime (minimal standalone) ----------
 FROM ${NODE_IMAGE} AS runtime

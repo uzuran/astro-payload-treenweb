@@ -5,6 +5,10 @@ import { generatePageMetadata, NotFoundPage } from '@payloadcms/next/views';
 
 import { importMap } from '../importMap.js';
 
+// Fully dynamic — see page.tsx. Keeps `next build` from pre-rendering this and
+// hitting a database that isn't available at image-build time.
+export const dynamic = 'force-dynamic';
+
 type Args = {
   params: Promise<{
     segments: string[];
