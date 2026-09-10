@@ -79,10 +79,12 @@ jobs:
 
       - name: Derive shared values
         id: vars
+        env:
+          # Pass context via env, never interpolate ${{ }} into the script body.
+          REPO_OWNER: ${{ github.repository_owner }}
         run: |
-          owner="${{ github.repository_owner }}"
           # GHCR requires a lowercase repository path.
-          echo "image_prefix=ghcr.io/${owner,,}/treenweb" >> "$GITHUB_OUTPUT"
+          echo "image_prefix=ghcr.io/${REPO_OWNER,,}/treenweb" >> "$GITHUB_OUTPUT"
           echo "short_sha=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
 
   # =========================================================================
@@ -587,14 +589,21 @@ jobs:
           name: image-digest-${{ matrix.service }}
 
       - name: Cosign sign (keyless)
+        env:
+          # Context via env, not ${{ }} interpolation into the script (github.ref
+          # can carry attacker-controlled branch names on fork PRs).
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          REF: ${{ github.ref }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           IMAGE="$(cat image.txt)@$(cat digest.txt)"
           echo "Signing $IMAGE"
           cosign sign --yes \
-            -a "repo=${{ github.repository }}" \
-            -a "sha=${{ github.sha }}" \
-            -a "ref=${{ github.ref }}" \
-            -a "run=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            -a "repo=$REPO" \
+            -a "sha=$SHA" \
+            -a "ref=$REF" \
+            -a "run=$RUN_URL" \
             "$IMAGE"
 
   # =========================================================================
@@ -635,13 +644,16 @@ jobs:
           name: image-digest-${{ matrix.service }}
 
       - name: Cosign verify
+        env:
+          REPO: ${{ github.repository }}
+          SERVICE: ${{ matrix.service }}
         run: |
           IMAGE="$(cat image.txt)@$(cat digest.txt)"
           echo "Verifying $IMAGE"
           cosign verify "$IMAGE" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-            --certificate-identity-regexp "^https://github\.com/${{ github.repository }}/\.github/workflows/security\.yml@" \
-            --output text | tee "cosign-verify-${{ matrix.service }}.txt"
+            --certificate-identity-regexp "^https://github\.com/${REPO}/\.github/workflows/security\.yml@" \
+            --output text | tee "cosign-verify-${SERVICE}.txt"
 
       - name: Upload verification artifact
         if: always()
