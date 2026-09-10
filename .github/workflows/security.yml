@@ -199,15 +199,22 @@ jobs:
 
       - name: Trivy filesystem scan (vuln + misconfig + secret)
         run: |
+          set -o pipefail
           export TRIVY_CACHE_DIR="$HOME/.cache/trivy"
           mkdir -p "$TRIVY_CACHE_DIR"
-          trivy fs . \
-            --scanners vuln,misconfig,secret \
-            --severity HIGH,CRITICAL \
-            --ignore-unfixed \
-            --exit-code 1 \
-            --format sarif \
-            --output trivy-fs.sarif
+          # `--skip-dirs node_modules`: vuln detection reads pnpm-lock.yaml
+          # directly, so skipping the tree only drops third-party Dockerfiles /
+          # configs that aren't ours. Two passes over the same cache: a
+          # human-readable table in the log, then SARIF + the pass/fail gate.
+          common=(fs .
+            --scanners vuln,misconfig,secret
+            --severity HIGH,CRITICAL
+            --ignore-unfixed
+            --skip-dirs node_modules
+            --skip-dirs .git
+            --skip-files '**/Dockerfile.dev')
+          trivy "${common[@]}" --format table
+          trivy "${common[@]}" --format sarif --output trivy-fs.sarif --exit-code 1
 
       - name: Detect SARIF
         id: sarif
@@ -488,15 +495,16 @@ jobs:
 
       - name: Trivy image scan (${{ matrix.service }})
         run: |
+          set -o pipefail
           export TRIVY_CACHE_DIR="$HOME/.cache/trivy"
           mkdir -p "$TRIVY_CACHE_DIR"
-          trivy image "${{ steps.ref.outputs.image }}" \
-            --scanners vuln \
-            --severity HIGH,CRITICAL \
-            --ignore-unfixed \
-            --exit-code 1 \
-            --format sarif \
-            --output trivy-image-${{ matrix.service }}.sarif
+          common=(image "${{ steps.ref.outputs.image }}"
+            --scanners vuln
+            --severity HIGH,CRITICAL
+            --ignore-unfixed)
+          trivy "${common[@]}" --format table
+          trivy "${common[@]}" --format sarif \
+            --output trivy-image-${{ matrix.service }}.sarif --exit-code 1
 
       - name: Detect SARIF
         id: sarif

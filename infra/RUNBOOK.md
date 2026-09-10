@@ -214,3 +214,15 @@ Prereqs: DNS `A`/`AAAA` for `SITE_DOMAIN` and `CMS_DOMAIN` → the host; ports
   instrumentation-hook bundling), browser-side capture (`PUBLIC_SENTRY_DSN` +
   `@sentry/browser`), and sourcemap upload in the Docker build (`SENTRY_AUTH_TOKEN`),
   and an uptime probe hitting `/readyz` with an alert.
+- **Dependency CVEs (time-boxed to 2026-10-10 in `.trivyignore`).** The
+  security pipeline's `trivy-fs` job accepts 18 HIGH/CRITICAL advisories that
+  can't be patched in place:
+  - **`next` 15.4.11** (13, incl. 2 RCE) + the **`postcss` 8.4.31** it vendors
+    (2). Fixes need `next >= 15.5.16`, but `@payloadcms/next@3.88.0` pins
+    `next` to `>=15.4.11 <15.5.0 || >=16.2.6`. **Blocked on a Payload upgrade**
+    (3.88 → a release supporting Next 15.5+/16).
+  - **`astro` 5.18.2** (3, incl. 1 RCE). Fixed in astro 6.3.3 / 7.2.8 — a
+    two-major migration (5 → 7).
+    `sharp` was bumped 0.34.5 → 0.35.4 (with a root `pnpm.overrides` to force
+    astro's/next's optional copy too). When the expiry passes, `trivy-fs` fails
+    until the entries are removed or renewed with a fresh justification.

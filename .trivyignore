@@ -1,0 +1,43 @@
+# Trivy ignore file — accepted findings, each with an expiry (exp:YYYY-MM-DD).
+# After the expiry Trivy stops honouring the line and the pipeline fails again,
+# forcing a re-review. Keep every entry justified.
+#
+# ---------------------------------------------------------------------------
+# Framework CVEs blocked by upstream peer ranges — tracked in infra/RUNBOOK.md
+# ("Still open"). Re-evaluate by 2026-10-10.
+#
+# next 15.4.11 (+ the postcss 8.4.31 it vendors): fixes land in next >= 15.5.16,
+#   but @payloadcms/next@3.88.0 pins next to ">=15.4.11 <15.5.0 || >=16.2.6".
+#   Requires upgrading Payload (3.88 -> a release supporting next 15.5+/16).
+# astro 5.18.2: fixes land in astro 6.3.3 / 6.4.6 / 7.2.8 — a two-major
+#   migration (5 -> 7). Scheduled as its own work item.
+#
+# Mitigating context: the image-optimization RCEs (GHSA-26w7-cxv4-gfx2,
+# GHSA-2xp9-vwfh-vxw4, CVE-2026-75604) require attacker-supplied images hitting
+# the optimizer; the frontend serves only build-time /_astro assets and the
+# Payload media pipeline is admin-auth gated. Not a substitute for the upgrade.
+# ---------------------------------------------------------------------------
+
+# --- astro 5.18.2 ---
+GHSA-26w7-cxv4-gfx2 exp:2026-10-10
+CVE-2026-50146 exp:2026-10-10
+CVE-2026-54299 exp:2026-10-10
+
+# --- next 15.4.11 ---
+CVE-2026-75604 exp:2026-10-10
+GHSA-2xp9-vwfh-vxw4 exp:2026-10-10
+CVE-2026-44573 exp:2026-10-10
+CVE-2026-44574 exp:2026-10-10
+CVE-2026-44575 exp:2026-10-10
+CVE-2026-44578 exp:2026-10-10
+CVE-2026-44579 exp:2026-10-10
+CVE-2026-45109 exp:2026-10-10
+CVE-2026-64641 exp:2026-10-10
+CVE-2026-64645 exp:2026-10-10
+CVE-2026-64649 exp:2026-10-10
+GHSA-8h8q-6873-q5fj exp:2026-10-10
+GHSA-q4gf-8mx6-v5v3 exp:2026-10-10
+
+# --- postcss 8.4.31 (vendored by next 15.4.11) ---
+CVE-2026-45623 exp:2026-10-10
+CVE-2026-73646 exp:2026-10-10
