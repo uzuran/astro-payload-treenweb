@@ -82,7 +82,11 @@ export default buildConfig({
   // Cap relationship population on the public REST API (default 10). The
   // frontend never asks for more than depth=1; the admin stays well under 5.
   maxDepth: 5,
-  graphQL: { disablePlaygroundInProduction: true },
+  // GraphQL is unused — the frontend and admin are REST + Local API only.
+  // Disabling drops the /api/graphql and /api/graphql-playground routes,
+  // which also lets `next build` run without a reachable database (it
+  // otherwise eagerly builds the GraphQL schema while collecting page data).
+  graphQL: { disable: true },
   telemetry: false,
   sharp,
   typescript: {
