@@ -50,10 +50,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  # Pin scanner versions for reproducible results; bump deliberately.
-  SEMGREP_VERSION: '1.97.0'
-
 jobs:
   # =========================================================================
   # prepare — checkout + pnpm workspace install (validates pnpm-lock.yaml,
@@ -99,67 +95,46 @@ jobs:
     permissions:
       contents: read
       security-events: write # upload SARIF to the Security tab
+    # Semgrep runs from its official pinned image via `docker run`, not pip:
+    # Python 3.12 dropped the bundled `setuptools` and Semgrep's vendored
+    # OpenTelemetry imports `pkg_resources` from it, so `pysemgrep` crashes on
+    # startup. The job stays on the host runner (not a `container:`) so the
+    # JS-based checkout / upload actions run on glibc — the Semgrep image is
+    # Alpine/musl and cannot host them. Output files land in the workspace via
+    # the bind mount; the container runs as the runner UID so later steps can
+    # read them. The pinned image is the cache.
+    env:
+      SEMGREP_IMAGE: semgrep/semgrep:1.97.0
+      SEMGREP_CONFIGS: >-
+        --config p/default --config p/security-audit --config p/owasp-top-ten
+        --config p/secrets --config p/javascript --config p/typescript
+        --config p/dockerfile --config p/github-actions
+        --exclude node_modules --exclude dist --exclude .next
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Cache Semgrep (pip wheels + downloaded rule registry)
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.cache/semgrep
-          key: semgrep-${{ runner.os }}-${{ env.SEMGREP_VERSION }}-${{ hashFiles('.semgrepignore') }}
-          restore-keys: |
-            semgrep-${{ runner.os }}-${{ env.SEMGREP_VERSION }}-
-
-      - name: Install Semgrep
-        # `setuptools` is explicit: Python 3.12 no longer bundles it, and
-        # Semgrep's vendored OpenTelemetry imports `pkg_resources` from it.
-        run: pip install "semgrep==${{ env.SEMGREP_VERSION }}" setuptools
-
-      - name: Run Semgrep (OSS engine, curated rulesets)
+      - name: Run Semgrep (blocking — ERROR severity only)
         run: |
           set -o pipefail
-          semgrep scan \
-            --oss-only \
-            --metrics off \
-            --error \
-            --severity ERROR \
-            --config p/default \
-            --config p/security-audit \
-            --config p/owasp-top-ten \
-            --config p/secrets \
-            --config p/javascript \
-            --config p/typescript \
-            --config p/dockerfile \
-            --config p/github-actions \
-            --exclude node_modules \
-            --exclude dist \
-            --exclude .next \
-            --sarif-output semgrep.sarif \
-            --json-output semgrep.json
-          # `--severity ERROR` above means a non-zero exit == an ERROR finding.
+          docker run --rm \
+            -u "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$PWD":/src -w /src \
+            "$SEMGREP_IMAGE" \
+            semgrep scan --oss-only --metrics off --error --severity ERROR \
+            $SEMGREP_CONFIGS \
+            --sarif-output semgrep.sarif --json-output semgrep.json
+          # `--severity ERROR` means a non-zero exit == an ERROR-severity finding.
 
-      - name: Full-severity SARIF for the Security tab (non-blocking)
+      - name: Run Semgrep (full severity — SARIF for the Security tab, non-blocking)
         if: always()
         run: |
-          semgrep scan \
-            --oss-only --metrics off \
-            --config p/default \
-            --config p/security-audit \
-            --config p/owasp-top-ten \
-            --config p/secrets \
-            --config p/javascript \
-            --config p/typescript \
-            --config p/dockerfile \
-            --config p/github-actions \
-            --exclude node_modules --exclude dist --exclude .next \
+          docker run --rm \
+            -u "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$PWD":/src -w /src \
+            "$SEMGREP_IMAGE" \
+            semgrep scan --oss-only --metrics off \
+            $SEMGREP_CONFIGS \
             --sarif-output semgrep-full.sarif || true
 
       - name: Upload SARIF to code scanning
