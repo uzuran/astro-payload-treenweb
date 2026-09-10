@@ -4,6 +4,7 @@
 ARG NODE_IMAGE=node:22-bookworm-slim
 
 # ---------- base ----------
+# checkov:skip=CKV_DOCKER_7: base image is pinned via ARG NODE_IMAGE (node:22-bookworm-slim); checkov can't resolve the ARG default
 FROM ${NODE_IMAGE} AS base
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
@@ -32,7 +33,10 @@ COPY . .
 # config validation / codegen pass. Real values are injected at runtime.
 # Exported into a single `sh -c` so every step below (not just the first)
 # sees them — env.ts validates on import in codegen too.
-RUN DATABASE_URL=postgres://build:build@localhost:5432/build \
+# No user:pass in the URL — nothing connects at build time (GraphQL is off),
+# env.ts only needs a syntactically valid string, and a `user:pass@` form
+# trips secret scanners on a value that is not a credential.
+RUN DATABASE_URL=postgres://localhost:5432/build \
     PAYLOAD_SECRET=build-time-placeholder-secret-0123456789 \
     PAYLOAD_DB_PUSH=false \
     sh -c 'pnpm --filter @treenweb/backend run generate:types \

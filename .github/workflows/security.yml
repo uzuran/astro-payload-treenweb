@@ -137,8 +137,14 @@ jobs:
             $SEMGREP_CONFIGS \
             --sarif-output semgrep-full.sarif || true
 
+      - name: Detect SARIF
+        id: sarif
+        if: always()
+        run: |
+          test -f semgrep-full.sarif && echo "found=true" >> "$GITHUB_OUTPUT" || echo "found=false" >> "$GITHUB_OUTPUT"
+
       - name: Upload SARIF to code scanning
-        if: always() && hashFiles('semgrep-full.sarif') != ''
+        if: always() && steps.sarif.outputs.found == 'true'
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
@@ -197,8 +203,14 @@ jobs:
         env:
           TRIVY_CACHE_DIR: ~/.cache/trivy
 
+      - name: Detect SARIF
+        id: sarif
+        if: always()
+        run: |
+          test -f trivy-fs.sarif && echo "found=true" >> "$GITHUB_OUTPUT" || echo "found=false" >> "$GITHUB_OUTPUT"
+
       - name: Upload SARIF to code scanning
-        if: always() && hashFiles('trivy-fs.sarif') != ''
+        if: always() && steps.sarif.outputs.found == 'true'
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
@@ -237,8 +249,14 @@ jobs:
           # Only required for repos owned by a GitHub Organization:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
+      - name: Detect SARIF
+        id: sarif
+        if: always()
+        run: |
+          test -f results.sarif && echo "found=true" >> "$GITHUB_OUTPUT" || echo "found=false" >> "$GITHUB_OUTPUT"
+
       - name: Upload SARIF to code scanning
-        if: always() && hashFiles('results.sarif') != ''
+        if: always() && steps.sarif.outputs.found == 'true'
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
@@ -277,23 +295,34 @@ jobs:
           soft_fail: false # findings fail the job
           output_format: cli,sarif
           output_file_path: console,checkov-reports
-          # Dev-only images/compose intentionally run as root with bind mounts:
-          skip_path: >-
-            .*Dockerfile\.dev$,
-            infra/docker-compose\.dev\.yml
-          # Accepted / non-applicable checks — review before extending:
-          skip_check: ''
+          # Dev-only Dockerfiles carry inline `# checkov:skip=` comments (they
+          # run as root for bind-mount writes and are never deployed); the prod
+          # Dockerfiles skip CKV_DOCKER_7 inline (base pinned via ARG). Keeping
+          # suppressions next to the code they apply to, not here.
+
+      - name: Detect SARIF
+        id: sarif
+        if: always()
+        run: |
+          # checkov-action writes <dir>/results_sarif.sarif; be tolerant of layout.
+          path=$(find checkov-reports -name '*.sarif' 2>/dev/null | head -n1 || true)
+          if [ -n "$path" ]; then
+            echo "path=$path" >> "$GITHUB_OUTPUT"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload SARIF to code scanning
-        if: always() && hashFiles('checkov-reports/results_sarif.sarif') != ''
+        if: always() && steps.sarif.outputs.found == 'true'
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:
-          sarif_file: checkov-reports/results_sarif.sarif
+          sarif_file: ${{ steps.sarif.outputs.path }}
           category: checkov
 
       - name: Upload report artifact
-        if: always()
+        if: always() && steps.sarif.outputs.found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: security-report-checkov
@@ -460,8 +489,14 @@ jobs:
         env:
           TRIVY_CACHE_DIR: ~/.cache/trivy
 
+      - name: Detect SARIF
+        id: sarif
+        if: always()
+        run: |
+          test -f "trivy-image-${{ matrix.service }}.sarif" && echo "found=true" >> "$GITHUB_OUTPUT" || echo "found=false" >> "$GITHUB_OUTPUT"
+
       - name: Upload SARIF to code scanning
-        if: always() && hashFiles(format('trivy-image-{0}.sarif', matrix.service)) != ''
+        if: always() && steps.sarif.outputs.found == 'true'
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true # non-fatal if code scanning / Advanced Security is not enabled
         with:

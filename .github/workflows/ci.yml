@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Checkout + tests + artifact upload only need read access to the repo.
+permissions:
+  contents: read
+
 env:
   # Local runs OOM on the dev box; CI runners have 16 GB. Give Node headroom
   # so `astro check` / builds / Playwright have room to breathe.

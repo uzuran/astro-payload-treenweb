@@ -4,6 +4,7 @@
 ARG NODE_IMAGE=node:22-bookworm-slim
 
 # ---------- base ----------
+# checkov:skip=CKV_DOCKER_7: base image is pinned via ARG NODE_IMAGE (node:22-bookworm-slim); checkov can't resolve the ARG default
 FROM ${NODE_IMAGE} AS base
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
