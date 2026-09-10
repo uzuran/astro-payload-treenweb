@@ -204,16 +204,18 @@ jobs:
           mkdir -p "$TRIVY_CACHE_DIR"
           # `--skip-dirs node_modules`: vuln detection reads pnpm-lock.yaml
           # directly, so skipping the tree only drops third-party Dockerfiles /
-          # configs that aren't ours. One JSON scan, then: a compact finding
-          # list (visible even in a truncated log), SARIF for upload, and the
-          # gate via `trivy convert`.
-          trivy fs . \
-            --scanners vuln,misconfig,secret \
-            --severity HIGH,CRITICAL \
-            --ignore-unfixed \
-            --skip-dirs node_modules --skip-dirs .git \
-            --skip-files '**/Dockerfile.dev' \
-            --format json --output trivy-fs.json
+          # configs that aren't ours. Scan to JSON + SARIF, print a compact
+          # finding list (visible even in a truncated log), then gate on a jq
+          # count — `trivy convert --exit-code` is unreliable here ("no enabled
+          # scanners").
+          args=(fs .
+            --scanners vuln,misconfig,secret
+            --severity HIGH,CRITICAL
+            --ignore-unfixed
+            --skip-dirs node_modules --skip-dirs .git
+            --skip-files '**/Dockerfile.dev')
+          trivy "${args[@]}" --format json  --output trivy-fs.json
+          trivy "${args[@]}" --format sarif --output trivy-fs.sarif
           echo "::group::Trivy findings (HIGH/CRITICAL, unfixed excluded, .trivyignore applied)"
           jq -r '
             [ .Results[]? | (.Vulnerabilities // [])[] |
@@ -224,8 +226,9 @@ jobs:
               "SECR  \(.Severity)  \(.RuleID)  \(.Target)" ]
             | (.[] // "none") ' trivy-fs.json | sort -u
           echo "::endgroup::"
-          trivy convert --format sarif --output trivy-fs.sarif trivy-fs.json
-          trivy convert --exit-code 1 --format table trivy-fs.json > /dev/null
+          n=$(jq '[ .Results[]? | (.Vulnerabilities // [])[], (.Misconfigurations // [])[], (.Secrets // [])[] ] | length' trivy-fs.json)
+          echo "HIGH/CRITICAL findings: $n"
+          [ "$n" -eq 0 ] || { echo "::error::trivy-fs: $n HIGH/CRITICAL finding(s) — see the group above"; exit 1; }
 
       - name: Detect SARIF
         id: sarif
@@ -510,18 +513,20 @@ jobs:
           export TRIVY_CACHE_DIR="$HOME/.cache/trivy"
           mkdir -p "$TRIVY_CACHE_DIR"
           out="trivy-image-${{ matrix.service }}"
-          trivy image "${{ steps.ref.outputs.image }}" \
-            --scanners vuln \
-            --severity HIGH,CRITICAL \
-            --ignore-unfixed \
-            --format json --output "$out.json"
+          args=(image "${{ steps.ref.outputs.image }}"
+            --scanners vuln
+            --severity HIGH,CRITICAL
+            --ignore-unfixed)
+          trivy "${args[@]}" --format json  --output "$out.json"
+          trivy "${args[@]}" --format sarif --output "$out.sarif"
           echo "::group::Trivy findings — ${{ matrix.service }} image (HIGH/CRITICAL, unfixed excluded)"
           jq -r '[ .Results[]? | (.Vulnerabilities // [])[] |
             "\(.Severity)  \(.PkgName)@\(.InstalledVersion)  \(.VulnerabilityID)  fix=\(.FixedVersion // "none")  <\(.PkgPath // .Target)>" ]
             | (.[] // "none")' "$out.json" | sort -u
           echo "::endgroup::"
-          trivy convert --format sarif --output "$out.sarif" "$out.json"
-          trivy convert --exit-code 1 --format table "$out.json" > /dev/null
+          n=$(jq '[ .Results[]? | (.Vulnerabilities // [])[] ] | length' "$out.json")
+          echo "HIGH/CRITICAL findings: $n"
+          [ "$n" -eq 0 ] || { echo "::error::trivy-image (${{ matrix.service }}): $n HIGH/CRITICAL finding(s) — see the group above"; exit 1; }
 
       - name: Detect SARIF
         id: sarif
