@@ -119,7 +119,9 @@ jobs:
             semgrep-${{ runner.os }}-${{ env.SEMGREP_VERSION }}-
 
       - name: Install Semgrep
-        run: pip install "semgrep==${{ env.SEMGREP_VERSION }}"
+        # `setuptools` is explicit: Python 3.12 no longer bundles it, and
+        # Semgrep's vendored OpenTelemetry imports `pkg_resources` from it.
+        run: pip install "semgrep==${{ env.SEMGREP_VERSION }}" setuptools
 
       - name: Run Semgrep (OSS engine, curated rulesets)
         run: |
