@@ -19,9 +19,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -49,9 +49,9 @@ jobs:
       DATABASE_URL_TEST: postgres://treenweb:treenweb@localhost:5432/treenweb_test
       PAYLOAD_SECRET: ci-secret-ci-secret-ci-secret-0123456789
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -88,9 +88,9 @@ jobs:
       E2E_CMS_URL: http://localhost:3000
       E2E_DEFAULT_LOCALE: ru
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -133,7 +133,7 @@ jobs:
           # playwright.config.ts starts `astro preview` on :4321 itself
           pnpm --filter @treenweb/frontend run test:e2e
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
