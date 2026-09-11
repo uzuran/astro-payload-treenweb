@@ -51,8 +51,16 @@ const privacyLabel = locale === 'cs' ? 'Ochrana soukromí' : 'Privacy';
 <script>
   import { CONSENT_COOKIE, CONSENT_MAX_AGE_S } from '../../lib/consent';
 
-  const form = document.querySelector<HTMLFormElement>('#vesco-consent form');
-  if (form) {
+  // This script has an `import`, so it's Vite-processed — adding
+  // data-astro-rerun would force is:inline and break the import. It's also
+  // the same src on every Vesco page, so View Transitions would otherwise
+  // skip re-running it after the first soft nav. astro:page-load fires after
+  // every navigation (including the first), so registering on it — once,
+  // since the script body itself only runs once — re-wires each fresh page's
+  // banner correctly without needing the script to re-execute at all.
+  function setup() {
+    const form = document.querySelector<HTMLFormElement>('#vesco-consent form');
+    if (!form) return;
     const dialog = form.closest('#vesco-consent');
     const secure = form.hasAttribute('data-secure') ? '; secure' : '';
 
@@ -66,4 +74,6 @@ const privacyLabel = locale === 'cs' ? 'Ochrana soukromí' : 'Privacy';
       dialog?.remove();
     });
   }
+
+  document.addEventListener('astro:page-load', setup);
 </script>

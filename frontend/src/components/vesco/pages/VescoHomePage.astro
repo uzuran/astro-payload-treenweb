@@ -1,7 +1,9 @@
 ---
 import { ClientRouter, fade } from 'astro:transitions';
+import VescoBackToTop from '../VescoBackToTop.astro';
 import VescoCookieConsent from '../VescoCookieConsent.astro';
 import VescoFooter from '../VescoFooter.astro';
+import VescoPreloader from '../VescoPreloader.astro';
 import VescoHeader, { type VescoLocale, vescoPath } from '../VescoHeader.astro';
 import VescoScripts from '../VescoScripts.astro';
 import { getVescoHero } from '../../../lib/payload/client';
@@ -48,6 +50,7 @@ const seoDescription =
     <ClientRouter />
   </head>
   <body class="min-h-screen">
+    <VescoPreloader />
     <VescoHeader active="home" locale={locale} />
     <main>
       <section
@@ -222,6 +225,7 @@ const seoDescription =
     </main>
     <VescoFooter />
     <VescoCookieConsent locale={locale} />
+    <VescoBackToTop locale={locale} />
     <VescoScripts page="home" cmsLabels={cmsLabels} />
   </body>
 </html>

@@ -1,7 +1,9 @@
 ---
 import { ClientRouter, fade } from 'astro:transitions';
+import VescoBackToTop from '../VescoBackToTop.astro';
 import VescoCookieConsent from '../VescoCookieConsent.astro';
 import VescoFooter from '../VescoFooter.astro';
+import VescoPreloader from '../VescoPreloader.astro';
 import VescoHeader, { type VescoLocale } from '../VescoHeader.astro';
 import VescoScripts from '../VescoScripts.astro';
 import { buildVescoCmsLabels } from '../../../lib/vescoContent';
@@ -29,6 +31,7 @@ const cmsLabels = await buildVescoCmsLabels(false);
     <ClientRouter />
   </head>
   <body class="min-h-screen">
+    <VescoPreloader />
     <VescoHeader active="tarot" locale={locale} />
     <main class="mx-auto max-w-shell px-5 pb-28 pt-16 sm:px-8 lg:px-10">
       <div class="mb-11 grid items-end gap-7 border-b border-[--rule] pb-7 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -60,6 +63,7 @@ const cmsLabels = await buildVescoCmsLabels(false);
     </main>
     <VescoFooter />
     <VescoCookieConsent locale={locale} />
+    <VescoBackToTop locale={locale} />
     <VescoScripts page="tarot" cmsLabels={cmsLabels} />
   </body>
 </html>
