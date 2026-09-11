@@ -80,7 +80,10 @@ export function toVescoUiOverride(sections: VescoSections): Record<string, unkno
 
 const settle = <T>(promise: Promise<T>, label: string): Promise<T | null> =>
   promise.catch((error: unknown) => {
-    console.error(`[vesco] ${label} failed:`, error);
+    // `label` as a separate arg, not interpolated into the format string —
+    // keeps console.error's first arg a literal so it's never scanned for
+    // (attacker-forgeable) %-format specifiers.
+    console.error('[vesco]', label, 'failed:', error);
     return null;
   });
 

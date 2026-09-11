@@ -24,7 +24,10 @@ import { organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
 /** Resolve a fetch, logging and swallowing failures so one dead section never 500s the page. */
 const settle = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
   promise.catch((error: unknown) => {
-    console.error(`[home] ${label} failed:`, error);
+    // `label` as a separate arg, not interpolated into the format string —
+    // keeps console.error's first arg a literal so it's never scanned for
+    // (attacker-forgeable) %-format specifiers.
+    console.error('[home]', label, 'failed:', error);
     return null;
   });
 

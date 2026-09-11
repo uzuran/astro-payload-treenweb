@@ -5,6 +5,19 @@
    Fails safe: any missing/malformed payload leaves the bundled copy as-is. */
 (function () {
   'use strict';
+
+  // Object.assign(target, source) would happily set target.__proto__ if
+  // `source` (CMS-sourced JSON) contains that key, since it uses normal
+  // property-set semantics. Copy only safe own keys instead.
+  var UNSAFE_KEYS = { __proto__: true, constructor: true, prototype: true };
+  function safeMerge(target, source) {
+    for (var key in source) {
+      if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+      if (Object.prototype.hasOwnProperty.call(UNSAFE_KEYS, key)) continue;
+      target[key] = source[key];
+    }
+  }
+
   try {
     var el = document.getElementById('vesco-cms-labels');
     if (!el) return;
@@ -13,7 +26,7 @@
     if (!UI) return;
     ['en', 'cs'].forEach(function (lang) {
       var o = overrides[lang];
-      if (o && UI[lang]) Object.assign(UI[lang], o);
+      if (o && UI[lang]) safeMerge(UI[lang], o);
     });
   } catch (e) {
     // Malformed/partial CMS payload — bundled defaults stand.
