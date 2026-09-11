@@ -79,6 +79,12 @@
 
 body {
   margin: 0;
+  /* Safety net for the decorative absolutely-positioned hero accents (rings,
+     drifting shapes) — fixed pixel sizes that can peek past a narrow phone
+     viewport. They're purely visual (pointer-events: none), so clipping the
+     sliver that overflows costs nothing and avoids an unwanted horizontal
+     scrollbar. */
+  overflow-x: hidden;
   color: var(--ink);
   background:
     radial-gradient(1100px 520px at 78% -8%, rgba(184, 134, 59, 0.16), transparent 62%),

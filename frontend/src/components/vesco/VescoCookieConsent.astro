@@ -33,13 +33,16 @@ const privacyLabel = locale === 'cs' ? 'Ochrana soukromí' : 'Privacy';
       >
         <input type="hidden" name="next" value={Astro.url.pathname} />
         <p class="m-0 max-w-2xl text-sm leading-relaxed text-ink70">
-          <span data-i18n="consent.body" /> <a href={`/${locale}/privacy`} class="underline hover:text-clay">{privacyLabel}</a>
+          <span data-i18n="consent.body" />{' '}
+          <a href={`/${locale}/privacy`} class="underline hover:text-clay">
+            {privacyLabel}
+          </a>
         </p>
-        <div class="flex shrink-0 gap-3">
-          <button type="submit" name="value" value="essential" class="v-btn v-btn--outline">
+        <div class="flex flex-col gap-3 sm:shrink-0 sm:flex-row">
+          <button type="submit" name="value" value="essential" class="v-btn v-btn--outline w-full justify-center sm:w-auto">
             <span data-i18n="consent.essential" />
           </button>
-          <button type="submit" name="value" value="analytics" class="v-btn v-btn--solid">
+          <button type="submit" name="value" value="analytics" class="v-btn v-btn--solid w-full justify-center sm:w-auto">
             <span data-i18n="consent.analytics" />
           </button>
         </div>

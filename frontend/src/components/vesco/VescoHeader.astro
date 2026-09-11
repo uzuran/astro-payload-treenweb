@@ -28,20 +28,66 @@ const links: { id: VescoPage; i18n: string; label: string }[] = [
 
 <header class="sticky top-0 z-40 border-b border-[--rule] bg-[rgba(244,237,224,.9)] backdrop-blur">
   <div
-    class="mx-auto flex max-w-shell flex-wrap items-center justify-between gap-x-6 gap-y-4 px-5 py-3 sm:px-8 lg:px-10"
+    class="mx-auto flex max-w-shell flex-wrap items-center justify-between gap-x-6 gap-y-1 px-5 py-3 sm:px-8 lg:px-10"
     style="min-height:92px"
   >
     <a href={vescoPath(locale, 'home')} class="flex items-center gap-2.5 whitespace-nowrap text-ink hover:text-ink">
       <VescoLogo size={56} />
       <span class="font-display text-[32px] tracking-logo">VESCO</span>
-      <span class="font-mono text-[10px] uppercase tracking-wide2 text-muted" data-i18n="est">est. mmxxvi</span>
+      <span
+        class="hidden font-mono text-[10px] uppercase tracking-wide2 text-muted sm:inline"
+        data-i18n="est"
+      >
+        est. mmxxvi
+      </span>
     </a>
-    <nav class="flex flex-wrap items-center gap-x-6 gap-y-3">
+
+    <button
+      id="vesco-nav-toggle"
+      type="button"
+      class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rule text-ink lg:hidden"
+      aria-expanded="false"
+      aria-controls="vesco-nav"
+      aria-label="Menu"
+    >
+      <svg
+        id="vesco-nav-icon-open"
+        viewBox="0 0 24 24"
+        width="20"
+        height="20"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="M4 7h16M4 12h16M4 17h16"></path>
+      </svg>
+      <svg
+        id="vesco-nav-icon-close"
+        viewBox="0 0 24 24"
+        width="20"
+        height="20"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        class="hidden"
+        aria-hidden="true"
+      >
+        <path d="M6 6l12 12M18 6L6 18"></path>
+      </svg>
+    </button>
+
+    <nav
+      id="vesco-nav"
+      class="hidden w-full flex-col items-stretch gap-1 pb-3 lg:flex lg:w-auto lg:flex-row lg:items-center lg:gap-x-6 lg:gap-y-3 lg:pb-0"
+    >
       {
         links.map((link) => (
           <a
             href={vescoPath(locale, link.id)}
-            class="v-nav-link"
+            class="v-nav-link block border-b border-[--rule-2] py-3 text-center lg:inline lg:border-b-0 lg:py-0 lg:text-left"
             aria-current={link.id === active ? 'page' : undefined}
             data-i18n={link.i18n}
           >
@@ -49,11 +95,26 @@ const links: { id: VescoPage; i18n: string; label: string }[] = [
           </a>
         ))
       }
-      <a href={vescoPath(locale, 'tarot')} class="v-btn v-btn--solid v-btn--sm" data-i18n="pullCard">Pull a card</a>
-      <div class="v-toggle">
+      <a
+        href={vescoPath(locale, 'tarot')}
+        class="v-btn v-btn--solid v-btn--sm mt-3 w-full justify-center lg:mt-0 lg:w-auto"
+        data-i18n="pullCard"
+      >
+        Pull a card
+      </a>
+      <div class="v-toggle mt-3 self-center lg:mt-0 lg:self-auto">
         <a href={vescoPath('en', active)} class="font-mono" aria-pressed={locale === 'en' ? 'true' : 'false'}>EN</a>
         <a href={vescoPath('cs', active)} class="font-mono" aria-pressed={locale === 'cs' ? 'true' : 'false'}>CS</a>
       </div>
     </nav>
   </div>
 </header>
+
+{
+  /* External file (CSP: script-src 'self', no 'unsafe-inline' — see the
+     back-to-top fix for why this can't be an inline block). data-astro-rerun:
+     same src on every Vesco page, so View Transitions would otherwise skip
+     re-running it after the first soft nav, leaving the fresh menu on the
+     next page with no click handler and a stale open/closed icon state. */
+}
+<script is:inline data-astro-rerun src="/vesco/js/nav-toggle.js"></script>
