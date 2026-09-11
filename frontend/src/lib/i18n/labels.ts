@@ -25,18 +25,6 @@ export function resolveLabels(cms: UiLabels | null | undefined, locale: Locale) 
       hoursHeading: pick('footer', 'hoursHeading'),
       disclaimer: pick('footer', 'disclaimer'),
     },
-    booking: {
-      nameLabel: pick('booking', 'nameLabel'),
-      namePlaceholder: pick('booking', 'namePlaceholder'),
-      phoneLabel: pick('booking', 'phoneLabel'),
-      phonePlaceholder: pick('booking', 'phonePlaceholder'),
-      serviceLabel: pick('booking', 'serviceLabel'),
-      masterLabel: pick('booking', 'masterLabel'),
-      anyMasterOption: pick('booking', 'anyMasterOption'),
-      dateLabel: pick('booking', 'dateLabel'),
-      submitLabel: pick('booking', 'submitLabel'),
-      resultTemplate: pick('booking', 'resultTemplate'),
-    },
     consent: {
       body: pick('consent', 'body'),
       essentialButton: pick('consent', 'essentialButton'),

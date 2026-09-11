@@ -1,30 +1,19 @@
 import type { Locale } from '../locale';
 
 /**
- * OFFLINE FALLBACK for the Payload `ui-labels` global. Read only when a CMS
- * field is blank or the CMS is unreachable (see `resolveLabels`). Shape MUST
- * match `backend/src/globals/UiLabels.ts`. `ru` is the shape source; `en`/`cs`
- * are type-checked to the same keys. Screen-reader strings live in `./aria.ts`.
+ * OFFLINE FALLBACK for site chrome text (header CTA, footer, cookie consent,
+ * 404). There is currently no backend `ui-labels` global — `getUiLabels()`
+ * always 404s and `resolveLabels()` always falls through to this bundled
+ * copy; see `resolveLabels` in `./labels.ts`. `ru` is the shape source;
+ * `en`/`cs` are type-checked to the same keys. Screen-reader strings live in
+ * `./aria.ts`.
  */
 const RU = {
   header: { cta: 'Записаться' },
   footer: {
     findUsHeading: 'НАЙДИ НАС',
     hoursHeading: 'ВРЕМЯ ДЛЯ СЕБЯ',
-    disclaimer: 'Названия, мастера и цены — примеры.',
-  },
-  booking: {
-    nameLabel: 'Твоё имя',
-    namePlaceholder: 'Как к тебе обращаться?',
-    phoneLabel: 'Телефон',
-    phonePlaceholder: '+420 000 000 000',
-    serviceLabel: 'Услуга',
-    masterLabel: 'Мастер',
-    anyMasterOption: 'Любой мастер',
-    dateLabel: 'Желаемая дата',
-    submitLabel: 'Отправить заявку',
-    resultTemplate:
-      '{name}, заявка отправлена: {service} — {date}. Мы свяжемся с вами для подтверждения.',
+    disclaimer: 'Показанный контент и цены — примеры.',
   },
   consent: {
     body: 'Мы храним cookie, чтобы запомнить язык. С вашего согласия загружаем приватную аналитику — без персональных данных и трекинга между сайтами.',
@@ -50,19 +39,7 @@ const EN: UiFallback = {
   footer: {
     findUsHeading: 'FIND US',
     hoursHeading: 'TIME FOR YOURSELF',
-    disclaimer: 'Names, barbers and prices are examples.',
-  },
-  booking: {
-    nameLabel: 'Your name',
-    namePlaceholder: 'What should we call you?',
-    phoneLabel: 'Phone',
-    phonePlaceholder: '+420 000 000 000',
-    serviceLabel: 'Service',
-    masterLabel: 'Barber',
-    anyMasterOption: 'Any barber',
-    dateLabel: 'Preferred date',
-    submitLabel: 'Send request',
-    resultTemplate: "{name}, request sent: {service} — {date}. We'll get in touch to confirm.",
+    disclaimer: 'Content and prices shown are examples.',
   },
   consent: {
     body: 'We store a cookie to remember your language. With your consent we also load privacy-friendly analytics — no personal data, no cross-site tracking.',
@@ -86,19 +63,7 @@ const CS: UiFallback = {
   footer: {
     findUsHeading: 'NAJDI NÁS',
     hoursHeading: 'ČAS PRO SEBE',
-    disclaimer: 'Jména, holiči a ceny jsou příklady.',
-  },
-  booking: {
-    nameLabel: 'Tvé jméno',
-    namePlaceholder: 'Jak ti máme říkat?',
-    phoneLabel: 'Telefon',
-    phonePlaceholder: '+420 000 000 000',
-    serviceLabel: 'Služba',
-    masterLabel: 'Holič',
-    anyMasterOption: 'Kterýkoli holič',
-    dateLabel: 'Preferovaný termín',
-    submitLabel: 'Odeslat žádost',
-    resultTemplate: '{name}, žádost odeslána: {service} — {date}. Ozveme se vám s potvrzením.',
+    disclaimer: 'Zobrazený obsah a ceny jsou pouze příklady.',
   },
   consent: {
     body: 'Ukládáme cookie, abychom si zapamatovali jazyk. S vaším souhlasem načteme i analytiku šetrnou k soukromí — žádná osobní data, žádné sledování napříč weby.',

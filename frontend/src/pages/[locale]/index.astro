@@ -1,39 +1,61 @@
 ---
 import RichText from '../../components/RichText.astro';
+import About from '../../components/sections/About.astro';
+import Hero from '../../components/sections/Hero.astro';
+import Services from '../../components/sections/Services.astro';
 import { env } from '../../env';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getFallback } from '../../lib/fallback';
-import { getPageBySlug, getSiteSettings } from '../../lib/payload/client';
+import {
+  getAbout,
+  getAnimationSettings,
+  getHero,
+  getPageBySlug,
+  getServices,
+  getSiteSettings,
+} from '../../lib/payload/client';
 import { buildMeta } from '../../lib/seo/buildMeta';
 import { organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
 
-// Placeholder homepage. Content is CMS-driven: create a Page with slug "home"
-// in the Payload admin and it renders here. A template replaces this file with
-// its own composition of sections.
+// Homepage. Section content (Hero / About / Services) is CMS-driven via the
+// globals of the same name — edit them in the Payload admin. Falls back to a
+// Page with slug "home" (for simple rich-text homepages), then a placeholder.
+
+/** Resolve a fetch, logging and swallowing failures so one dead section never 500s the page. */
+const settle = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
+  promise.catch((error: unknown) => {
+    console.error(`[home] ${label} failed:`, error);
+    return null;
+  });
 
 const locale = Astro.locals.locale;
 
-let page = null;
-try {
-  page = await getPageBySlug('home', locale);
-} catch (error) {
-  console.error(`[home] failed to load "home" (${locale}):`, error);
-}
+const [siteSettings, hero, about, services, page, animationSettings] = await Promise.all([
+  settle(getSiteSettings(locale), 'site settings'),
+  settle(getHero(locale), 'hero'),
+  settle(getAbout(locale), 'about'),
+  settle(getServices(locale), 'services'),
+  settle(getPageBySlug('home', locale), 'page'),
+  settle(getAnimationSettings(locale), 'animation settings'),
+]);
 
-let siteSettings = null;
-try {
-  siteSettings = await getSiteSettings(locale);
-} catch (error) {
-  console.error(`[home] site settings failed (${locale}):`, error);
-}
-
+const hasSections = Boolean(hero?.heading || about?.heading || services?.items?.length);
 const siteName = siteSettings?.siteName || getFallback(locale).site.siteName || '';
+
+// Editor-facing placeholder for an empty homepage — was hardcoded English
+// regardless of locale; now keyed per locale like the rest of the chrome.
+const emptyStateNote: Record<typeof locale, string> = {
+  ru: 'На главной пока нет контента. Заполните глобал Hero или создайте страницу со слагом home в CMS.',
+  en: 'No homepage content yet. Fill in the Hero global, or create a page with slug home, in the CMS.',
+  cs: 'Domovská stránka zatím nemá obsah. Vyplňte globál Hero, nebo vytvořte stránku se slugem home v CMS.',
+};
 
 const meta = buildMeta(
   {
-    title: page?.seo?.title ?? page?.title ?? siteName,
+    title: page?.seo?.title ?? hero?.heading ?? siteName,
     description:
       page?.seo?.description ??
+      hero?.intro ??
       siteSettings?.seo?.defaultDescription ??
       siteSettings?.description ??
       undefined,
@@ -54,7 +76,13 @@ const jsonLd = [
 
 <SiteLayout meta={meta} locale={locale} jsonLd={jsonLd}>
   {
-    page?.content ? (
+    hasSections ? (
+      <>
+        <Hero hero={hero} animation={siteSettings?.heroAnimation} duration={animationSettings?.duration} />
+        <About about={about} />
+        <Services services={services} />
+      </>
+    ) : page?.content ? (
       <article class="prose mx-auto max-w-3xl px-4 py-16">
         <h1>{page.title}</h1>
         <RichText content={page.content} />
@@ -62,9 +90,7 @@ const jsonLd = [
     ) : (
       <section class="mx-auto max-w-3xl px-4 py-24 text-center">
         <h1 class="text-2xl font-semibold">{siteName || 'treenweb'}</h1>
-        <p class="mt-4 opacity-70">
-          No homepage content yet. Create a page with slug <code>home</code> in the CMS.
-        </p>
+        <p class="mt-4 opacity-70">{emptyStateNote[locale]}</p>
       </section>
     )
   }

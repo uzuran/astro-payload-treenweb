@@ -1,0 +1,36 @@
+---
+import { mediaUrl, type Services } from '../../lib/payload/client';
+
+interface Props {
+  services: Services | null;
+}
+const { services } = Astro.props;
+const items = services?.items ?? [];
+---
+
+{
+  services && items.length > 0 && (
+    <section id="services" class="section border-t border-white/15">
+      <div class="wrap">
+        <div class="section-top">
+          <div>
+            {services.eyebrow && <p class="eyebrow orange mb-3">{services.eyebrow}</p>}
+            {services.heading && <h2 class="text-3xl font-bold sm:text-4xl">{services.heading}</h2>}
+          </div>
+        </div>
+        <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => {
+            const icon = mediaUrl(item.icon, 'thumbnail');
+            return (
+              <li class="border-t border-white/15 pt-6">
+                {icon && <img src={icon} alt="" width="40" height="40" class="mb-4" />}
+                <p class="mb-2 text-lg font-semibold">{item.name}</p>
+                {item.description && <p class="muted text-sm">{item.description}</p>}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  )
+}

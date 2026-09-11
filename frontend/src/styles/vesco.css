@@ -186,7 +186,9 @@ a:hover {
   border-radius: 999px;
   overflow: hidden;
 }
-.v-toggle > button {
+/* Used both by JS-generated tab buttons (horoscope daily/weekly/monthly) and
+   the header's EN/CS locale links — same look either way. */
+.v-toggle > :is(button, a) {
   appearance: none;
   border: 0;
   background: transparent;
@@ -195,6 +197,7 @@ a:hover {
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  text-decoration: none;
   padding: 12px 22px;
   cursor: pointer;
   white-space: nowrap;
@@ -202,7 +205,7 @@ a:hover {
     background-color 0.18s ease,
     color 0.18s ease;
 }
-.v-toggle > button[aria-pressed='true'] {
+.v-toggle > :is(button, a)[aria-pressed='true'] {
   background: var(--ink);
   color: var(--parchment);
 }

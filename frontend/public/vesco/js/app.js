@@ -17,7 +17,11 @@
     try { localStorage.setItem(key, value); } catch (e) { /* private mode */ }
   }
 
-  var lang = read(LANG_KEY, 'en') === 'cs' ? 'cs' : 'en';
+  // The URL (/en/... or /cs/...) is authoritative — it sets <html lang>
+  // server-side. Keep localStorage in sync so the deck/zodiac engine (which
+  // has no other locale signal) always matches what the page is showing.
+  var lang = document.documentElement.lang === 'cs' ? 'cs' : 'en';
+  write(LANG_KEY, lang);
 
   function t() { return CS.UI[lang]; }
   function isCS() { return lang === 'cs'; }

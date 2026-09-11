@@ -1,0 +1,55 @@
+---
+import Multiline from '../Multiline.astro';
+import { mediaUrl, type Hero } from '../../lib/payload/client';
+
+interface Props {
+  hero: Hero | null;
+  /** SiteSettings.heroAnimation — 'none' (or unset) skips the entrance animation. */
+  animation?: string | null;
+  /** AnimationSettings.duration (seconds) — feeds --hero-anim-duration in global.css. */
+  duration?: number | null;
+}
+const { hero, animation, duration } = Astro.props;
+const photo = mediaUrl(hero?.image, 'hero');
+const animClass = animation && animation !== 'none' ? `hero--${animation}` : '';
+---
+
+{
+  hero && (hero.heading || hero.intro) && (
+    <section
+      id="hero"
+      class={`section hero ${animClass}`}
+      style={duration ? `--hero-anim-duration:${duration}s` : undefined}
+    >
+      <div class="wrap grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          {hero.eyebrow && <p class="eyebrow orange mb-4">{hero.eyebrow}</p>}
+          {hero.heading && (
+            <h1 class="mb-5 text-4xl font-bold sm:text-5xl">
+              <Multiline text={hero.heading} />
+            </h1>
+          )}
+          {hero.intro && (
+            <p class="muted mb-8 max-w-[52ch] text-base">
+              <Multiline text={hero.intro} />
+            </p>
+          )}
+          {hero.ctaLabel && hero.ctaHref && (
+            <a href={hero.ctaHref} class="button">
+              <span>{hero.ctaLabel}</span>
+            </a>
+          )}
+        </div>
+        {photo && (
+          <img
+            src={photo}
+            alt={hero.imageAlt ?? ''}
+            width={hero.image?.width ?? undefined}
+            height={hero.image?.height ?? undefined}
+            class="w-full object-cover"
+          />
+        )}
+      </div>
+    </section>
+  )
+}

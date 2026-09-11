@@ -1,0 +1,37 @@
+---
+import Multiline from '../Multiline.astro';
+import { mediaUrl, type About } from '../../lib/payload/client';
+
+interface Props {
+  about: About | null;
+}
+const { about } = Astro.props;
+const photo = mediaUrl(about?.image, 'card');
+---
+
+{
+  about && (about.heading || about.body) && (
+    <section id="about" class="section border-t border-white/15">
+      <div class="wrap grid items-center gap-10 lg:grid-cols-2">
+        {photo && (
+          <img
+            src={photo}
+            alt={about.imageAlt ?? ''}
+            width={about.image?.width ?? undefined}
+            height={about.image?.height ?? undefined}
+            class="w-full object-cover"
+          />
+        )}
+        <div>
+          {about.eyebrow && <p class="eyebrow orange mb-4">{about.eyebrow}</p>}
+          {about.heading && <h2 class="mb-5 text-3xl font-bold sm:text-4xl">{about.heading}</h2>}
+          {about.body && (
+            <p class="muted max-w-[60ch] text-base">
+              <Multiline text={about.body} />
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}

@@ -1,17 +1,38 @@
 ---
 import VescoLogo from './VescoLogo.astro';
 
-interface Props {
-  active: 'home' | 'tarot' | 'horoscope' | 'numerology' | 'dashboard';
-}
-const { active } = Astro.props;
+export type VescoLocale = 'en' | 'cs';
+export type VescoPage = 'home' | 'tarot' | 'horoscope' | 'numerology' | 'dashboard';
 
-const links: { id: Props['active']; href: string; i18n: string; label: string }[] = [
-  { id: 'home', href: '/', i18n: 'nav.home', label: 'Home' },
-  { id: 'tarot', href: '/tarot', i18n: 'nav.tarot', label: 'Tarot' },
-  { id: 'horoscope', href: '/horoscope', i18n: 'nav.horoscope', label: 'Horoscope' },
-  { id: 'numerology', href: '/numerology', i18n: 'nav.numerology', label: 'Numerology' },
-  { id: 'dashboard', href: '/dashboard', i18n: 'nav.dashboard', label: 'Dashboard' },
+/**
+ * Absolute URL for `page` in `loc` — the URL is what actually changes the
+ * language. Exported bindings in an Astro frontmatter are hoisted above the
+ * component closure, so this can't close over a module-scope const declared
+ * outside it — the segment map has to live inside the function itself.
+ */
+export const vescoPath = (loc: VescoLocale, page: VescoPage): string => {
+  const segment: Record<VescoPage, string> = {
+    home: '',
+    tarot: '/tarot',
+    horoscope: '/horoscope',
+    numerology: '/numerology',
+    dashboard: '/dashboard',
+  };
+  return `/${loc}${segment[page]}`;
+};
+
+interface Props {
+  active: VescoPage;
+  locale: VescoLocale;
+}
+const { active, locale } = Astro.props;
+
+const links: { id: VescoPage; i18n: string; label: string }[] = [
+  { id: 'home', i18n: 'nav.home', label: 'Home' },
+  { id: 'tarot', i18n: 'nav.tarot', label: 'Tarot' },
+  { id: 'horoscope', i18n: 'nav.horoscope', label: 'Horoscope' },
+  { id: 'numerology', i18n: 'nav.numerology', label: 'Numerology' },
+  { id: 'dashboard', i18n: 'nav.dashboard', label: 'Dashboard' },
 ];
 ---
 
@@ -20,7 +41,7 @@ const links: { id: Props['active']; href: string; i18n: string; label: string }[
     class="mx-auto flex max-w-shell flex-wrap items-center justify-between gap-x-6 gap-y-4 px-5 py-3 sm:px-8 lg:px-10"
     style="min-height:92px"
   >
-    <a href="/" class="flex items-center gap-2.5 whitespace-nowrap text-ink hover:text-ink">
+    <a href={vescoPath(locale, 'home')} class="flex items-center gap-2.5 whitespace-nowrap text-ink hover:text-ink">
       <VescoLogo size={56} />
       <span class="font-display text-[32px] tracking-logo">VESCO</span>
       <span class="font-mono text-[10px] uppercase tracking-wide2 text-muted" data-i18n="est">est. mmxxvi</span>
@@ -29,7 +50,7 @@ const links: { id: Props['active']; href: string; i18n: string; label: string }[
       {
         links.map((link) => (
           <a
-            href={link.href}
+            href={vescoPath(locale, link.id)}
             class="v-nav-link"
             aria-current={link.id === active ? 'page' : undefined}
             data-i18n={link.i18n}
@@ -38,10 +59,10 @@ const links: { id: Props['active']; href: string; i18n: string; label: string }[
           </a>
         ))
       }
-      <a href="/tarot" class="v-btn v-btn--solid v-btn--sm" data-i18n="pullCard">Pull a card</a>
+      <a href={vescoPath(locale, 'tarot')} class="v-btn v-btn--solid v-btn--sm" data-i18n="pullCard">Pull a card</a>
       <div class="v-toggle">
-        <button type="button" class="font-mono" data-lang-btn="en" aria-pressed="true">EN</button>
-        <button type="button" class="font-mono" data-lang-btn="cs" aria-pressed="false">CS</button>
+        <a href={vescoPath('en', active)} class="font-mono" aria-pressed={locale === 'en' ? 'true' : 'false'}>EN</a>
+        <a href={vescoPath('cs', active)} class="font-mono" aria-pressed={locale === 'cs' ? 'true' : 'false'}>CS</a>
       </div>
     </nav>
   </div>

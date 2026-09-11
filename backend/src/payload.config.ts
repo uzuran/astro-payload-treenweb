@@ -7,17 +7,16 @@ import { buildConfig } from 'payload';
 import sharp from 'sharp';
 
 import { Media } from './collections/Media';
-import { Pages } from './collections/Pages';
-import { Posts } from './collections/Posts';
-import { Redirects } from './collections/Redirects';
 import { Users } from './collections/Users';
 import { emailAdapter } from './email';
 import { env } from './env';
 import { reportError } from './lib/errorReporter';
-import { AnimationSettings } from './globals/AnimationSettings';
-import { Navigation } from './globals/Navigation';
 import { SiteSettings } from './globals/SiteSettings';
-import { UiLabels } from './globals/UiLabels';
+import { VescoCounters } from './globals/VescoCounters';
+import { VescoCta } from './globals/VescoCta';
+import { VescoFooter } from './globals/VescoFooter';
+import { VescoHero } from './globals/VescoHero';
+import { VescoNavigation } from './globals/VescoNavigation';
 import { lexicalFeatures } from './lexical/allowlist';
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES } from './locales';
 
@@ -40,10 +39,12 @@ export default buildConfig({
     defaultLocale: DEFAULT_LOCALE,
     fallback: true,
   },
-  // System / reusable content types only. A template adds its own collections
-  // and content globals here.
-  collections: [Pages, Posts, Media, Redirects, Users],
-  globals: [SiteSettings, Navigation, UiLabels, AnimationSettings],
+  // Fresh-install baseline (auth + uploads + site config) plus the Vesco
+  // template's marketing sections — each a standalone global so it shows
+  // individually in the sidebar. Tarot/zodiac/numerology stay bundled JS
+  // (public/vesco/js/*) — structured domain data, not marketing copy.
+  collections: [Media, Users],
+  globals: [SiteSettings, VescoNavigation, VescoHero, VescoCounters, VescoCta, VescoFooter],
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL },
     push: env.PAYLOAD_DB_PUSH,
