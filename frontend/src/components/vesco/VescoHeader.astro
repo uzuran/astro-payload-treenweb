@@ -1,25 +1,15 @@
 ---
 import VescoLogo from './VescoLogo.astro';
+import { vescoPath, type VescoLocale, type VescoPage } from '../../lib/vescoPath';
 
-export type VescoLocale = 'en' | 'cs';
-export type VescoPage = 'home' | 'tarot' | 'horoscope' | 'numerology' | 'dashboard';
-
-/**
- * Absolute URL for `page` in `loc` — the URL is what actually changes the
- * language. Exported bindings in an Astro frontmatter are hoisted above the
- * component closure, so this can't close over a module-scope const declared
- * outside it — the segment map has to live inside the function itself.
- */
-export const vescoPath = (loc: VescoLocale, page: VescoPage): string => {
-  const segment: Record<VescoPage, string> = {
-    home: '',
-    tarot: '/tarot',
-    horoscope: '/horoscope',
-    numerology: '/numerology',
-    dashboard: '/dashboard',
-  };
-  return `/${loc}${segment[page]}`;
-};
+// Re-exported so existing `import { type VescoLocale, vescoPath } from
+// './VescoHeader.astro'` call sites keep working. The real definition lives
+// in lib/vescoPath.ts (a plain module, unlike this file, vitest can import
+// and test directly) — it used to live inline here as an exported frontmatter
+// function, which silently broke: Astro hoists exported bindings above the
+// component closure, so it lost access to a non-exported sibling const.
+export type { VescoLocale, VescoPage };
+export { vescoPath };
 
 interface Props {
   active: VescoPage;

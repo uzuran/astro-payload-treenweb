@@ -1,4 +1,5 @@
 ---
+import VescoCookieConsent from '../VescoCookieConsent.astro';
 import VescoFooter from '../VescoFooter.astro';
 import VescoHeader, { type VescoLocale, vescoPath } from '../VescoHeader.astro';
 import VescoScripts from '../VescoScripts.astro';
@@ -218,6 +219,7 @@ const seoDescription =
       </section>
     </main>
     <VescoFooter />
+    <VescoCookieConsent locale={locale} />
     <VescoScripts page="home" cmsLabels={cmsLabels} />
   </body>
 </html>

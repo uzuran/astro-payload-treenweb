@@ -57,7 +57,12 @@ const UI = {
     checkInToday: 'Check in for today',
     variant: 'Variant I · Mystic Minimalism',
     days: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    est: 'est. mmxxvi'
+    est: 'est. mmxxvi',
+    consent: {
+      body: 'We use a couple of cookies to remember your reading preferences. Essential ones keep the site working; analytics is optional.',
+      essential: 'Essential only',
+      analytics: 'Allow analytics'
+    }
   },
   cs: {
     lang: 'CS', other: 'English',
@@ -112,7 +117,12 @@ const UI = {
     checkInToday: 'Zapsat dnešní den',
     variant: 'Varianta I · Mystický minimalismus',
     days: ['P', 'Ú', 'S', 'Č', 'P', 'S', 'N'],
-    est: 'zal. mmxxvi'
+    est: 'zal. mmxxvi',
+    consent: {
+      body: 'Používáme pár cookies, abychom si zapamatovali vaše preference čtení. Nezbytné udržují web funkční; analytika je volitelná.',
+      essential: 'Jen nezbytné',
+      analytics: 'Povolit analytiku'
+    }
   }
 };
 

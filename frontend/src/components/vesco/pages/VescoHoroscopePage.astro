@@ -1,4 +1,5 @@
 ---
+import VescoCookieConsent from '../VescoCookieConsent.astro';
 import VescoFooter from '../VescoFooter.astro';
 import VescoHeader, { type VescoLocale } from '../VescoHeader.astro';
 import VescoScripts from '../VescoScripts.astro';
@@ -43,6 +44,7 @@ const cmsLabels = await buildVescoCmsLabels(false);
       <div class="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]" data-signs></div>
     </main>
     <VescoFooter />
+    <VescoCookieConsent locale={locale} />
     <VescoScripts page="horoscope" cmsLabels={cmsLabels} />
   </body>
 </html>

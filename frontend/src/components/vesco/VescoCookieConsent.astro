@@ -1,0 +1,69 @@
+---
+import { env } from '../../env';
+import { hasConsentDecision } from '../../lib/consent';
+import type { VescoLocale } from './VescoHeader.astro';
+
+interface Props {
+  locale: VescoLocale;
+}
+const { locale } = Astro.props;
+
+// Same cookie/endpoint as the rest of the site (lib/consent.ts, /consent) —
+// Vesco just gets its own on-brand banner instead of the dark chrome one.
+// Renders only until the visitor has chosen; no-JS falls back to the
+// <form> POSTing to /consent, which sets the cookie and redirects back.
+const decided = hasConsentDecision(Astro.cookies);
+const ariaLabel = locale === 'cs' ? 'Předvolby cookies' : 'Cookie preferences';
+const privacyLabel = locale === 'cs' ? 'Ochrana soukromí' : 'Privacy';
+---
+
+{
+  !decided && (
+    <div
+      id="vesco-consent"
+      role="dialog"
+      aria-label={ariaLabel}
+      class="fixed inset-x-0 bottom-0 z-50 border-t border-rule bg-card px-5 py-5 shadow-[0_-16px_40px_-24px_rgba(34,26,19,.35)] sm:px-8"
+    >
+      <form
+        method="POST"
+        action="/consent"
+        data-secure={env.NODE_ENV === 'production' || undefined}
+        class="mx-auto flex max-w-shell flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <input type="hidden" name="next" value={Astro.url.pathname} />
+        <p class="m-0 max-w-2xl text-sm leading-relaxed text-ink70">
+          <span data-i18n="consent.body" /> <a href={`/${locale}/privacy`} class="underline hover:text-clay">{privacyLabel}</a>
+        </p>
+        <div class="flex shrink-0 gap-3">
+          <button type="submit" name="value" value="essential" class="v-btn v-btn--outline">
+            <span data-i18n="consent.essential" />
+          </button>
+          <button type="submit" name="value" value="analytics" class="v-btn v-btn--solid">
+            <span data-i18n="consent.analytics" />
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+<script>
+  import { CONSENT_COOKIE, CONSENT_MAX_AGE_S } from '../../lib/consent';
+
+  const form = document.querySelector<HTMLFormElement>('#vesco-consent form');
+  if (form) {
+    const dialog = form.closest('#vesco-consent');
+    const secure = form.hasAttribute('data-secure') ? '; secure' : '';
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const value =
+        (event.submitter as HTMLButtonElement | null)?.value === 'analytics'
+          ? 'analytics'
+          : 'essential';
+      document.cookie = `${CONSENT_COOKIE}=${value}; path=/; max-age=${CONSENT_MAX_AGE_S}; samesite=lax${secure}`;
+      dialog?.remove();
+    });
+  }
+</script>
