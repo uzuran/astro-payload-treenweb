@@ -1,0 +1,29 @@
+---
+interface Props {
+  size?: number;
+  accent?: string;
+  line?: string;
+}
+const { size = 56, accent = '#A9502F', line = '#221A13' } = Astro.props;
+---
+
+<svg viewBox="0 0 44 44" width={size} height={size} fill="none" aria-hidden="true" class="shrink-0 overflow-visible">
+  <circle cx="22" cy="22" r="20.5" stroke={accent} stroke-width=".8" opacity=".55"></circle>
+  <circle cx="22" cy="22" r="16" stroke={line} stroke-width=".7" opacity=".35"></circle>
+  <circle cx="22" cy="22" r="10.5" stroke={accent} stroke-width=".7" opacity=".7" stroke-dasharray="1.6 3.2"></circle>
+  <path d="M22 1.5 L22 42.5 M1.5 22 L42.5 22" stroke={line} stroke-width=".5" opacity=".18"></path>
+  <path d="M7.5 7.5 L36.5 36.5 M36.5 7.5 L7.5 36.5" stroke={line} stroke-width=".5" opacity=".12"></path>
+  <path
+    d="M22 6 L26.4 17.6 L38 22 L26.4 26.4 L22 38 L17.6 26.4 L6 22 L17.6 17.6 Z"
+    stroke={accent}
+    stroke-width=".9"
+    stroke-linejoin="round"></path>
+  <path d="M15.6 16.6 L22 30.4 L28.4 16.6" stroke={line} stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path>
+  <circle cx="22" cy="22" r="1.5" fill={accent}></circle>
+  <circle cx="22" cy="1.5" r="1.15" fill={accent}></circle>
+  <circle cx="42.5" cy="22" r=".9" fill={line} opacity=".6"></circle>
+  <circle cx="22" cy="42.5" r=".9" fill={line} opacity=".6"></circle>
+  <circle cx="1.5" cy="22" r=".9" fill={line} opacity=".6"></circle>
+  <circle cx="36.5" cy="7.5" r=".7" fill={accent} opacity=".8"></circle>
+  <circle cx="7.5" cy="36.5" r=".7" fill={accent} opacity=".8"></circle>
+</svg>

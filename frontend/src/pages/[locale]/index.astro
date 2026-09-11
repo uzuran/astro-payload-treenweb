@@ -1,118 +1,71 @@
 ---
-import About from '../../components/sections/About.astro';
-import Booking from '../../components/sections/Booking.astro';
-import Hero from '../../components/sections/Hero.astro';
-import Services from '../../components/sections/Services.astro';
-import Team from '../../components/sections/Team.astro';
-import Ticker from '../../components/sections/Ticker.astro';
+import RichText from '../../components/RichText.astro';
 import { env } from '../../env';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getFallback } from '../../lib/fallback';
-import { resolveLabels } from '../../lib/i18n/labels';
-import { localizedPath } from '../../lib/locale';
-import {
-  getAbout,
-  getAnimationSettings,
-  getBooking,
-  getHero,
-  getNavigation,
-  getPageBySlug,
-  getServices,
-  getSiteSettings,
-  getTeam,
-  getUiLabels,
-  listMasters,
-  mediaUrl,
-} from '../../lib/payload/client';
+import { getPageBySlug, getSiteSettings } from '../../lib/payload/client';
 import { buildMeta } from '../../lib/seo/buildMeta';
-import { hairSalonJsonLd, organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
+import { organizationJsonLd, webPageJsonLd } from '../../lib/seo/jsonLd';
 
-/** Resolve a fetch, logging and swallowing failures so one dead section never 500s the page. */
-const settle = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
-  promise.catch((error: unknown) => {
-    console.error(`[index] ${label} failed:`, error);
-    return null;
-  });
+// Placeholder homepage. Content is CMS-driven: create a Page with slug "home"
+// in the Payload admin and it renders here. A template replaces this file with
+// its own composition of sections.
 
 const locale = Astro.locals.locale;
 
-const [
-  page,
-  hero,
-  services,
-  about,
-  team,
-  booking,
-  navigation,
-  siteSettings,
-  masters,
-  uiLabels,
-  animationSettings,
-] = await Promise.all([
-  settle(getPageBySlug('home', locale), 'home page'),
-  settle(getHero(locale), 'hero'),
-  settle(getServices(locale), 'services'),
-  settle(getAbout(locale), 'about'),
-  settle(getTeam(locale), 'team'),
-  settle(getBooking(locale), 'booking'),
-  settle(getNavigation(locale), 'navigation'),
-  settle(getSiteSettings(locale), 'site settings'),
-  settle(listMasters(locale), 'masters'),
-  settle(getUiLabels(locale), 'ui labels'),
-  settle(getAnimationSettings(locale), 'animation settings'),
-]);
+let page = null;
+try {
+  page = await getPageBySlug('home', locale);
+} catch (error) {
+  console.error(`[home] failed to load "home" (${locale}):`, error);
+}
+
+let siteSettings = null;
+try {
+  siteSettings = await getSiteSettings(locale);
+} catch (error) {
+  console.error(`[home] site settings failed (${locale}):`, error);
+}
 
 const siteName = siteSettings?.siteName || getFallback(locale).site.siteName || '';
-const labels = resolveLabels(uiLabels, locale);
 
-// hreflang / og:locale:alternate are added by SiteLayout from siteSettings.
 const meta = buildMeta(
   {
-    title: page?.seo?.title || page?.title || siteName,
+    title: page?.seo?.title ?? page?.title ?? siteName,
     description:
-      page?.seo?.description ||
-      siteSettings?.description ||
-      siteSettings?.seo?.defaultDescription ||
+      page?.seo?.description ??
+      siteSettings?.seo?.defaultDescription ??
+      siteSettings?.description ??
       undefined,
     titleTemplate: siteSettings?.seo?.titleTemplate,
-    path: localizedPath(locale, '/'),
+    path: '/',
     noindex: page?.seo?.noindex ?? false,
-    image: mediaUrl(siteSettings?.ogImage) ?? undefined,
-    siteName,
     locale,
+    siteName,
   },
   env.PUBLIC_SITE_URL,
 );
+
+const jsonLd = [
+  organizationJsonLd(env.PUBLIC_SITE_URL, siteName),
+  webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
+];
 ---
 
-<SiteLayout
-  meta={meta}
-  locale={locale}
-  navigation={navigation}
-  siteSettings={siteSettings}
-  uiLabels={uiLabels}
-  jsonLd={[
-    organizationJsonLd(env.PUBLIC_SITE_URL, siteName),
-    hairSalonJsonLd({
-      name: siteName,
-      url: env.PUBLIC_SITE_URL,
-      image: mediaUrl(siteSettings?.ogImage) ?? undefined,
-      telephone: siteSettings?.contact?.phone,
-      streetAddress: siteSettings?.contact?.address,
-      mapUrl: siteSettings?.contact?.mapUrl,
-    }),
-    webPageJsonLd({ title: meta.title, description: meta.description, url: meta.canonical }),
-  ]}
->
-  <Hero
-    data={hero}
-    animation={siteSettings?.heroAnimation}
-    duration={animationSettings?.duration}
-    locale={locale}
-  />
-  <Ticker words={siteSettings?.ticker?.map((word) => word.word)} locale={locale} />
-  <Services data={services} locale={locale} />
-  <About data={about} locale={locale} />
-  <Team data={team} masters={masters} locale={locale} />
-  <Booking data={booking} services={services} masters={masters} locale={locale} labels={labels} />
+<SiteLayout meta={meta} locale={locale} jsonLd={jsonLd}>
+  {
+    page?.content ? (
+      <article class="prose mx-auto max-w-3xl px-4 py-16">
+        <h1>{page.title}</h1>
+        <RichText content={page.content} />
+      </article>
+    ) : (
+      <section class="mx-auto max-w-3xl px-4 py-24 text-center">
+        <h1 class="text-2xl font-semibold">{siteName || 'treenweb'}</h1>
+        <p class="mt-4 opacity-70">
+          No homepage content yet. Create a page with slug <code>home</code> in the CMS.
+        </p>
+      </section>
+    )
+  }
 </SiteLayout>

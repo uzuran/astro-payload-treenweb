@@ -17,3 +17,6 @@ backend/payload-types.ts
 backend/src/migrations/
 **/importMap.js
 
+# static assets served as-is — not app source
+frontend/public/
+

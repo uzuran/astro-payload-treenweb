@@ -1,0 +1,14 @@
+---
+// Classic (non-module) scripts, load order matters: data -> cs translations ->
+// shared runtime -> page controller. Plain global-scope JS (window.Vesco), not
+// bundled by Vite — served as-is from public/vesco/js/.
+interface Props {
+  page: 'home' | 'tarot' | 'horoscope' | 'numerology' | 'dashboard';
+}
+const { page } = Astro.props;
+---
+
+<script is:inline src="/vesco/js/vesco-data.js"></script>
+<script is:inline src="/vesco/js/vesco-cs.js"></script>
+<script is:inline src="/vesco/js/app.js"></script>
+<script is:inline src={`/vesco/js/page-${page}.js`}></script>
