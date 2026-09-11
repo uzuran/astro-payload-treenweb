@@ -1,4 +1,5 @@
 ---
+import { ClientRouter, fade } from 'astro:transitions';
 import VescoCookieConsent from '../VescoCookieConsent.astro';
 import VescoFooter from '../VescoFooter.astro';
 import VescoHeader, { type VescoLocale } from '../VescoHeader.astro';
@@ -15,7 +16,7 @@ const cmsLabels = await buildVescoCmsLabels(false);
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang={locale} transition:animate={fade({ duration: '0.2s' })}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -23,6 +24,7 @@ const cmsLabels = await buildVescoCmsLabels(false);
     <meta name="description" content="Vesco — a quieter daily practice: one tarot card, one forecast, one number." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <ClientRouter />
   </head>
   <body class="min-h-screen">
     <VescoHeader active="numerology" locale={locale} />

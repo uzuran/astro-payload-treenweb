@@ -14,9 +14,21 @@ const { page, cmsLabels } = Astro.props;
 const cmsLabelsJson = cmsLabels ? JSON.stringify(cmsLabels).replace(/</g, '\\u003c') : '{}';
 ---
 
-<script is:inline src="/vesco/js/vesco-data.js"></script>
-<script is:inline src="/vesco/js/vesco-cs.js"></script>
+{
+  /* data-astro-rerun: under View Transitions (astro:transitions), Astro skips
+     re-running a <script src> if an identical one is already in the DOM from
+     the previous page — a same-origin optimization for genuinely static
+     scripts. These aren't: app.js reads document.documentElement.lang and
+     (re)populates every [data-i18n] node on each run, cms-merge.js applies
+     THIS page's embedded CMS JSON, and page-*.js binds to THIS page's DOM
+     (its src is stable across a locale-toggle nav — /en/tarot -> /cs/tarot
+     both load page-tarot.js). Without this they'd silently no-op on the
+     second+ navigation, leaving every data-i18n node blank. Force a full
+     re-run every time, so a soft nav behaves exactly like a fresh page load. */
+}
+<script is:inline data-astro-rerun src="/vesco/js/vesco-data.js"></script>
+<script is:inline data-astro-rerun src="/vesco/js/vesco-cs.js"></script>
 <script is:inline type="application/json" id="vesco-cms-labels" set:html={cmsLabelsJson} />
-<script is:inline src="/vesco/js/cms-merge.js"></script>
-<script is:inline src="/vesco/js/app.js"></script>
-<script is:inline src={`/vesco/js/page-${page}.js`}></script>
+<script is:inline data-astro-rerun src="/vesco/js/cms-merge.js"></script>
+<script is:inline data-astro-rerun src="/vesco/js/app.js"></script>
+<script is:inline data-astro-rerun src={`/vesco/js/page-${page}.js`}></script>
