@@ -91,4 +91,51 @@ document.querySelector('[data-save-daily]').addEventListener('click', (e) => {
 
 onLanguageChange(render);
 render();
+
+/* Admin-authored card packs (CardPacks/Cards in Payload) are a separate,
+   additive system — see src/lib/vescoCardLoader.ts. render() above always
+   shows the classic deck's placeholder "today's card" first, unchanged, so
+   this page behaves exactly as before for anyone with no packs, or if the
+   CMS is unreachable. If a pack IS available, this swaps its first card in
+   afterward — same "bundled defaults first, CMS overrides async" pattern as
+   cms-merge.js. */
+function whenCardLoaderReady(cb) {
+  if (window.VescoCardLoader) { cb(window.VescoCardLoader); return; }
+  window.addEventListener('vesco:cardloader-ready', function once() {
+    window.removeEventListener('vesco:cardloader-ready', once);
+    cb(window.VescoCardLoader);
+  });
+}
+
+function currentLang() {
+  return document.documentElement.lang === 'cs' ? 'cs' : 'en';
+}
+
+function showCmsDailyCard(loader) {
+  const lang = currentLang();
+  loader.getActivePackId().then((activeId) => (
+    activeId != null
+      ? loader.loadCardPack(activeId, lang)
+      : loader.getCardPacks(lang).then((packs) => packs.length ? loader.loadCardPack(packs[0].id, lang) : null)
+  )).then((loaded) => {
+    if (!loaded || !loaded.cards.length) return; // no pack available — classic card stands
+    const card = loaded.cards[0];
+    const T = t();
+
+    const img = $('[data-daily-art]');
+    if (img && card.imageUrl) { img.src = card.imageUrl; img.alt = card.name; }
+    $('[data-daily-name]').textContent = card.name;
+    $('[data-daily-suit]').textContent = loaded.pack.name;
+    $('[data-daily-upright]').textContent = card.meaningUpright || '';
+    $('[data-daily-reversed]').textContent = card.meaningReversed || '';
+    $('[data-daily-keywords]').innerHTML = card.tags.map(chip).join('');
+    $('[data-daily-record]').innerHTML = [
+      row(T.arcana, loaded.pack.name), row(T.element, '—'), row(T.ruler, '—'),
+      row(T.yesNo, '—', true), row(T.czechTitle, '—')
+    ].join('');
+  }).catch(() => { /* CMS unreachable — classic card stands */ });
+}
+
+onLanguageChange(() => whenCardLoaderReady(showCmsDailyCard));
+whenCardLoaderReady(showCmsDailyCard);
 })();

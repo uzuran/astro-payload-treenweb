@@ -6,6 +6,8 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { buildConfig } from 'payload';
 import sharp from 'sharp';
 
+import { CardPacks } from './collections/CardPacks';
+import { Cards } from './collections/Cards';
 import { Media } from './collections/Media';
 import { Users } from './collections/Users';
 import { emailAdapter } from './email';
@@ -41,9 +43,11 @@ export default buildConfig({
   },
   // Fresh-install baseline (auth + uploads + site config) plus the Vesco
   // template's marketing sections — each a standalone global so it shows
-  // individually in the sidebar. Tarot/zodiac/numerology stay bundled JS
-  // (public/vesco/js/*) — structured domain data, not marketing copy.
-  collections: [Media, Users],
+  // individually in the sidebar. The built-in 78-card deck stays bundled JS
+  // (public/vesco/js/vesco-data.js), untouched. CardPacks/Cards is a separate,
+  // additive system for admin-authored packs — see src/lib/vescoCardLoader.ts
+  // on the frontend.
+  collections: [Media, Users, CardPacks, Cards],
   globals: [SiteSettings, VescoNavigation, VescoHero, VescoCounters, VescoCta, VescoFooter],
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL },

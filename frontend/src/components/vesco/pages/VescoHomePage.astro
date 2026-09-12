@@ -1,6 +1,7 @@
 ---
 import { ClientRouter, fade } from 'astro:transitions';
 import VescoBackToTop from '../VescoBackToTop.astro';
+import VescoCardLoaderScript from '../VescoCardLoaderScript.astro';
 import VescoCookieConsent from '../VescoCookieConsent.astro';
 import VescoFooter from '../VescoFooter.astro';
 import VescoPreloader from '../VescoPreloader.astro';
@@ -111,6 +112,7 @@ const seoDescription =
               width="336"
               height="487"
               class="v-card-art max-w-[336px] shadow-[0_34px_60px_-34px_rgba(34,26,19,.55)]"
+              data-daily-art
             />
             <figcaption class="mt-4 flex items-baseline justify-between gap-2.5 px-0.5">
               <span class="font-display text-base uppercase tracking-[.14em]" data-daily-name></span>
@@ -227,5 +229,6 @@ const seoDescription =
     <VescoCookieConsent locale={locale} />
     <VescoBackToTop locale={locale} />
     <VescoScripts page="home" cmsLabels={cmsLabels} />
+    <VescoCardLoaderScript />
   </body>
 </html>

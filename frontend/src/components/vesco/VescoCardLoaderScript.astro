@@ -1,0 +1,10 @@
+---
+// Loads lib/vescoCardLoader.ts (Vite-bundled — it needs Dexie) and exposes it
+// as window.VescoCardLoader for the classic tarot engine scripts to consume,
+// same bridge pattern as every other window.Vesco* global. Purely additive:
+// nothing here touches the existing bundled 78-card deck or its rendering.
+---
+
+<script>
+  import '../../lib/vescoCardLoader';
+</script>

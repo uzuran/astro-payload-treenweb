@@ -1,6 +1,7 @@
 ---
 import { ClientRouter, fade } from 'astro:transitions';
 import VescoBackToTop from '../VescoBackToTop.astro';
+import VescoCardLoaderScript from '../VescoCardLoaderScript.astro';
 import VescoCookieConsent from '../VescoCookieConsent.astro';
 import VescoFooter from '../VescoFooter.astro';
 import VescoPreloader from '../VescoPreloader.astro';
@@ -43,6 +44,19 @@ const cmsLabels = await buildVescoCmsLabels(false);
         ></button>
       </div>
 
+      {
+        /* Hidden until JS confirms there's at least one published card pack
+           to offer — a site with none looks exactly as it did before. */
+      }
+      <div class="mb-8 hidden max-w-[280px] items-center gap-3" data-pack-switcher-row>
+        <label class="whitespace-nowrap text-[11px] uppercase tracking-label text-muted" for="v-pack-switcher"
+          >Deck</label
+        >
+        <select id="v-pack-switcher" class="v-input v-input--mono" data-pack-switcher>
+          <option value="">Classic Tarot</option>
+        </select>
+      </div>
+
       <div class="mb-14 hidden h-[380px] place-items-center" data-shuffle-stage>
         <div class="v-shuffle"><div></div><div></div><div></div><div></div></div>
         <p class="v-eyebrow mt-6" data-i18n="shuffling"></p>
@@ -65,5 +79,6 @@ const cmsLabels = await buildVescoCmsLabels(false);
     <VescoCookieConsent locale={locale} />
     <VescoBackToTop locale={locale} />
     <VescoScripts page="tarot" cmsLabels={cmsLabels} />
+    <VescoCardLoaderScript />
   </body>
 </html>

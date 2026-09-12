@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     media: Media;
     users: User;
+    'card-packs': CardPack;
+    cards: Card;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +80,8 @@ export interface Config {
   collectionsSelect: {
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    'card-packs': CardPacksSelect<false> | CardPacksSelect<true>;
+    cards: CardsSelect<false> | CardsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -208,6 +212,58 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "card-packs".
+ */
+export interface CardPack {
+  id: number;
+  name: string;
+  /**
+   * URL-safe identifier, e.g. "classic-tarot". Not localized.
+   */
+  slug: string;
+  coverImage?: (number | null) | Media;
+  description?: string | null;
+  /**
+   * Bump when cards change meaningfully — the frontend cache compares this to decide whether to refetch.
+   */
+  version?: number | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cards".
+ */
+export interface Card {
+  id: number;
+  /**
+   * The pack this card belongs to.
+   */
+  pack: number | CardPack;
+  name: string;
+  image: number | Media;
+  meaningUpright?: string | null;
+  meaningReversed?: string | null;
+  /**
+   * Display order within the pack.
+   */
+  order?: number | null;
+  /**
+   * e.g. major-arcana, cups, fire — free-form, not a fixed enum.
+   */
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -237,6 +293,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'card-packs';
+        value: number | CardPack;
+      } | null)
+    | ({
+        relationTo: 'cards';
+        value: number | Card;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -355,6 +419,41 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "card-packs_select".
+ */
+export interface CardPacksSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  coverImage?: T;
+  description?: T;
+  version?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cards_select".
+ */
+export interface CardsSelect<T extends boolean = true> {
+  pack?: T;
+  name?: T;
+  image?: T;
+  meaningUpright?: T;
+  meaningReversed?: T;
+  order?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

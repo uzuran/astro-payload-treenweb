@@ -7,6 +7,12 @@ export default defineConfig({
     testTimeout: 60_000,
     hookTimeout: 180_000,
     pool: 'forks',
+    // Integration test files each call getPayload() against the same
+    // throwaway database, which dev-schema-pushes the locale enum type on
+    // init — two files doing that concurrently race and one fails with
+    // "type already exists". Run files one at a time instead. Costs unit
+    // tests nothing noticeable; they don't share any external resource.
+    fileParallelism: false,
     // Integration tests hit a throwaway database (schema is `push`-synced).
     // Unit tests ignore these.
     env: {
