@@ -2,11 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getAnimationSettings,
-  getHero,
   getPageBySlug,
   getSiteSettings,
   getUiLabels,
-  listMasters,
   listSitemapEntries,
   mediaUrl,
   PayloadError,
@@ -110,39 +108,17 @@ describe('mediaUrl', () => {
   });
 });
 
-describe('globals + masters getters', () => {
-  it('parses the hero global and exposes a populated photo', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () =>
-        jsonResponse({
-          headingLine1: 'ТВОЯ ФОРМА.',
-          headingAccent: 'ТВОЙ ХАРАКТЕР.',
-          photo: { url: '/api/media/file/hero.jpg', alt: 'x' },
-        }),
-      ),
-    );
-    const hero = await getHero();
-    expect(hero.headingLine1).toBe('ТВОЯ ФОРМА.');
-    expect(mediaUrl(hero.photo)).toBe('http://localhost:3000/api/media/file/hero.jpg');
-  });
-
-  it('requests hero at depth=1 and omits locale by default', async () => {
+describe('globals getters', () => {
+  it('omits locale by default and threads an explicit one without fallback-locale', async () => {
     const fetchMock = vi.fn(async (_url: string | URL) => jsonResponse({}));
     vi.stubGlobal('fetch', fetchMock);
-    await getHero();
-    const requested = String(fetchMock.mock.calls[0]?.[0]);
-    expect(requested).toContain('/api/globals/hero?depth=1');
-    expect(requested).not.toContain('locale=');
-  });
+    await getAnimationSettings();
+    expect(String(fetchMock.mock.calls[0]?.[0])).not.toContain('locale=');
 
-  it('threads an explicit locale through without forcing fallback-locale', async () => {
-    const fetchMock = vi.fn(async (_url: string | URL) => jsonResponse({}));
     vi.stubGlobal('fetch', fetchMock);
     await getSiteSettings('cs');
-    const requested = String(fetchMock.mock.calls[0]?.[0]);
+    const requested = String(fetchMock.mock.calls[1]?.[0]);
     expect(requested).toContain('locale=cs');
-    // no fallback-locale => Payload config `fallback: true` fills untranslated fields
     expect(requested).not.toContain('fallback-locale');
   });
 
@@ -157,43 +133,6 @@ describe('globals + masters getters', () => {
     expect(requested).toContain('locale=en');
     expect(labels.header?.cta).toBe('Book');
     expect(labels.footer).toBeUndefined();
-  });
-
-  it('parses a fully-populated ui-labels payload', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () =>
-        jsonResponse({
-          header: { cta: 'X' },
-          footer: { findUsHeading: 'A', hoursHeading: 'B', disclaimer: 'C' },
-          booking: { submitLabel: 'S', resultTemplate: '{name} {service} {date}' },
-          notFound: { heading: 'H', missingPathTemplate: 'x {path} y' },
-        }),
-      ),
-    );
-    const labels = await getUiLabels();
-    expect(labels.notFound?.missingPathTemplate).toBe('x {path} y');
-  });
-
-  it('parses siteSettings.heroAnimation (valid, garbage and absent all accepted)', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => jsonResponse({ siteName: 'FORMA', heroAnimation: 'neon' })),
-    );
-    expect((await getSiteSettings()).heroAnimation).toBe('neon');
-
-    // the schema is intentionally loose — the whitelist lives in the component
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => jsonResponse({ siteName: 'FORMA', heroAnimation: 'disco' })),
-    );
-    expect((await getSiteSettings()).heroAnimation).toBe('disco');
-
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => jsonResponse({ siteName: 'FORMA' })),
-    );
-    expect((await getSiteSettings()).heroAnimation).toBeUndefined();
   });
 
   it('requests animation-settings at depth=0 and parses `duration` (present or absent)', async () => {
@@ -217,29 +156,12 @@ describe('globals + masters getters', () => {
       'fetch',
       vi.fn(async () =>
         jsonResponse({
-          siteName: 'FORMA',
+          siteName: 'Acme',
           seo: { titleTemplate: '{page} · {site}', defaultDescription: 'D' },
         }),
       ),
     );
     const s = await getSiteSettings('ru');
     expect(s.seo?.titleTemplate).toBe('{page} · {site}');
-  });
-
-  it('returns the masters docs array sorted by the API', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () =>
-        jsonResponse({
-          docs: [
-            { id: 1, name: 'Алекс', order: 1 },
-            { id: 2, name: 'Марк', order: 2 },
-          ],
-          totalDocs: 2,
-        }),
-      ),
-    );
-    const masters = await listMasters();
-    expect(masters.map((m) => m.name)).toEqual(['Алекс', 'Марк']);
   });
 });

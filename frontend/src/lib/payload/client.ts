@@ -139,10 +139,10 @@ export function mediaUrl(file: Media | null | undefined, size?: MediaSize): stri
   return new URL(relative, env.PUBLIC_CMS_URL).href;
 }
 
-// ─── Globals (FORMA landing sections) ──────────────────────────────────────
+// ─── Globals ───────────────────────────────────────────────────────────────
 //
-// Every field is optional: a half-filled global renders with per-section
-// fallbacks rather than throwing.
+// Every field is optional: a half-filled global renders with fallbacks rather
+// than throwing. Template-specific content globals are added by each template.
 
 async function getGlobal<T>(
   slug: string,
@@ -152,69 +152,6 @@ async function getGlobal<T>(
 ): Promise<T> {
   return apiFetch(`/api/globals/${slug}?depth=${depth}${localeQS(locale)}`, schema);
 }
-
-const sectionHeader = {
-  eyebrow: z.string().nullish(),
-  heading: z.string().nullish(),
-  headingAccent: z.string().nullish(),
-  note: z.string().nullish(),
-};
-
-export const heroSchema = z.object({
-  eyebrowLeft: z.string().nullish(),
-  eyebrowRight: z.string().nullish(),
-  headingLine1: z.string().nullish(),
-  headingAccent: z.string().nullish(),
-  introText: z.string().nullish(),
-  ctaLabel: z.string().nullish(),
-  ctaHref: z.string().nullish(),
-  sealText: z.string().nullish(),
-  sealCaption: z.string().nullish(),
-  photo: mediaSchema.nullish(),
-  photoCaptionLeft: z.string().nullish(),
-  photoCaptionRight: z.string().nullish(),
-  rounded: z.string().nullish(),
-  photoRounded: z.string().nullish(),
-});
-export type Hero = z.infer<typeof heroSchema>;
-
-export const serviceItemSchema = z.object({
-  name: z.string(),
-  badge: z.string().nullish(),
-  description: z.string().nullish(),
-  duration: z.string().nullish(),
-  priceAmount: z.number().nullish(),
-  priceCurrency: z.string().nullish(),
-  anchor: z.string().nullish(),
-  id: z.string().nullish(),
-});
-export const servicesSchema = z.object({
-  ...sectionHeader,
-  items: z.array(serviceItemSchema).nullish(),
-  rounded: z.string().nullish(),
-});
-export type Services = z.infer<typeof servicesSchema>;
-export type ServiceItem = z.infer<typeof serviceItemSchema>;
-
-export const aboutSchema = z.object({
-  ...sectionHeader,
-  leadParagraph: z.string().nullish(),
-  bodyParagraph: z.string().nullish(),
-  footnote: z.string().nullish(),
-  rounded: z.string().nullish(),
-});
-export type About = z.infer<typeof aboutSchema>;
-
-export const teamSchema = z.object({ ...sectionHeader, rounded: z.string().nullish() });
-export type Team = z.infer<typeof teamSchema>;
-
-export const bookingSchema = z.object({
-  ...sectionHeader,
-  intro: z.string().nullish(),
-  disclaimer: z.string().nullish(),
-  rounded: z.string().nullish(),
-});
-export type Booking = z.infer<typeof bookingSchema>;
 
 const navItemSchema = z.object({
   label: z.string(),
@@ -310,11 +247,6 @@ export const animationSettingsSchema = z.object({
 });
 export type AnimationSettings = z.infer<typeof animationSettingsSchema>;
 
-export const getHero = (locale?: string) => getGlobal('hero', heroSchema, 1, locale);
-export const getServices = (locale?: string) => getGlobal('services', servicesSchema, 0, locale);
-export const getAbout = (locale?: string) => getGlobal('about', aboutSchema, 0, locale);
-export const getTeam = (locale?: string) => getGlobal('team', teamSchema, 0, locale);
-export const getBooking = (locale?: string) => getGlobal('booking', bookingSchema, 0, locale);
 export const getNavigation = (locale?: string) =>
   getGlobal('navigation', navigationSchema, 0, locale);
 export const getSiteSettings = (locale?: string) =>
@@ -323,26 +255,106 @@ export const getUiLabels = (locale?: string) => getGlobal('ui-labels', uiLabelsS
 export const getAnimationSettings = (locale?: string) =>
   getGlobal('animation-settings', animationSettingsSchema, 0, locale);
 
-// ─── Masters (collection) ─────────────────────────────────────────────────
+// ─── Homepage sections (Hero / About / Services) ───────────────────────────
 
-export const masterSchema = z.object({
-  id: z.union([z.string(), z.number()]),
-  name: z.string(),
-  initials: z.string().nullish(),
-  specialty: z.string().nullish(),
-  bookingLabel: z.string().nullish(),
-  photo: mediaSchema.nullish(),
-  order: z.number().nullish(),
+export const heroSchema = z.object({
+  eyebrow: z.string().nullish(),
+  heading: z.string().nullish(),
+  intro: z.string().nullish(),
+  ctaLabel: z.string().nullish(),
+  ctaHref: z.string().nullish(),
+  image: mediaSchema.nullish(),
+  imageAlt: z.string().nullish(),
 });
-export type Master = z.infer<typeof masterSchema>;
+export type Hero = z.infer<typeof heroSchema>;
 
-export async function listMasters(locale?: string): Promise<Master[]> {
-  const data = await apiFetch(
-    `/api/masters?sort=order&limit=100&depth=1${localeQS(locale)}`,
-    listOf(masterSchema),
-  );
-  return data.docs;
-}
+export const aboutSchema = z.object({
+  eyebrow: z.string().nullish(),
+  heading: z.string().nullish(),
+  body: z.string().nullish(),
+  image: mediaSchema.nullish(),
+  imageAlt: z.string().nullish(),
+});
+export type About = z.infer<typeof aboutSchema>;
+
+export const serviceItemSchema = z.object({
+  name: z.string(),
+  description: z.string().nullish(),
+  icon: mediaSchema.nullish(),
+  id: z.string().nullish(),
+});
+export const servicesSchema = z.object({
+  eyebrow: z.string().nullish(),
+  heading: z.string().nullish(),
+  items: z.array(serviceItemSchema).nullish(),
+});
+export type Services = z.infer<typeof servicesSchema>;
+export type ServiceItem = z.infer<typeof serviceItemSchema>;
+
+export const getHero = (locale?: string) => getGlobal('hero', heroSchema, 1, locale);
+export const getAbout = (locale?: string) => getGlobal('about', aboutSchema, 1, locale);
+export const getServices = (locale?: string) => getGlobal('services', servicesSchema, 1, locale);
+
+// ─── Vesco homepage sections ────────────────────────────────────────────────
+// Each is a standalone global (own sidebar entry), fetched per-locale and
+// merged client-side over the bundled vesco-cs.js UI dictionary — see
+// lib/vescoContent.ts + public/vesco/js/cms-merge.js. Tarot/zodiac/numerology
+// stay bundled JS; these cover only the static marketing copy.
+
+export const vescoNavigationSchema = z.object({
+  estLabel: z.string().nullish(),
+  pullCardLabel: z.string().nullish(),
+  nav: z
+    .object({
+      home: z.string().nullish(),
+      tarot: z.string().nullish(),
+      horoscope: z.string().nullish(),
+      numerology: z.string().nullish(),
+      dashboard: z.string().nullish(),
+    })
+    .nullish(),
+});
+export type VescoNavigation = z.infer<typeof vescoNavigationSchema>;
+
+export const vescoHeroSchema = z.object({
+  eyebrow: z.string().nullish(),
+  headingLine1: z.string().nullish(),
+  headingLine2: z.string().nullish(),
+  headingAccent: z.string().nullish(),
+  lede: z.string().nullish(),
+  ctaBeginLabel: z.string().nullish(),
+  ctaNumbersLabel: z.string().nullish(),
+  seo: z.object({ title: z.string().nullish(), description: z.string().nullish() }).nullish(),
+});
+export type VescoHero = z.infer<typeof vescoHeroSchema>;
+
+export const vescoCountersSchema = z.object({
+  cardsLabel: z.string().nullish(),
+  signsLabel: z.string().nullish(),
+  numbersLabel: z.string().nullish(),
+});
+export type VescoCounters = z.infer<typeof vescoCountersSchema>;
+
+export const vescoCtaSchema = z.object({
+  headingLine1: z.string().nullish(),
+  headingLine2: z.string().nullish(),
+  body: z.string().nullish(),
+  dayStreakLabel: z.string().nullish(),
+});
+export type VescoCta = z.infer<typeof vescoCtaSchema>;
+
+export const vescoFooterSchema = z.object({ tagline: z.string().nullish() });
+export type VescoFooter = z.infer<typeof vescoFooterSchema>;
+
+export const getVescoNavigation = (locale?: string) =>
+  getGlobal('vesco-navigation', vescoNavigationSchema, 0, locale);
+export const getVescoHero = (locale?: string) =>
+  getGlobal('vesco-hero', vescoHeroSchema, 0, locale);
+export const getVescoCounters = (locale?: string) =>
+  getGlobal('vesco-counters', vescoCountersSchema, 0, locale);
+export const getVescoCta = (locale?: string) => getGlobal('vesco-cta', vescoCtaSchema, 0, locale);
+export const getVescoFooter = (locale?: string) =>
+  getGlobal('vesco-footer', vescoFooterSchema, 0, locale);
 
 const sitemapDoc = z.object({ slug: z.string(), updatedAt: z.string().nullish() });
 

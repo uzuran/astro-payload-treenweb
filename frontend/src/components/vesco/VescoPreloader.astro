@@ -1,0 +1,37 @@
+---
+import VescoLogo from './VescoLogo.astro';
+---
+
+{
+  /* transition:persist keeps this exact DOM node across every soft navigation
+     (matched by id) instead of swapping in each new page's fresh copy — once
+     hidden, it stays hidden. Its own <script> deliberately has no
+     data-astro-rerun: Astro skips re-running an identical <script> already
+     present from a prior navigation, so it only ever fires once per real
+     browser load (never again on a soft nav) — exactly the "show once"
+     behavior we want, for free. */
+}
+<div
+  id="vesco-preloader"
+  transition:persist
+  aria-hidden="true"
+  class="fixed inset-0 z-[100] grid place-items-center bg-parchment transition-opacity duration-500"
+>
+  <div class="v-anim-pulse">
+    <VescoLogo size={72} />
+  </div>
+</div>
+
+<script>
+  const el = document.getElementById('vesco-preloader');
+  if (el) {
+    const hide = () => {
+      el.style.opacity = '0';
+      window.setTimeout(() => {
+        el.hidden = true;
+      }, 500);
+    };
+    if (document.readyState === 'complete') hide();
+    else window.addEventListener('load', hide, { once: true });
+  }
+</script>

@@ -18,7 +18,7 @@ describe('resolveLabels', () => {
     const l = resolveLabels(null, 'en');
     expect(l.header.cta).toBe(UI_FALLBACK.en.header.cta);
     expect(l.notFound.backHomeLabel).toBe(UI_FALLBACK.en.notFound.backHomeLabel);
-    expect(l.booking.resultTemplate).toBe(UI_FALLBACK.en.booking.resultTemplate);
+    expect(l.footer.disclaimer).toBe(UI_FALLBACK.en.footer.disclaimer);
   });
 
   it('prefers a non-empty CMS value over the fallback', () => {
@@ -27,8 +27,8 @@ describe('resolveLabels', () => {
   });
 
   it('ignores a whitespace-only CMS value', () => {
-    const l = resolveLabels({ booking: { submitLabel: '   ' } }, 'cs');
-    expect(l.booking.submitLabel).toBe(UI_FALLBACK.cs.booking.submitLabel);
+    const l = resolveLabels({ footer: { disclaimer: '   ' } }, 'cs');
+    expect(l.footer.disclaimer).toBe(UI_FALLBACK.cs.footer.disclaimer);
   });
 
   it('falls back per field, not per group', () => {
@@ -45,7 +45,6 @@ describe('resolveLabels', () => {
 
   it('exposes the full label surface', () => {
     expect(Object.keys(resolveLabels(null, 'ru')).sort()).toEqual([
-      'booking',
       'consent',
       'footer',
       'header',

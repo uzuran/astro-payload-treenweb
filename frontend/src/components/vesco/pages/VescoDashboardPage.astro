@@ -1,0 +1,93 @@
+---
+import { ClientRouter, fade } from 'astro:transitions';
+import VescoBackToTop from '../VescoBackToTop.astro';
+import VescoCookieConsent from '../VescoCookieConsent.astro';
+import VescoFooter from '../VescoFooter.astro';
+import VescoPreloader from '../VescoPreloader.astro';
+import VescoHeader, { type VescoLocale, vescoPath } from '../VescoHeader.astro';
+import VescoScripts from '../VescoScripts.astro';
+import { buildVescoCmsLabels } from '../../../lib/vescoContent';
+import '../../../styles/vesco.css';
+
+interface Props {
+  locale: VescoLocale;
+}
+const { locale } = Astro.props;
+const tarotHref = vescoPath(locale, 'tarot');
+
+const cmsLabels = await buildVescoCmsLabels(false);
+---
+
+<!doctype html>
+<html lang={locale} transition:animate={fade({ duration: '0.2s' })}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard · Vesco</title>
+    <meta name="description" content="Vesco — a quieter daily practice: one tarot card, one forecast, one number." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <ClientRouter />
+  </head>
+  <body class="min-h-screen">
+    <VescoPreloader />
+    <VescoHeader active="dashboard" locale={locale} />
+    <main class="mx-auto max-w-shell px-5 pb-28 pt-16 sm:px-8 lg:px-10">
+      <div class="mb-11 grid items-end gap-7 border-b border-[--rule] pb-7 sm:grid-cols-[minmax(0,1fr)_auto]">
+        <div>
+          <p class="v-eyebrow mb-4" data-i18n="dashEyebrow"></p>
+          <h1 class="m-0 font-display text-[clamp(36px,4.4vw,62px)] font-normal" data-i18n="dashTitle"></h1>
+        </div>
+        <a href={tarotHref} class="v-btn v-btn--solid justify-self-start sm:justify-self-end" data-i18n="todaysPull"></a>
+      </div>
+
+      <div class="v-stat-grid mb-9" data-stats></div>
+
+      <div class="grid gap-9 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+        <div>
+          <div class="mb-1.5 flex items-baseline justify-between gap-4 border-b border-[--rule] pb-3.5">
+            <h2 class="m-0 font-display text-3xl font-normal" data-i18n="savedReadings"></h2>
+            <p class="m-0 font-mono text-[11px] text-muted" data-entries></p>
+          </div>
+          <ul class="m-0 list-none p-0" data-log></ul>
+
+          <div class="mt-11">
+            <div class="mb-6 flex items-baseline justify-between gap-4 border-b border-[--rule] pb-3.5">
+              <h2 class="m-0 font-display text-3xl font-normal" data-i18n="favCards"></h2>
+              <a href={tarotHref} class="flex items-center text-[11px] uppercase tracking-label text-clay hover:text-ink">
+                <span data-i18n="browseDeck"></span>
+                <svg
+                  viewBox="0 0 16 16"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="ml-2"
+                  aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4"></path></svg
+                >
+              </a>
+            </div>
+            <div class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(120px,1fr))]" data-favs></div>
+          </div>
+        </div>
+
+        <div>
+          <section class="v-panel p-8" data-profile></section>
+          <section class="v-panel v-panel--ink mt-6 p-8">
+            <p class="v-label mb-5" data-i18n="checkins"></p>
+            <div class="mb-6 flex gap-2" data-week></div>
+            <p class="mb-5 font-display text-xl leading-snug" data-i18n="checkinNote"></p>
+            <a href={tarotHref} class="v-btn v-btn--solid w-full" data-i18n="checkInToday"></a>
+          </section>
+        </div>
+      </div>
+    </main>
+    <VescoFooter />
+    <VescoCookieConsent locale={locale} />
+    <VescoBackToTop locale={locale} />
+    <VescoScripts page="dashboard" cmsLabels={cmsLabels} />
+  </body>
+</html>

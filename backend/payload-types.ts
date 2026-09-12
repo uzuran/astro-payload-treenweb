@@ -67,13 +67,10 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    pages: Page;
-    posts: Post;
     media: Media;
-    masters: Master;
-    bookings: Booking;
-    redirects: Redirect;
     users: User;
+    'card-packs': CardPack;
+    cards: Card;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -81,13 +78,10 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    pages: PagesSelect<false> | PagesSelect<true>;
-    posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
-    masters: MastersSelect<false> | MastersSelect<true>;
-    bookings: BookingsSelect<false> | BookingsSelect<true>;
-    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    'card-packs': CardPacksSelect<false> | CardPacksSelect<true>;
+    cards: CardsSelect<false> | CardsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -99,25 +93,19 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('cs' | 'en' | 'ru') | ('cs' | 'en' | 'ru')[];
   globals: {
     'site-settings': SiteSetting;
-    navigation: Navigation;
-    'ui-labels': UiLabel;
-    'animation-settings': AnimationSetting;
-    hero: Hero;
-    services: Service;
-    about: About;
-    team: Team;
-    booking: Booking1;
+    'vesco-navigation': VescoNavigation;
+    'vesco-hero': VescoHero;
+    'vesco-counters': VescoCounter;
+    'vesco-cta': VescoCta;
+    'vesco-footer': VescoFooter;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    navigation: NavigationSelect<false> | NavigationSelect<true>;
-    'ui-labels': UiLabelsSelect<false> | UiLabelsSelect<true>;
-    'animation-settings': AnimationSettingsSelect<false> | AnimationSettingsSelect<true>;
-    hero: HeroSelect<false> | HeroSelect<true>;
-    services: ServicesSelect<false> | ServicesSelect<true>;
-    about: AboutSelect<false> | AboutSelect<true>;
-    team: TeamSelect<false> | TeamSelect<true>;
-    booking: BookingSelect<false> | BookingSelect<true>;
+    'vesco-navigation': VescoNavigationSelect<false> | VescoNavigationSelect<true>;
+    'vesco-hero': VescoHeroSelect<false> | VescoHeroSelect<true>;
+    'vesco-counters': VescoCountersSelect<false> | VescoCountersSelect<true>;
+    'vesco-cta': VescoCtaSelect<false> | VescoCtaSelect<true>;
+    'vesco-footer': VescoFooterSelect<false> | VescoFooterSelect<true>;
   };
   locale: 'cs' | 'en' | 'ru';
   widgets: {
@@ -146,52 +134,6 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pages".
- */
-export interface Page {
-  id: number;
-  title: string;
-  /**
-   * URL path segment. Generated from the title if left blank.
-   */
-  slug: string;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  seo?: {
-    /**
-     * Overrides <title> / OG title. Falls back to the document title.
-     */
-    title?: string | null;
-    /**
-     * Meta description / OG description (~155 chars).
-     */
-    description?: string | null;
-    /**
-     * OG / social share image. Shared across locales.
-     */
-    image?: (number | null) | Media;
-    noindex?: boolean | null;
-  };
-  publishedAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -244,60 +186,6 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
- */
-export interface Post {
-  id: number;
-  title: string;
-  /**
-   * URL path segment. Generated from the title if left blank.
-   */
-  slug: string;
-  excerpt?: string | null;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  author?: (number | null) | User;
-  tags?:
-    | {
-        tag: string;
-        id?: string | null;
-      }[]
-    | null;
-  seo?: {
-    /**
-     * Overrides <title> / OG title. Falls back to the document title.
-     */
-    title?: string | null;
-    /**
-     * Meta description / OG description (~155 chars).
-     */
-    description?: string | null;
-    /**
-     * OG / social share image. Shared across locales.
-     */
-    image?: (number | null) | Media;
-    noindex?: boolean | null;
-  };
-  publishedAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -324,64 +212,55 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "masters".
+ * via the `definition` "card-packs".
  */
-export interface Master {
+export interface CardPack {
   id: number;
   name: string;
   /**
-   * e.g. "АЛ".
+   * URL-safe identifier, e.g. "classic-tarot". Not localized.
    */
-  initials: string;
-  specialty?: string | null;
+  slug: string;
+  coverImage?: (number | null) | Media;
+  description?: string | null;
   /**
-   * Link text, e.g. "Записаться к Алексу ↗".
+   * Bump when cards change meaningfully — the frontend cache compares this to decide whether to refetch.
    */
-  bookingLabel?: string | null;
-  photo?: (number | null) | Media;
+  version?: number | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cards".
+ */
+export interface Card {
+  id: number;
   /**
-   * Ascending. Ties break by creation order.
+   * The pack this card belongs to.
+   */
+  pack: number | CardPack;
+  name: string;
+  image: number | Media;
+  meaningUpright?: string | null;
+  meaningReversed?: string | null;
+  /**
+   * Display order within the pack.
    */
   order?: number | null;
+  /**
+   * e.g. major-arcana, cups, fire — free-form, not a fixed enum.
+   */
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "bookings".
- */
-export interface Booking {
-  id: number;
-  name: string;
-  phone: string;
-  service: string;
-  master?: string | null;
-  date: string;
-  status?: ('new' | 'confirmed' | 'cancelled') | null;
-  source?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "redirects".
- */
-export interface Redirect {
-  id: number;
-  /**
-   * Path to match, e.g. /old-page
-   */
-  from: string;
-  /**
-   * Destination path or absolute URL
-   */
-  to: string;
-  /**
-   * On = 308 permanent. Off = 307 temporary.
-   */
-  permanent?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -408,32 +287,20 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'pages';
-        value: number | Page;
-      } | null)
-    | ({
-        relationTo: 'posts';
-        value: number | Post;
-      } | null)
-    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
     | ({
-        relationTo: 'masters';
-        value: number | Master;
-      } | null)
-    | ({
-        relationTo: 'bookings';
-        value: number | Booking;
-      } | null)
-    | ({
-        relationTo: 'redirects';
-        value: number | Redirect;
-      } | null)
-    | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'card-packs';
+        value: number | CardPack;
+      } | null)
+    | ({
+        relationTo: 'cards';
+        value: number | Card;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -476,56 +343,6 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pages_select".
- */
-export interface PagesSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  content?: T;
-  seo?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
-        noindex?: T;
-      };
-  publishedAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts_select".
- */
-export interface PostsSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  excerpt?: T;
-  content?: T;
-  author?: T;
-  tags?:
-    | T
-    | {
-        tag?: T;
-        id?: T;
-      };
-  seo?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
-        noindex?: T;
-      };
-  publishedAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -582,46 +399,6 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "masters_select".
- */
-export interface MastersSelect<T extends boolean = true> {
-  name?: T;
-  initials?: T;
-  specialty?: T;
-  bookingLabel?: T;
-  photo?: T;
-  order?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "bookings_select".
- */
-export interface BookingsSelect<T extends boolean = true> {
-  name?: T;
-  phone?: T;
-  service?: T;
-  master?: T;
-  date?: T;
-  status?: T;
-  source?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "redirects_select".
- */
-export interface RedirectsSelect<T extends boolean = true> {
-  from?: T;
-  to?: T;
-  permanent?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -642,6 +419,41 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "card-packs_select".
+ */
+export interface CardPacksSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  coverImage?: T;
+  description?: T;
+  version?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cards_select".
+ */
+export interface CardsSelect<T extends boolean = true> {
+  pack?: T;
+  name?: T;
+  image?: T;
+  meaningUpright?: T;
+  meaningReversed?: T;
+  order?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -758,314 +570,95 @@ export interface SiteSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation".
+ * via the `definition` "vesco-navigation".
  */
-export interface Navigation {
+export interface VescoNavigation {
   id: number;
   /**
-   * Header navigation.
+   * "est. mmxxvi" tagline next to the logo.
    */
-  main?:
-    | {
-        label: string;
-        /**
-         * Path (/about) or on-page anchor (#booking). Shared across locales.
-         */
-        href: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Secondary link row in the site footer. Leave empty to hide it.
-   */
-  footer?:
-    | {
-        label: string;
-        /**
-         * Path (/about) or on-page anchor (#booking). Shared across locales.
-         */
-        href: string;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * Site-wide interface wording. A blank field falls back to the built-in translation for that locale.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ui-labels".
- */
-export interface UiLabel {
-  id: number;
-  header?: {
-    /**
-     * Header “Book” button.
-     */
-    cta?: string | null;
-  };
-  footer?: {
-    findUsHeading?: string | null;
-    hoursHeading?: string | null;
-    disclaimer?: string | null;
-  };
-  booking?: {
-    nameLabel?: string | null;
-    namePlaceholder?: string | null;
-    phoneLabel?: string | null;
-    phonePlaceholder?: string | null;
-    serviceLabel?: string | null;
-    masterLabel?: string | null;
-    anyMasterOption?: string | null;
-    dateLabel?: string | null;
-    submitLabel?: string | null;
-    /**
-     * Confirmation line. Tokens: {name} {service} {date}.
-     */
-    resultTemplate?: string | null;
-  };
-  consent?: {
-    /**
-     * Banner text shown until the visitor chooses.
-     */
-    body?: string | null;
-    /**
-     * “Essential only” button.
-     */
-    essentialButton?: string | null;
-    /**
-     * “Allow analytics” button.
-     */
-    analyticsButton?: string | null;
-  };
-  notFound?: {
-    /**
-     * <title> for a missing content page.
-     */
-    pageMetaTitle?: string | null;
-    /**
-     * <title> for a missing post.
-     */
-    postMetaTitle?: string | null;
-    /**
-     * On-page heading for a missing content page.
-     */
-    heading?: string | null;
-    /**
-     * Heading for the standalone /404 route.
-     */
-    heading404?: string | null;
-    /**
-     * Body text on the standalone /404 route.
-     */
-    body?: string | null;
-    /**
-     * Missing-page line. Token: {path} (rendered in <code>).
-     */
-    missingPathTemplate?: string | null;
-    /**
-     * On-page heading for a missing post.
-     */
-    postHeading?: string | null;
-    /**
-     * “Back to home” link text.
-     */
-    backHomeLabel?: string | null;
+  estLabel?: string | null;
+  pullCardLabel?: string | null;
+  nav?: {
+    home?: string | null;
+    tarot?: string | null;
+    horoscope?: string | null;
+    numerology?: string | null;
+    dashboard?: string | null;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "animation-settings".
+ * via the `definition` "vesco-hero".
  */
-export interface AnimationSetting {
+export interface VescoHero {
   id: number;
-  /**
-   * Hero entrance length in seconds for Fade / Slide up / Zoom. Neon keeps its own timing. 0.2–5s, default 1.2.
-   */
-  duration?: number | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "hero".
- */
-export interface Hero {
-  id: number;
-  eyebrowLeft?: string | null;
-  eyebrowRight?: string | null;
+  eyebrow?: string | null;
   headingLine1?: string | null;
-  /**
-   * Second line, rendered in the accent colour.
-   */
+  headingLine2?: string | null;
   headingAccent?: string | null;
-  introText?: string | null;
-  ctaLabel?: string | null;
-  ctaHref?: string | null;
-  sealText?: string | null;
-  sealCaption?: string | null;
-  photo?: (number | null) | Media;
-  photoCaptionLeft?: string | null;
-  photoCaptionRight?: string | null;
   /**
-   * Corner rounding for this section’s buttons, cards and form fields.
+   * The intro / description paragraph under the heading.
    */
-  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
-  /**
-   * Corner rounding for the hero photo only.
-   */
-  photoRounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  lede?: string | null;
+  ctaBeginLabel?: string | null;
+  ctaNumbersLabel?: string | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "services".
+ * via the `definition` "vesco-counters".
  */
-export interface Service {
+export interface VescoCounter {
   id: number;
   /**
-   * e.g. "01 / УСЛУГИ".
+   * Caption under "78".
    */
-  eyebrow?: string | null;
+  cardsLabel?: string | null;
   /**
-   * Headline. Line breaks are preserved on the site.
+   * Caption under "12".
    */
-  heading?: string | null;
+  signsLabel?: string | null;
   /**
-   * Optional trailing fragment rendered in the accent colour.
+   * Caption under "6".
    */
-  headingAccent?: string | null;
-  /**
-   * Optional muted text beside the headline.
-   */
-  note?: string | null;
-  /**
-   * Rendered in this order.
-   */
-  items?:
-    | {
-        name: string;
-        /**
-         * Optional pill, e.g. "КОМБО".
-         */
-        badge?: string | null;
-        description?: string | null;
-        /**
-         * e.g. "60 мин".
-         */
-        duration?: string | null;
-        priceAmount?: number | null;
-        priceCurrency?: string | null;
-        /**
-         * Optional #id link target.
-         */
-        anchor?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Corner rounding for this section’s buttons, cards and form fields.
-   */
-  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  numbersLabel?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "about".
+ * via the `definition` "vesco-cta".
  */
-export interface About {
+export interface VescoCta {
   id: number;
+  headingLine1?: string | null;
+  headingLine2?: string | null;
+  body?: string | null;
   /**
-   * e.g. "01 / УСЛУГИ".
+   * "day streak" caption.
    */
-  eyebrow?: string | null;
-  /**
-   * Headline. Line breaks are preserved on the site.
-   */
-  heading?: string | null;
-  /**
-   * Optional trailing fragment rendered in the accent colour.
-   */
-  headingAccent?: string | null;
-  /**
-   * Optional muted text beside the headline.
-   */
-  note?: string | null;
-  leadParagraph?: string | null;
-  bodyParagraph?: string | null;
-  footnote?: string | null;
-  /**
-   * Corner rounding for this section’s buttons, cards and form fields.
-   */
-  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  dayStreakLabel?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "team".
+ * via the `definition` "vesco-footer".
  */
-export interface Team {
+export interface VescoFooter {
   id: number;
   /**
-   * e.g. "01 / УСЛУГИ".
+   * "Variant I · Mystic Minimalism".
    */
-  eyebrow?: string | null;
-  /**
-   * Headline. Line breaks are preserved on the site.
-   */
-  heading?: string | null;
-  /**
-   * Optional trailing fragment rendered in the accent colour.
-   */
-  headingAccent?: string | null;
-  /**
-   * Optional muted text beside the headline.
-   */
-  note?: string | null;
-  /**
-   * Corner rounding for this section’s buttons, cards and form fields.
-   */
-  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "booking".
- */
-export interface Booking1 {
-  id: number;
-  /**
-   * e.g. "01 / УСЛУГИ".
-   */
-  eyebrow?: string | null;
-  /**
-   * Headline. Line breaks are preserved on the site.
-   */
-  heading?: string | null;
-  /**
-   * Optional trailing fragment rendered in the accent colour.
-   */
-  headingAccent?: string | null;
-  /**
-   * Optional muted text beside the headline.
-   */
-  note?: string | null;
-  intro?: string | null;
-  /**
-   * Notice shown under the demo form.
-   */
-  disclaimer?: string | null;
-  /**
-   * Corner rounding for this section’s buttons, cards and form fields.
-   */
-  rounded?: ('none' | 'sm' | 'md' | 'lg' | 'full') | null;
+  tagline?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1124,22 +717,19 @@ export interface SiteSettingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation_select".
+ * via the `definition` "vesco-navigation_select".
  */
-export interface NavigationSelect<T extends boolean = true> {
-  main?:
+export interface VescoNavigationSelect<T extends boolean = true> {
+  estLabel?: T;
+  pullCardLabel?: T;
+  nav?:
     | T
     | {
-        label?: T;
-        href?: T;
-        id?: T;
-      };
-  footer?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        id?: T;
+        home?: T;
+        tarot?: T;
+        horoscope?: T;
+        numerology?: T;
+        dashboard?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1147,160 +737,57 @@ export interface NavigationSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ui-labels_select".
+ * via the `definition` "vesco-hero_select".
  */
-export interface UiLabelsSelect<T extends boolean = true> {
-  header?:
-    | T
-    | {
-        cta?: T;
-      };
-  footer?:
-    | T
-    | {
-        findUsHeading?: T;
-        hoursHeading?: T;
-        disclaimer?: T;
-      };
-  booking?:
-    | T
-    | {
-        nameLabel?: T;
-        namePlaceholder?: T;
-        phoneLabel?: T;
-        phonePlaceholder?: T;
-        serviceLabel?: T;
-        masterLabel?: T;
-        anyMasterOption?: T;
-        dateLabel?: T;
-        submitLabel?: T;
-        resultTemplate?: T;
-      };
-  consent?:
-    | T
-    | {
-        body?: T;
-        essentialButton?: T;
-        analyticsButton?: T;
-      };
-  notFound?:
-    | T
-    | {
-        pageMetaTitle?: T;
-        postMetaTitle?: T;
-        heading?: T;
-        heading404?: T;
-        body?: T;
-        missingPathTemplate?: T;
-        postHeading?: T;
-        backHomeLabel?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "animation-settings_select".
- */
-export interface AnimationSettingsSelect<T extends boolean = true> {
-  duration?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "hero_select".
- */
-export interface HeroSelect<T extends boolean = true> {
-  eyebrowLeft?: T;
-  eyebrowRight?: T;
+export interface VescoHeroSelect<T extends boolean = true> {
+  eyebrow?: T;
   headingLine1?: T;
+  headingLine2?: T;
   headingAccent?: T;
-  introText?: T;
-  ctaLabel?: T;
-  ctaHref?: T;
-  sealText?: T;
-  sealCaption?: T;
-  photo?: T;
-  photoCaptionLeft?: T;
-  photoCaptionRight?: T;
-  rounded?: T;
-  photoRounded?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "services_select".
- */
-export interface ServicesSelect<T extends boolean = true> {
-  eyebrow?: T;
-  heading?: T;
-  headingAccent?: T;
-  note?: T;
-  items?:
+  lede?: T;
+  ctaBeginLabel?: T;
+  ctaNumbersLabel?: T;
+  seo?:
     | T
     | {
-        name?: T;
-        badge?: T;
+        title?: T;
         description?: T;
-        duration?: T;
-        priceAmount?: T;
-        priceCurrency?: T;
-        anchor?: T;
-        id?: T;
       };
-  rounded?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "about_select".
+ * via the `definition` "vesco-counters_select".
  */
-export interface AboutSelect<T extends boolean = true> {
-  eyebrow?: T;
-  heading?: T;
-  headingAccent?: T;
-  note?: T;
-  leadParagraph?: T;
-  bodyParagraph?: T;
-  footnote?: T;
-  rounded?: T;
+export interface VescoCountersSelect<T extends boolean = true> {
+  cardsLabel?: T;
+  signsLabel?: T;
+  numbersLabel?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "team_select".
+ * via the `definition` "vesco-cta_select".
  */
-export interface TeamSelect<T extends boolean = true> {
-  eyebrow?: T;
-  heading?: T;
-  headingAccent?: T;
-  note?: T;
-  rounded?: T;
+export interface VescoCtaSelect<T extends boolean = true> {
+  headingLine1?: T;
+  headingLine2?: T;
+  body?: T;
+  dayStreakLabel?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "booking_select".
+ * via the `definition` "vesco-footer_select".
  */
-export interface BookingSelect<T extends boolean = true> {
-  eyebrow?: T;
-  heading?: T;
-  headingAccent?: T;
-  note?: T;
-  intro?: T;
-  disclaimer?: T;
-  rounded?: T;
+export interface VescoFooterSelect<T extends boolean = true> {
+  tagline?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

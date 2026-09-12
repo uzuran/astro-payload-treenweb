@@ -1,12 +1,11 @@
 import type { Access } from 'payload';
 
 /**
- * Logged-in users see everything; everyone else sees only published documents.
- * Returned as a query constraint so it composes with the caller's `where`.
+ * Public read of published documents; a logged-in user (the admin, previewing
+ * drafts) sees everything. Pair with `versions: { drafts: true }` so `_status`
+ * exists on the collection.
  */
 export const publishedOrAuthenticated: Access = ({ req }) => {
   if (req.user) return true;
-  return {
-    _status: { equals: 'published' },
-  };
+  return { _status: { equals: 'published' } };
 };

@@ -1,0 +1,487 @@
+/* Vesco — Mystic Minimalism
+ * Ported from frontend/template/ (static HTML + Tailwind CDN + vesco.css) into
+ * Tailwind v4's CSS-first config. Imported only by src/pages/vesco/*.astro —
+ * scoped to that section, does not touch the main site's design system.
+ */
+/* Both @import statements must stay first, in this order — Tailwind v4 expands
+ * `@import 'tailwindcss'` inline into real CSS rules, so anything textually
+ * after it (even another @import) trips "@import must precede all statements". */
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Karla:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+@import 'tailwindcss';
+
+/* Tailwind utility theme (drives text-clay, bg-parchment, font-display, tracking-label, …) */
+@theme {
+  --color-parchment: #f4ede0;
+  --color-card: #fbf7ef;
+  --color-ink: #221a13;
+  --color-ink70: #574835;
+  --color-ink50: #6b5c4a;
+  --color-muted: #8a7962;
+  --color-rule: #dfd2bb;
+  --color-rule2: #e8dec9;
+  --color-edge: #c9b896;
+  --color-frame: #c0af8e;
+  --color-clay: #a9502f;
+  --color-brass: #b8863b;
+  --color-slate: #4a5d6b;
+  --color-sand: #f1e7d3;
+
+  --font-display: 'Marcellus', serif;
+  --font-sans: 'Karla', system-ui, sans-serif;
+  --font-mono: '"IBM Plex Mono"', monospace;
+
+  --tracking-label: 0.16em;
+  --tracking-wide2: 0.18em;
+  --tracking-eyebrow: 0.22em;
+  --tracking-logo: 0.3em;
+}
+
+/* A few custom utilities used verbatim in the markup (max-w-shell, rounded-panel, …) — plain
+ * CSS rather than more @theme namespace guessing, since this can't be build-verified here. */
+.max-w-shell {
+  max-width: 1200px;
+}
+.rounded-panel {
+  border-radius: 18px;
+}
+.rounded-tile {
+  border-radius: 16px;
+}
+.rounded-art {
+  border-radius: 14px;
+}
+.aspect-card {
+  aspect-ratio: 69 / 100;
+}
+
+/* Design-token custom properties — referenced directly in the markup via arbitrary values
+ * like `border-[--rule]`, and by the component classes below. */
+:root {
+  --parchment: #f4ede0;
+  --card: #fbf7ef;
+  --ink: #221a13;
+  --ink-70: #574835;
+  --ink-50: #6b5c4a;
+  --muted: #8a7962;
+  --rule: #dfd2bb;
+  --rule-2: #e8dec9;
+  --edge: #c9b896;
+  --frame: #c0af8e;
+  --clay: #a9502f;
+  --brass: #b8863b;
+  --slate: #4a5d6b;
+  --sand: #f1e7d3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /* Safety net for the decorative absolutely-positioned hero accents (rings,
+     drifting shapes) — fixed pixel sizes that can peek past a narrow phone
+     viewport. They're purely visual (pointer-events: none), so clipping the
+     sliver that overflows costs nothing and avoids an unwanted horizontal
+     scrollbar. */
+  overflow-x: hidden;
+  color: var(--ink);
+  background:
+    radial-gradient(1100px 520px at 78% -8%, rgba(184, 134, 59, 0.16), transparent 62%),
+    radial-gradient(760px 460px at 6% 22%, rgba(74, 93, 107, 0.09), transparent 60%),
+    var(--parchment);
+  font-family: 'Karla', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+}
+::selection {
+  background: #e3d3b4;
+}
+a {
+  color: var(--clay);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--ink);
+}
+
+/* ── Components ───────────────────────────────────────────── */
+
+.v-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.v-label {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.v-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 30px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.v-btn--solid {
+  background: var(--ink);
+  color: var(--parchment);
+}
+.v-btn--solid:hover {
+  background: var(--clay);
+  color: var(--parchment);
+}
+.v-btn--ghost {
+  border-color: var(--edge);
+  color: var(--ink);
+  background: transparent;
+}
+.v-btn--ghost:hover {
+  border-color: var(--ink);
+  background: #ede3d1;
+}
+.v-btn--outline {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: transparent;
+}
+.v-btn--outline:hover {
+  background: var(--ink);
+  color: var(--parchment);
+}
+.v-btn--sm {
+  padding: 13px 22px;
+  font-size: 11px;
+}
+
+.v-chip {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-70);
+  white-space: nowrap;
+}
+
+.v-toggle {
+  display: inline-flex;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  overflow: hidden;
+}
+/* Used both by JS-generated tab buttons (horoscope daily/weekly/monthly) and
+   the header's EN/CS locale links — same look either way. */
+.v-toggle > :is(button, a) {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-70);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 12px 22px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.v-toggle > :is(button, a)[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--parchment);
+}
+
+.v-panel {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+}
+.v-panel--plain {
+  background: transparent;
+}
+.v-panel--ink {
+  border-color: var(--ink);
+  background: transparent;
+}
+
+.v-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.v-stat-grid > * {
+  background: var(--card);
+  padding: 30px 28px;
+}
+
+.v-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule-2);
+  font-size: 13px;
+}
+.v-row dt {
+  color: var(--ink-50);
+}
+.v-row dd {
+  margin: 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.v-input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: var(--parchment);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+.v-input:focus {
+  border-color: var(--clay);
+}
+.v-input--mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+}
+
+.v-card-art {
+  width: 100%;
+  aspect-ratio: 69 / 100;
+  object-fit: cover;
+  border: 1px solid var(--frame);
+  border-radius: 14px;
+}
+
+.v-deck-tile {
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
+.v-deck-tile:hover {
+  transform: translateY(-6px);
+}
+
+.v-sign-tile {
+  cursor: pointer;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  padding: 26px;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.v-sign-tile:hover {
+  border-color: var(--ink);
+  transform: translateY(-3px);
+}
+.v-sign-tile[aria-pressed='true'] {
+  background: var(--sand);
+  border-color: var(--ink);
+}
+
+.v-bar {
+  height: 6px;
+  background: var(--rule-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.v-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--clay);
+  border-radius: 999px;
+}
+
+.v-nav-link {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-70);
+  padding-bottom: 3px;
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+}
+.v-nav-link:hover {
+  color: var(--ink);
+}
+.v-nav-link[aria-current='page'] {
+  color: var(--ink);
+  border-bottom-color: var(--clay);
+}
+
+/* Shuffle animation stack */
+.v-shuffle {
+  position: relative;
+  width: 210px;
+  height: 306px;
+}
+.v-shuffle > div {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #2a2019;
+  border-radius: 14px;
+}
+.v-shuffle > div:nth-child(1) {
+  background: repeating-linear-gradient(45deg, #7a2e22 0 12px, #8e3a2a 12px 24px);
+  animation: v-shuffle-l 0.62s ease-in-out infinite;
+}
+.v-shuffle > div:nth-child(2) {
+  background: repeating-linear-gradient(-45deg, #a9502f 0 12px, #b8603c 12px 24px);
+  animation: v-shuffle-r 0.62s ease-in-out 0.07s infinite;
+}
+.v-shuffle > div:nth-child(3) {
+  background: conic-gradient(from 45deg, #b8863b, #7a2e22, #4a5d6b, #b8863b);
+  animation: v-shuffle-u 0.62s ease-in-out 0.14s infinite;
+}
+.v-shuffle > div:nth-child(4) {
+  background: linear-gradient(150deg, #241a14, #4a3524);
+  display: grid;
+  place-items: center;
+  animation: v-shuffle-l 0.62s ease-in-out 0.21s infinite;
+}
+.v-shuffle > div:nth-child(4)::after {
+  content: '';
+  width: 84px;
+  height: 84px;
+  border: 1px solid rgba(184, 134, 59, 0.75);
+  transform: rotate(45deg);
+}
+
+@keyframes v-shuffle-l {
+  0%,
+  100% {
+    transform: none;
+  }
+  40% {
+    transform: translateX(-84px) rotate(-11deg);
+  }
+}
+@keyframes v-shuffle-r {
+  0%,
+  100% {
+    transform: none;
+  }
+  40% {
+    transform: translateX(84px) rotate(9deg);
+  }
+}
+@keyframes v-shuffle-u {
+  0%,
+  100% {
+    transform: none;
+  }
+  40% {
+    transform: translateY(-40px) rotate(3deg);
+  }
+}
+@keyframes v-fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes v-flip {
+  from {
+    transform: rotateY(96deg) scale(0.94);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes v-twinkle {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+@keyframes v-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-14px);
+  }
+}
+@keyframes v-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+.v-anim-fade {
+  animation: v-fade 0.6s ease both;
+}
+.v-anim-flip {
+  animation: v-flip 0.6s ease both;
+}
+.v-anim-twinkle {
+  animation: v-twinkle 4s ease-in-out infinite;
+}
+.v-anim-drift {
+  animation: v-drift 6s ease-in-out infinite alternate;
+}
+.v-anim-pulse {
+  animation: v-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -6,25 +6,19 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { buildConfig } from 'payload';
 import sharp from 'sharp';
 
-import { Bookings } from './collections/Bookings';
-import { Masters } from './collections/Masters';
+import { CardPacks } from './collections/CardPacks';
+import { Cards } from './collections/Cards';
 import { Media } from './collections/Media';
-import { Pages } from './collections/Pages';
-import { Posts } from './collections/Posts';
-import { Redirects } from './collections/Redirects';
 import { Users } from './collections/Users';
 import { emailAdapter } from './email';
 import { env } from './env';
 import { reportError } from './lib/errorReporter';
-import { About } from './globals/About';
-import { AnimationSettings } from './globals/AnimationSettings';
-import { Booking } from './globals/Booking';
-import { Hero } from './globals/Hero';
-import { Navigation } from './globals/Navigation';
-import { Services } from './globals/Services';
 import { SiteSettings } from './globals/SiteSettings';
-import { Team } from './globals/Team';
-import { UiLabels } from './globals/UiLabels';
+import { VescoCounters } from './globals/VescoCounters';
+import { VescoCta } from './globals/VescoCta';
+import { VescoFooter } from './globals/VescoFooter';
+import { VescoHero } from './globals/VescoHero';
+import { VescoNavigation } from './globals/VescoNavigation';
 import { lexicalFeatures } from './lexical/allowlist';
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES } from './locales';
 
@@ -47,18 +41,14 @@ export default buildConfig({
     defaultLocale: DEFAULT_LOCALE,
     fallback: true,
   },
-  collections: [Pages, Posts, Media, Masters, Bookings, Redirects, Users],
-  globals: [
-    SiteSettings,
-    Navigation,
-    UiLabels,
-    AnimationSettings,
-    Hero,
-    Services,
-    About,
-    Team,
-    Booking,
-  ],
+  // Fresh-install baseline (auth + uploads + site config) plus the Vesco
+  // template's marketing sections — each a standalone global so it shows
+  // individually in the sidebar. The built-in 78-card deck stays bundled JS
+  // (public/vesco/js/vesco-data.js), untouched. CardPacks/Cards is a separate,
+  // additive system for admin-authored packs — see src/lib/vescoCardLoader.ts
+  // on the frontend.
+  collections: [Media, Users, CardPacks, Cards],
+  globals: [SiteSettings, VescoNavigation, VescoHero, VescoCounters, VescoCta, VescoFooter],
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL },
     push: env.PAYLOAD_DB_PUSH,

@@ -1,0 +1,84 @@
+---
+import { ClientRouter, fade } from 'astro:transitions';
+import VescoBackToTop from '../VescoBackToTop.astro';
+import VescoCardLoaderScript from '../VescoCardLoaderScript.astro';
+import VescoCookieConsent from '../VescoCookieConsent.astro';
+import VescoFooter from '../VescoFooter.astro';
+import VescoPreloader from '../VescoPreloader.astro';
+import VescoHeader, { type VescoLocale } from '../VescoHeader.astro';
+import VescoScripts from '../VescoScripts.astro';
+import { buildVescoCmsLabels } from '../../../lib/vescoContent';
+import '../../../styles/vesco.css';
+
+interface Props {
+  locale: VescoLocale;
+}
+const { locale } = Astro.props;
+
+// Nav + footer copy is CMS-driven (same globals as the home page). This page
+// has no hero/counters/CTA content of its own, so those 3 fetches are skipped.
+const cmsLabels = await buildVescoCmsLabels(false);
+---
+
+<!doctype html>
+<html lang={locale} transition:animate={fade({ duration: '0.2s' })}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tarot · Vesco</title>
+    <meta name="description" content="Vesco — a quieter daily practice: one tarot card, one forecast, one number." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <ClientRouter />
+  </head>
+  <body class="min-h-screen">
+    <VescoPreloader />
+    <VescoHeader active="tarot" locale={locale} />
+    <main class="mx-auto max-w-shell px-5 pb-28 pt-16 sm:px-8 lg:px-10">
+      <div class="mb-11 grid items-end gap-7 border-b border-[--rule] pb-7 sm:grid-cols-[minmax(0,1fr)_auto]">
+        <div>
+          <p class="v-eyebrow mb-4" data-i18n="deckEyebrow"></p>
+          <h1 class="m-0 font-display text-[clamp(36px,4.4vw,62px)] font-normal" data-i18n="tarotTitle"></h1>
+        </div>
+        <button type="button" class="v-btn v-btn--solid justify-self-start sm:justify-self-end" data-shuffle data-i18n="shufflePull"
+        ></button>
+      </div>
+
+      {
+        /* Hidden until JS confirms there's at least one published card pack
+           to offer — a site with none looks exactly as it did before. */
+      }
+      <div class="mb-8 hidden max-w-[280px] items-center gap-3" data-pack-switcher-row>
+        <label class="whitespace-nowrap text-[11px] uppercase tracking-label text-muted" for="v-pack-switcher"
+          >Deck</label
+        >
+        <select id="v-pack-switcher" class="v-input v-input--mono" data-pack-switcher>
+          <option value="">Classic Tarot</option>
+        </select>
+      </div>
+
+      <div class="mb-14 hidden h-[380px] place-items-center" data-shuffle-stage>
+        <div class="v-shuffle"><div></div><div></div><div></div><div></div></div>
+        <p class="v-eyebrow mt-6" data-i18n="shuffling"></p>
+      </div>
+
+      <article
+        class="v-anim-fade mb-14 hidden gap-8 rounded-panel border border-[--rule] bg-card p-6 sm:p-11 lg:grid-cols-[minmax(220px,340px)_minmax(300px,1fr)] lg:gap-14"
+        data-detail
+      >
+      </article>
+
+      <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap gap-2.5" data-filters></div>
+        <p class="m-0 whitespace-nowrap font-mono text-[11px] tracking-label text-muted" data-count></p>
+      </div>
+
+      <div class="grid gap-7 [grid-template-columns:repeat(auto-fill,minmax(200px,1fr))]" data-grid></div>
+    </main>
+    <VescoFooter />
+    <VescoCookieConsent locale={locale} />
+    <VescoBackToTop locale={locale} />
+    <VescoScripts page="tarot" cmsLabels={cmsLabels} />
+    <VescoCardLoaderScript />
+  </body>
+</html>

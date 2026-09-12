@@ -1,16 +1,11 @@
 ---
-// The bare `/` carries no locale. Redirect to the locale chosen in
-// SiteSettings → Default locale (the Payload admin is the source of truth);
-// the bundled DEFAULT_LOCALE is only the fallback when the CMS is unreachable.
-// All content lives under [locale]/**.
-import { resolveDefaultLocale } from '../lib/defaultLocale';
+import { resolveVescoDefaultLocale } from '../lib/vescoContent';
 
-export const prerender = false;
-
-const target = await resolveDefaultLocale();
+// The URL now carries the language: /en or /cs. Redirect the old flat route
+// to whichever language is set as default in Payload (SiteSettings).
+const locale = await resolveVescoDefaultLocale();
 
 Astro.response.status = 302;
-Astro.response.headers.set('Location', `/${target}`);
-// Dynamic target — never let a CDN pin one locale.
+Astro.response.headers.set('Location', `/${locale}`);
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---

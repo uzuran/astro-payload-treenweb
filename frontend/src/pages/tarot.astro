@@ -1,0 +1,11 @@
+---
+import { resolveVescoDefaultLocale } from '../lib/vescoContent';
+
+// The URL now carries the language: /en or /cs. Redirect the old flat route
+// to whichever language is set as default in Payload (SiteSettings).
+const locale = await resolveVescoDefaultLocale();
+
+Astro.response.status = 302;
+Astro.response.headers.set('Location', `/${locale}/tarot`);
+Astro.response.headers.set('Cache-Control', 'no-store');
+---

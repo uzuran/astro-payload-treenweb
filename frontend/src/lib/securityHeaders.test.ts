@@ -44,14 +44,19 @@ describe('contentSecurityPolicy', () => {
     expect(csp).not.toContain('*');
   });
 
-  it('still allows inline styles (Astro scoped <style> + style="" attrs)', () => {
-    expect(directive('style-src')).toBe("style-src 'self' 'unsafe-inline'");
+  it('still allows inline styles (Astro scoped <style> + style="" attrs) + Google Fonts stylesheet', () => {
+    expect(directive('style-src')).toBe(
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    );
   });
 
   it('permits CMS media + API and data: images, nothing wider', () => {
     expect(directive('img-src')).toMatch(/^img-src 'self' data: https?:\/\/[^ ]+$/);
     expect(directive('connect-src')).toMatch(/^connect-src 'self' https?:\/\/[^ ]+$/);
-    expect(directive('font-src')).toBe("font-src 'self'");
+  });
+
+  it('allows Google Fonts font files (Vesco pages)', () => {
+    expect(directive('font-src')).toBe("font-src 'self' https://fonts.gstatic.com");
   });
 
   it('upgrades insecure requests', () => {

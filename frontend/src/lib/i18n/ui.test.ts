@@ -21,11 +21,8 @@ describe('UI_FALLBACK', () => {
     }
   });
 
-  it('keeps the interpolation tokens in the templated leaves', () => {
+  it('keeps the interpolation token in the templated leaf', () => {
     for (const l of LOCALES) {
-      for (const tok of ['{name}', '{service}', '{date}']) {
-        expect(UI_FALLBACK[l].booking.resultTemplate, `${l} ${tok}`).toContain(tok);
-      }
       expect(UI_FALLBACK[l].notFound.missingPathTemplate, l).toContain('{path}');
     }
   });

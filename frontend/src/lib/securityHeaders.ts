@@ -28,6 +28,10 @@ export const HSTS_HEADER = 'max-age=63072000; includeSubDomains; preload';
  * blocks and components use `style=""` attributes (e.g. the hero duration var).
  * Removing it also needs `experimental.csp`.
  *
+ * `fonts.googleapis.com` / `fonts.gstatic.com` are allowed for the `/vesco/*`
+ * pages, which load Google Fonts (Marcellus, Karla, IBM Plex Mono) rather than
+ * the self-hosted woff2 set the rest of the site uses.
+ *
  * A third-party analytics host, if ever used instead of self-hosted Plausible,
  * must be added to `script-src` / `connect-src`.
  */
@@ -36,10 +40,10 @@ export function contentSecurityPolicy(): string {
   return [
     "default-src 'self'",
     "script-src 'self'",
-    "style-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     `img-src 'self' data: ${cms}`,
     `connect-src 'self' ${cms}`,
-    "font-src 'self'",
+    "font-src 'self' https://fonts.gstatic.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
